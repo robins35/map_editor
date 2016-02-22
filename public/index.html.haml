@@ -2,9 +2,10 @@
 %html
   %head
     %title Map Editor
-    -# = stylesheet_link_tag    'application', media: 'all'
-    %script{type: 'text/javascript', src: 'assets/javascripts/commonjs-require.js'}
-    %script{type: 'text/javascript', src: 'assets/javascripts/application.js'}
+    %link{type: "text/css", rel: 'stylesheet', href: 'stylesheets/map_editor.css'}
+    %script{type: 'text/javascript', src: '/javascript/module.js'}
   %body
-    The Body
-    MORE
+    .wrapper
+      %canvas#map_editor{width: "720", height: "480"}
+        %p
+          Your browser does not support the required functionality to play this game.
