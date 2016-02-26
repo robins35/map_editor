@@ -7,5 +7,6 @@ gem 'rerun'
 gem 'haml'
 gem 'sass'
 
-gem 'pry-rails'
-gem 'pry-byebug'
+# gem 'pry-rails'
+# gem 'pry-byebug'
+gem 'pry-remote'

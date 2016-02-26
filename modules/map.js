@@ -1,3 +1,10 @@
+class Map {
+  constructor(
+}
+
+
+
+
 var sum = (a, b = 6) => (a + b);
 
 var square = (b) => {
@@ -16,4 +23,4 @@ class MyClass {
     }
 }
 
-export { sum, square, variable, MyClass };
+//export { sum, square, variable, MyClass };

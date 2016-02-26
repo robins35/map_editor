@@ -2,56 +2,131 @@
 "use strict";
 
 exports.__esModule = true;
+var successCount = 0;
+var errorCount = 0;
+var imgs = {};
+var imgPaths = [];
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var sum = function sum(a) {
-    var b = arguments.length <= 1 || arguments[1] === undefined ? 6 : arguments[1];
-    return a + b;
+var isDone = function isDone() {
+    return imgPaths.length == successCount + errorCount;
 };
 
-var square = function square(b) {
-    return b * b;
+var loadImagePaths = function loadImagePaths(downloadCallback) {
+    $.ajax({
+        dataType: "json",
+        method: "GET",
+        url: '/load_textures',
+        error: function error(_error) {
+            console.log("ERROR: #{error}");
+        },
+        success: function success(data) {
+            imgPaths = data;
+            downloadCallback();
+        }
+    });
 };
 
-var variable = 8;
+var loadImages = function loadImages(downloadCallback) {
+    if (imgPaths.length == 0) downloadCallback();
+    for (var i = 0; i < imgPaths.length; i++) {
+        (function (src) {
+            var name = src.split('/').slice(-1)[0].split('.')[0];
+            imgs[name] = new Image();
 
-var MyClass = (function () {
-    function MyClass(credentials) {
-        _classCallCheck(this, MyClass);
+            imgs[name].addEventListener("load", function () {
+                successCount++;
+                if (isDone()) downloadCallback();
+            }, false);
 
-        this.name = credentials.name;
-        this.enrollmentNo = credentials.enrollmentNo;
+            imgs[name].addEventListener("error", function () {
+                errorCount++;
+                if (isDone()) downloadCallback();
+            }, false);
+
+            imgs[name].src = src;
+        })(imgPaths[i]);
     }
+};
 
-    MyClass.prototype.getName = function getName() {
-        return this.name;
-    };
+// var loadAudio = function(downloadCallback) {
+//     if(imgPaths.length == 0) downloadCallback();
+// }
 
-    return MyClass;
-})();
+var loadAssets = function loadAssets(downloadCallback) {
+    loadImagePaths(downloadCallback);
+};
 
-exports.sum = sum;
-exports.square = square;
-exports.variable = variable;
-exports.MyClass = MyClass;
+exports.loadAssets = loadAssets;
+// var getImage = function(name) {
+//     return imgs[name];
+// }
+
+// var getAudio = function(name) {
+//     return snds[name];
+// }
+
+// module.exports = {
+//     loadAssets : loadAssets,
+//     getImage : getImage,
+//     getAudio : getAudio,
+//     imgs : imgs
+// };
 
 },{}],2:[function(require,module,exports){
 'use strict';
 
-var _import = require('./import');
+exports.__esModule = true;
+var state = 'loading';
 
-// 25
-console.log(_import.square(5));
-
-var cred = {
-    name: 'Ritesh Kumar',
-    enrollmentNo: 11115078
+exports.state = state;
+var update = function update() {
+  //console.log("Updating");
 };
 
-var x = new _import.MyClass(cred);
+exports.update = update;
+var draw = function draw() {
+  //console.log("Drawing");
+};
+exports.draw = draw;
 
-//Ritesh Kumar
-console.log(x.getName());
+},{}],3:[function(require,module,exports){
+'use strict';
 
-},{"./import":1}]},{},[2]);
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
+
+var _game = require('./game');
+
+var game = _interopRequireWildcard(_game);
+
+var _asset_manager = require('./asset_manager');
+
+var assetManager = _interopRequireWildcard(_asset_manager);
+
+var FPS = 60;
+
+var AnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || null;
+
+$(document).ready(function () {
+  if (AnimationFrame) {
+    var updateLoop = function updateLoop() {
+      game.update();
+      AnimationFrame(updateLoop);
+    };
+    var drawLoop = function drawLoop() {
+      game.draw();
+      AnimationFrame(drawLoop);
+    };
+
+    assetManager.loadAssets(function () {
+      game.state = "ready";console.log("Loaded assets");
+    });
+    updateLoop();
+    drawLoop();
+  } else {
+    console.log("Falling back to setInterval, update your browser!");
+    setInterval(game.update, 1000 / FPS);
+    setInterval(game.draw, 1000 / FPS);
+  }
+});
+
+},{"./asset_manager":1,"./game":2}]},{},[3]);
