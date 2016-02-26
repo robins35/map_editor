@@ -13,11 +13,12 @@ var loadImagePaths = (downloadCallback) => {
     method: "GET",
     url: '/load_textures',
     error: (error) => {
-      console.log("ERROR: #{error}")
+      console.log(`ERROR: ${error}`)
     },
     success: (data) => {
+      console.log(`Loaded image paths: ${data}`)
       imgPaths = data
-      downloadCallback()
+      loadImages(downloadCallback)
     }
   });
 }
@@ -31,11 +32,13 @@ var loadImages = function(downloadCallback) {
 
             imgs[name].addEventListener("load", function() {
                 successCount++;
+                console.log(`Loaded image ${this.src}`)
                 if (isDone()) downloadCallback();
             }, false);
 
             imgs[name].addEventListener("error", function() {
                 errorCount++;
+                console.log(`Error loading image ${this.src}`)
                 if (isDone()) downloadCallback();
             }, false);
 
@@ -52,9 +55,11 @@ export var loadAssets = function(downloadCallback) {
     loadImagePaths(downloadCallback)
 }
 
-// var getImage = function(name) {
-//     return imgs[name];
-// }
+export var getImage = function(name) {
+    return imgs[name];
+}
+
+export var imgs
 
 // var getAudio = function(name) {
 //     return snds[name];

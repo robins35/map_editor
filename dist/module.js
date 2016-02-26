@@ -17,11 +17,12 @@ var loadImagePaths = function loadImagePaths(downloadCallback) {
         method: "GET",
         url: '/load_textures',
         error: function error(_error) {
-            console.log("ERROR: #{error}");
+            console.log("ERROR: " + _error);
         },
         success: function success(data) {
+            console.log("Loaded image paths: " + data);
             imgPaths = data;
-            downloadCallback();
+            loadImages(downloadCallback);
         }
     });
 };
@@ -35,11 +36,13 @@ var loadImages = function loadImages(downloadCallback) {
 
             imgs[name].addEventListener("load", function () {
                 successCount++;
+                console.log("Loaded image " + this.src);
                 if (isDone()) downloadCallback();
             }, false);
 
             imgs[name].addEventListener("error", function () {
                 errorCount++;
+                console.log("Error loading image " + this.src);
                 if (isDone()) downloadCallback();
             }, false);
 
@@ -57,10 +60,14 @@ var loadAssets = function loadAssets(downloadCallback) {
 };
 
 exports.loadAssets = loadAssets;
-// var getImage = function(name) {
-//     return imgs[name];
-// }
+var getImage = function getImage(name) {
+    return imgs[name];
+};
 
+exports.getImage = getImage;
+var imgs;
+
+exports.imgs = imgs;
 // var getAudio = function(name) {
 //     return snds[name];
 // }
@@ -76,18 +83,33 @@ exports.loadAssets = loadAssets;
 'use strict';
 
 exports.__esModule = true;
-var state = 'loading';
+var States = ['loading', 'ready', 'paused', 'menu'];
+var canvas = undefined;
+var ctx = undefined;
 
-exports.state = state;
+var state = 'loading';
+var canvas;
+var ctx;
+
 var update = function update() {
   //console.log("Updating");
 };
 
-exports.update = update;
 var draw = function draw() {
   //console.log("Drawing");
 };
+
+var init = function init() {
+  exports.canvas = canvas = document.getElementById("map_editor");
+  exports.ctx = ctx = canvas.getContext("2d");
+};
+
+exports.state = state;
+exports.canvas = canvas;
+exports.ctx = ctx;
+exports.update = update;
 exports.draw = draw;
+exports.init = init;
 
 },{}],3:[function(require,module,exports){
 'use strict';
@@ -107,6 +129,8 @@ var FPS = 60;
 var AnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || null;
 
 $(document).ready(function () {
+  game.init();
+
   if (AnimationFrame) {
     var updateLoop = function updateLoop() {
       game.update();

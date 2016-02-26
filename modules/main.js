@@ -11,6 +11,8 @@ const AnimationFrame = window.requestAnimationFrame ||
                       null;
 
 $(document).ready( () => {
+  game.init()
+
   if(AnimationFrame) {
     var updateLoop = () => {
       game.update()
