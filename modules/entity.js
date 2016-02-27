@@ -1,4 +1,4 @@
-class Entity {
+export class Entity {
   constructor (ctx, x, y) {
     this.ctx = ctx
     this.id = Entity.id++
@@ -11,5 +11,3 @@ class Entity {
 }
 
 Entity.id = 1
-
-export default class Entity

@@ -1,5 +1,4 @@
 import * as game from './game'
-import * as assetManager from './asset_manager'
 
 const FPS = 60
 
@@ -23,7 +22,6 @@ $(document).ready( () => {
       AnimationFrame(drawLoop)
     }
 
-    assetManager.loadAssets(() => { game.state = "ready"; console.log("Loaded assets"); })
     updateLoop()
     drawLoop()
   }

@@ -1,18 +1,48 @@
+import * as assetManager from './asset_manager'
+
 const States = ['loading', 'ready', 'paused', 'menu']
+
+
+class SpriteList {
+  constructor() {
+    this.list = {}
+  }
+
+  push(sprite) {
+    this.list[sprite.id] = sprite
+  }
+
+  draw() {
+    // Change to a better kind of iterator
+    for (let i = 1; i <= Object.keys(this.list).length; i++) {
+      this.list[i].draw()
+    }
+  }
+}
+
 var canvas = undefined
 var ctx = undefined
-
-
-var state = 'loading'
-var canvas
-var ctx
+var state = 'begin'
+var sprites = new SpriteList()
+var activeSprites = new SpriteList()
+var environmentSprites = new SpriteList()
 
 var update = () => {
-  //console.log("Updating");
+  switch (state) {
+    case 'begin':
+      state = 'loading'
+      assetManager.loadAssets(() => { state = "main_menu"; console.log("Loaded assets"); }, ctx, sprites)
+      break
+    case 'main_menu':
+      //debugger
+      break
+    default:
+      //console.log("No state matches in update loop")
+  }
 }
 
 var draw = () => {
-  //console.log("Drawing");
+  sprites.draw()
 }
 
 var init = () => {

@@ -1,3 +1,8 @@
+import { ProgressBar } from './progress_bar'
+
+var ctx = 0
+var sprites = 0
+
 var successCount = 0;
 var errorCount = 0;
 var imgs = {};
@@ -16,7 +21,7 @@ var loadImagePaths = (downloadCallback) => {
       console.log(`ERROR: ${error}`)
     },
     success: (data) => {
-      console.log(`Loaded image paths: ${data}`)
+      //console.log(`Loaded image paths: ${data}`)
       imgPaths = data
       loadImages(downloadCallback)
     }
@@ -24,15 +29,18 @@ var loadImagePaths = (downloadCallback) => {
 }
 
 var loadImages = function(downloadCallback) {
+    var progressBar = new ProgressBar(ctx, imgPaths.length)
+    sprites.push(progressBar)
+
     if (imgPaths.length == 0) downloadCallback();
     for (var i = 0; i < imgPaths.length; i++) {
         (function(src) {
-            var name = src.split('/').slice(-1)[0].split('.')[0];
-            imgs[name] = new Image();
+            var name = src.split('/').slice(-1)[0].split('.')[0]; imgs[name] = new Image();
 
             imgs[name].addEventListener("load", function() {
                 successCount++;
-                console.log(`Loaded image ${this.src}`)
+                //console.log(`Loaded image ${this.src}`)
+                progressBar.progress++
                 if (isDone()) downloadCallback();
             }, false);
 
@@ -51,15 +59,18 @@ var loadImages = function(downloadCallback) {
 //     if(imgPaths.length == 0) downloadCallback();
 // }
 
-export var loadAssets = function(downloadCallback) {
+var loadAssets = function(downloadCallback, _ctx, _sprites) {
+    ctx = _ctx
+    sprites = _sprites
     loadImagePaths(downloadCallback)
 }
 
-export var getImage = function(name) {
+var getImage = function(name) {
     return imgs[name];
 }
 
-export var imgs
+
+export { loadAssets, getImage, imgs }
 
 // var getAudio = function(name) {
 //     return snds[name];
