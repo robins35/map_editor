@@ -3,10 +3,7 @@
 
 exports.__esModule = true;
 
-var _progress_bar = require('./progress_bar');
-
-var ctx = 0;
-var sprites = 0;
+var _ui = require('./ui');
 
 var successCount = 0;
 var errorCount = 0;
@@ -26,7 +23,6 @@ var loadImagePaths = function loadImagePaths(downloadCallback) {
             console.log("ERROR: " + _error);
         },
         success: function success(data) {
-            //console.log(`Loaded image paths: ${data}`)
             imgPaths = data;
             loadImages(downloadCallback);
         }
@@ -34,8 +30,8 @@ var loadImagePaths = function loadImagePaths(downloadCallback) {
 };
 
 var loadImages = function loadImages(downloadCallback) {
-    var progressBar = new _progress_bar.ProgressBar(ctx, imgPaths.length);
-    sprites.push(progressBar);
+    var progressBar = new _ui.UI.ProgressBar(imgPaths.length);
+    window.game.sprites.push(progressBar);
 
     if (imgPaths.length == 0) downloadCallback();
     for (var i = 0; i < imgPaths.length; i++) {
@@ -44,7 +40,6 @@ var loadImages = function loadImages(downloadCallback) {
 
             imgs[name].addEventListener("load", function () {
                 successCount++;
-                //console.log(`Loaded image ${this.src}`)
                 progressBar.progress++;
                 if (isDone()) downloadCallback();
             }, false);
@@ -64,9 +59,7 @@ var loadImages = function loadImages(downloadCallback) {
 //     if(imgPaths.length == 0) downloadCallback();
 // }
 
-var loadAssets = function loadAssets(downloadCallback, _ctx, _sprites) {
-    ctx = _ctx;
-    sprites = _sprites;
+var loadAssets = function loadAssets(downloadCallback) {
     loadImagePaths(downloadCallback);
 };
 
@@ -89,7 +82,7 @@ exports.imgs = imgs;
 //     imgs : imgs
 // };
 
-},{"./progress_bar":5}],2:[function(require,module,exports){
+},{"./ui":6}],2:[function(require,module,exports){
 "use strict";
 
 exports.__esModule = true;
@@ -97,12 +90,13 @@ exports.__esModule = true;
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Entity = (function () {
-  function Entity(ctx, x, y) {
+  function Entity(x, y) {
     _classCallCheck(this, Entity);
 
-    this.ctx = ctx;
     this.id = Entity.id++;
     this.pos = { x: x, y: y };
+    this.canvas = window.game.canvas;
+    this.ctx = window.game.ctx;
   }
 
   Entity.prototype.move = function move(x, y) {
@@ -128,6 +122,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var _asset_manager = require('./asset_manager');
 
 var assetManager = _interopRequireWildcard(_asset_manager);
+
+var _main_menu = require('./main_menu');
+
+var mainMenu = _interopRequireWildcard(_main_menu);
 
 var States = ['loading', 'ready', 'paused', 'menu'];
 
@@ -165,7 +163,7 @@ var update = function update() {
       exports.state = state = 'loading';
       assetManager.loadAssets(function () {
         exports.state = state = "main_menu";console.log("Loaded assets");
-      }, ctx, sprites);
+      });
       break;
     case 'main_menu':
       //debugger
@@ -185,13 +183,14 @@ var init = function init() {
 };
 
 exports.state = state;
+exports.sprites = sprites;
 exports.canvas = canvas;
 exports.ctx = ctx;
 exports.update = update;
 exports.draw = draw;
 exports.init = init;
 
-},{"./asset_manager":1}],4:[function(require,module,exports){
+},{"./asset_manager":1,"./main_menu":5}],4:[function(require,module,exports){
 "use strict";
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj["default"] = obj; return newObj; } }
@@ -199,6 +198,8 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 var _game = require('./game');
 
 var game = _interopRequireWildcard(_game);
+
+window.game = game;
 
 var FPS = 60;
 
@@ -231,24 +232,90 @@ $(document).ready(function () {
 
 exports.__esModule = true;
 
+var _ui = require('./ui');
+
+var buttons = [];
+var canvas = undefined;
+var ctx = undefined;
+
+var draw = function draw() {
+  for (var i = 1; i < buttons.length; i++) {
+    buttons[i].draw();
+  }
+};
+
+var init = function init() {
+  canvas = window.game.canvas;
+  ctx = window.game.ctx;
+  var buttonsWidth = canvas.width / 4;
+  var buttonColumnX = canvas.width / 2 - buttonsWidth;
+  var buttonsHeight;
+  var buttonColumnY = canvas.height / 2;
+
+  exports.buttons = buttons = [new _ui.UI.Button(buttonColumnX, buttonColumnY, buttonsWidth, buttonsHeight, "Map Editor"), new _ui.UI.Button(buttonColumnX, buttonColumnY + 2 * buttonsHeight, buttonsWidth, buttonsHeight, "Settings")];
+};
+
+exports.buttons = buttons;
+exports.init = init;
+exports.draw = draw;
+
+},{"./ui":6}],6:[function(require,module,exports){
+"use strict";
+
+exports.__esModule = true;
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var _entity = require('./entity');
 
-var ProgressBar = (function (_Entity) {
-  _inherits(ProgressBar, _Entity);
+var Button = (function (_Entity) {
+  _inherits(Button, _Entity);
 
-  function ProgressBar(ctx, total) {
+  function Button(x, y, width, height, text) {
+    _classCallCheck(this, Button);
+
+    _Entity.call(this, x, y);
+    this.width = width;
+    this.height = height;
+    this.text = text;
+    this.clicked = false;
+    this.hovered = false;
+    this.color = "#cccccc";
+  }
+
+  Button.prototype.draw = function draw() {
+    this.ctx.beginPath();
+    this.ctx.fillStyle = this.color;
+    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+
+    var fontSize = 20;
+    this.ctx.setFillColor(1, 1, 1, 1.0);
+    this.ctx.font = fontSize + "px sans-serif";
+
+    var textSize = this.ctx.measureText(this.text);
+    var textX = this.x + this.width / 2 - textSize.width / 2;
+    var textY = this.y + this.height / 2 - fontSize / 2;
+
+    this.ctx.fillText(this.text, textX, textY);
+  };
+
+  return Button;
+})(_entity.Entity);
+
+var ProgressBar = (function (_Entity2) {
+  _inherits(ProgressBar, _Entity2);
+
+  function ProgressBar(total) {
     _classCallCheck(this, ProgressBar);
 
-    _Entity.call(this, ctx, 200, 200);
+    _Entity2.call(this, 200, 200);
     this.total = total;
     this.progress = 0;
     this.width = 300;
-    this.height = 40;
-    this.color = "white";
+    this.height = 20;
+    this.color = "#ffffff";
   }
 
   ProgressBar.prototype.draw = function draw() {
@@ -259,7 +326,7 @@ var ProgressBar = (function (_Entity) {
     this.ctx.stroke();
 
     this.ctx.beginPath();
-    this.ctx.strokeStyle = this.color;
+    this.ctx.fillStyle = this.color;
     this.ctx.fillRect(this.pos.x, this.pos.y, this.calculateWidth(), this.height);
   };
 
@@ -270,6 +337,8 @@ var ProgressBar = (function (_Entity) {
   return ProgressBar;
 })(_entity.Entity);
 
-exports.ProgressBar = ProgressBar;
+var UI = { Button: Button, ProgressBar: ProgressBar };
+
+exports.UI = UI;
 
 },{"./entity":2}]},{},[4]);

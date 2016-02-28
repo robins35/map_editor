@@ -1,5 +1,7 @@
 import * as game from './game'
 
+window.game = game
+
 const FPS = 60
 
 const AnimationFrame = window.requestAnimationFrame ||

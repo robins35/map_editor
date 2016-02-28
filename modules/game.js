@@ -1,4 +1,5 @@
 import * as assetManager from './asset_manager'
+import * as mainMenu from './main_menu'
 
 const States = ['loading', 'ready', 'paused', 'menu']
 
@@ -31,7 +32,7 @@ var update = () => {
   switch (state) {
     case 'begin':
       state = 'loading'
-      assetManager.loadAssets(() => { state = "main_menu"; console.log("Loaded assets"); }, ctx, sprites)
+      assetManager.loadAssets(() => { state = "main_menu"; console.log("Loaded assets"); })
       break
     case 'main_menu':
       //debugger
@@ -50,4 +51,4 @@ var init = () => {
   ctx = canvas.getContext("2d")
 }
 
-export { state, canvas, ctx, update, draw, init }
+export { state, sprites, canvas, ctx, update, draw, init }

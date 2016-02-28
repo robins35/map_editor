@@ -1,7 +1,4 @@
-import { ProgressBar } from './progress_bar'
-
-var ctx = 0
-var sprites = 0
+import { UI } from './ui'
 
 var successCount = 0;
 var errorCount = 0;
@@ -21,7 +18,6 @@ var loadImagePaths = (downloadCallback) => {
       console.log(`ERROR: ${error}`)
     },
     success: (data) => {
-      //console.log(`Loaded image paths: ${data}`)
       imgPaths = data
       loadImages(downloadCallback)
     }
@@ -29,8 +25,8 @@ var loadImagePaths = (downloadCallback) => {
 }
 
 var loadImages = function(downloadCallback) {
-    var progressBar = new ProgressBar(ctx, imgPaths.length)
-    sprites.push(progressBar)
+    var progressBar = new UI.ProgressBar(imgPaths.length)
+    window.game.sprites.push(progressBar)
 
     if (imgPaths.length == 0) downloadCallback();
     for (var i = 0; i < imgPaths.length; i++) {
@@ -39,7 +35,6 @@ var loadImages = function(downloadCallback) {
 
             imgs[name].addEventListener("load", function() {
                 successCount++;
-                //console.log(`Loaded image ${this.src}`)
                 progressBar.progress++
                 if (isDone()) downloadCallback();
             }, false);
@@ -59,9 +54,7 @@ var loadImages = function(downloadCallback) {
 //     if(imgPaths.length == 0) downloadCallback();
 // }
 
-var loadAssets = function(downloadCallback, _ctx, _sprites) {
-    ctx = _ctx
-    sprites = _sprites
+var loadAssets = function(downloadCallback) {
     loadImagePaths(downloadCallback)
 }
 
