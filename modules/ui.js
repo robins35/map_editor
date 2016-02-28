@@ -9,21 +9,24 @@ class Button extends Entity {
     this.text = text
     this.clicked = false
     this.hovered = false
-    this.color = "#cccccc"
+    this.background_color = "#cc6600"
+    this.text_color = "#ffffff"
   }
 
   draw () {
     this.ctx.beginPath()
-    this.ctx.fillStyle = this.color
+    this.ctx.fillStyle = this.background_color
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
 
     var fontSize = 20
-    this.ctx.setFillColor(1, 1, 1, 1.0)
-    this.ctx.font = fontSize + "px sans-serif"
+    this.ctx.fillStyle = this.text_color
+    this.ctx.font = fontSize + "px amatic-bold"
+    this.ctx.textBaseline = "top"
 
+    var textMargin = 3
     var textSize = this.ctx.measureText(this.text)
-    var textX = this.x + (this.width / 2) - (textSize.width / 2)
-    var textY = this.y + (this.height / 2) - (fontSize / 2)
+    var textX = this.pos.x + (this.width / 2) - (textSize.width / 2)
+    var textY = this.pos.y + (this.height / 2) - (fontSize / 2) - textMargin
 
     this.ctx.fillText(this.text, textX, textY)
   }

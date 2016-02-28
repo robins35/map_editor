@@ -137,14 +137,49 @@ var SpriteList = (function () {
   }
 
   SpriteList.prototype.push = function push(sprite) {
-    this.list[sprite.id] = sprite;
+    if (sprite instanceof Array) {
+      for (var _iterator = sprite, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+        var _ref;
+
+        if (_isArray) {
+          if (_i >= _iterator.length) break;
+          _ref = _iterator[_i++];
+        } else {
+          _i = _iterator.next();
+          if (_i.done) break;
+          _ref = _i.value;
+        }
+
+        var _sprite = _ref;
+
+        this.push(_sprite);
+      }
+    } else {
+      this.list[sprite.id] = sprite;
+    }
   };
 
   SpriteList.prototype.draw = function draw() {
-    // Change to a better kind of iterator
-    for (var i = 1; i <= Object.keys(this.list).length; i++) {
-      this.list[i].draw();
+    for (var _iterator2 = Object.keys(this.list), _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+      var _ref2;
+
+      if (_isArray2) {
+        if (_i2 >= _iterator2.length) break;
+        _ref2 = _iterator2[_i2++];
+      } else {
+        _i2 = _iterator2.next();
+        if (_i2.done) break;
+        _ref2 = _i2.value;
+      }
+
+      var key = _ref2;
+
+      this.list[key].draw();
     }
+  };
+
+  SpriteList.prototype.clear = function clear() {
+    this.list = {};
   };
 
   return SpriteList;
@@ -160,12 +195,16 @@ var environmentSprites = new SpriteList();
 var update = function update() {
   switch (state) {
     case 'begin':
-      exports.state = state = 'loading';
+      exports.state = state = 'idle';
       assetManager.loadAssets(function () {
-        exports.state = state = "main_menu";console.log("Loaded assets");
+        exports.state = state = "main_menu";
+        console.log("Loaded assets");
+        sprites.clear();
       });
       break;
     case 'main_menu':
+      exports.state = state = 'idle';
+      mainMenu.init();
       //debugger
       break;
     default:
@@ -174,6 +213,7 @@ var update = function update() {
 };
 
 var draw = function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   sprites.draw();
 };
 
@@ -239,20 +279,38 @@ var canvas = undefined;
 var ctx = undefined;
 
 var draw = function draw() {
-  for (var i = 1; i < buttons.length; i++) {
-    buttons[i].draw();
+  for (var _iterator = buttons, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+    var _ref;
+
+    if (_isArray) {
+      if (_i >= _iterator.length) break;
+      _ref = _iterator[_i++];
+    } else {
+      _i = _iterator.next();
+      if (_i.done) break;
+      _ref = _i.value;
+    }
+
+    var button = _ref;
+
+    buttons.draw();
   }
 };
 
 var init = function init() {
   canvas = window.game.canvas;
   ctx = window.game.ctx;
-  var buttonsWidth = canvas.width / 4;
-  var buttonColumnX = canvas.width / 2 - buttonsWidth;
-  var buttonsHeight;
+
+  var buttonY = function buttonY(nthButton) {
+    return canvas.height / 2 + nthButton * 40;
+  };
+  var buttonsWidth = canvas.width / 5;
+  var buttonColumnX = 20;
+  var buttonsHeight = 30;
   var buttonColumnY = canvas.height / 2;
 
-  exports.buttons = buttons = [new _ui.UI.Button(buttonColumnX, buttonColumnY, buttonsWidth, buttonsHeight, "Map Editor"), new _ui.UI.Button(buttonColumnX, buttonColumnY + 2 * buttonsHeight, buttonsWidth, buttonsHeight, "Settings")];
+  exports.buttons = buttons = [new _ui.UI.Button(buttonColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Map Editor"), new _ui.UI.Button(buttonColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Settings")];
+  window.game.sprites.push(buttons);
 };
 
 exports.buttons = buttons;
@@ -282,21 +340,24 @@ var Button = (function (_Entity) {
     this.text = text;
     this.clicked = false;
     this.hovered = false;
-    this.color = "#cccccc";
+    this.background_color = "#cc6600";
+    this.text_color = "#ffffff";
   }
 
   Button.prototype.draw = function draw() {
     this.ctx.beginPath();
-    this.ctx.fillStyle = this.color;
+    this.ctx.fillStyle = this.background_color;
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
 
     var fontSize = 20;
-    this.ctx.setFillColor(1, 1, 1, 1.0);
-    this.ctx.font = fontSize + "px sans-serif";
+    this.ctx.fillStyle = this.text_color;
+    this.ctx.font = fontSize + "px amatic-bold";
+    this.ctx.textBaseline = "top";
 
+    var textMargin = 3;
     var textSize = this.ctx.measureText(this.text);
-    var textX = this.x + this.width / 2 - textSize.width / 2;
-    var textY = this.y + this.height / 2 - fontSize / 2;
+    var textX = this.pos.x + this.width / 2 - textSize.width / 2;
+    var textY = this.pos.y + this.height / 2 - fontSize / 2 - textMargin;
 
     this.ctx.fillText(this.text, textX, textY);
   };

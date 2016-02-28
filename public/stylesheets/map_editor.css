@@ -16,4 +16,11 @@ div.wrapper {
   left: 0px;
   right: 0px; }
 
+@font-face {
+  font-family: amatic;
+  src: url("fonts/AmaticSC-Regular.ttf"); }
+@font-face {
+  font-family: amatic-bold;
+  src: url("fonts/Amatic-Bold.ttf"); }
+
 /*# sourceMappingURL=map_editor.css.map */
