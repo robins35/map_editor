@@ -1,4 +1,5 @@
 import { Entity } from './entity'
+import * as Collision from './collision'
 
 class Button extends Entity {
 
@@ -18,7 +19,7 @@ class Button extends Entity {
     this.ctx.fillStyle = this.background_color
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
 
-    var fontSize = 20
+    let fontSize = 24
     this.ctx.fillStyle = this.text_color
     this.ctx.font = fontSize + "px amatic-bold"
     this.ctx.textBaseline = "top"
@@ -29,6 +30,17 @@ class Button extends Entity {
     var textY = this.pos.y + (this.height / 2) - (fontSize / 2) - textMargin
 
     this.ctx.fillText(this.text, textX, textY)
+  }
+
+  update() {
+    if (Collision.intersects(this, Game.events.mouse)) {
+      this.hovered = true
+      console.log("Hovering over button")
+      if (Game.events.mouse.clicked) {
+        this.clicked = true
+        console.log("Clicked button")
+      }
+    }
   }
 }
 

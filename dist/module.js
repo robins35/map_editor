@@ -31,7 +31,7 @@ var loadImagePaths = function loadImagePaths(downloadCallback) {
 
 var loadImages = function loadImages(downloadCallback) {
     var progressBar = new _ui.UI.ProgressBar(imgPaths.length);
-    window.game.sprites.push(progressBar);
+    Game.sprites.push(progressBar);
 
     if (imgPaths.length == 0) downloadCallback();
     for (var i = 0; i < imgPaths.length; i++) {
@@ -82,7 +82,21 @@ exports.imgs = imgs;
 //     imgs : imgs
 // };
 
-},{"./ui":6}],2:[function(require,module,exports){
+},{"./ui":9}],2:[function(require,module,exports){
+"use strict";
+
+exports.__esModule = true;
+var intersects = function intersects(obj, point) {
+  var tolerance = arguments.length <= 2 || arguments[2] === undefined ? 0 : arguments[2];
+
+  var xIntersect = point.x + tolerance > obj.pos.x && point.x - tolerance < obj.pos.x + obj.width;
+  var yIntersect = point.y + tolerance > obj.pos.y && point.y - tolerance < obj.pos.y + obj.height;
+  return xIntersect && yIntersect;
+};
+
+exports.intersects = intersects;
+
+},{}],3:[function(require,module,exports){
 "use strict";
 
 exports.__esModule = true;
@@ -95,8 +109,8 @@ var Entity = (function () {
 
     this.id = Entity.id++;
     this.pos = { x: x, y: y };
-    this.canvas = window.game.canvas;
-    this.ctx = window.game.ctx;
+    this.canvas = Game.canvas;
+    this.ctx = Game.ctx;
   }
 
   Entity.prototype.move = function move(x, y) {
@@ -110,14 +124,62 @@ exports.Entity = Entity;
 
 Entity.id = 1;
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
+'use strict';
+
+exports.__esModule = true;
+var mouse = {
+  x: 0,
+  y: 0,
+  clicked: false,
+  down: false
+};
+
+var keysDown = {};
+
+var init = function init(canvas) {
+  $(canvas).on('mousemove', function (e) {
+    mouse.x = e.offsetX;
+    mouse.y = e.offsetY;
+    mouse.clicked = e.which == 1 && !mouse.down;
+    mouse.down = e.which == 1;
+  });
+
+  $(canvas).on('mousedown', function (e) {
+    mouse.clicked = !mouse.down;
+    mouse.down = true;
+  });
+
+  $(canvas).on('mouseup', function (e) {
+    mouse.down = false;
+    mouse.clicked = false;
+  });
+
+  $(document).on('keydown', function (e) {
+    keysDown[e.keyCode] = true;
+  });
+
+  $(document).on('keyup', function (e) {
+    delete keysDown[e.keyCode];
+  });
+};
+
+exports.init = init;
+exports.mouse = mouse;
+exports.keysDown = keysDown;
+
+},{}],5:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+var _sprite_list = require('./sprite_list');
+
+var _events = require('./events');
+
+var Events = _interopRequireWildcard(_events);
 
 var _asset_manager = require('./asset_manager');
 
@@ -128,6 +190,150 @@ var _main_menu = require('./main_menu');
 var mainMenu = _interopRequireWildcard(_main_menu);
 
 var States = ['loading', 'ready', 'paused', 'menu'];
+
+var canvas = undefined;
+var ctx = undefined;
+var events = Events;
+var state = 'begin';
+var sprites = new _sprite_list.SpriteList();
+var activeSprites = new _sprite_list.SpriteList();
+var environmentSprites = new _sprite_list.SpriteList();
+
+var update = function update() {
+  switch (state) {
+    case 'begin':
+      exports.state = state = 'idle';
+      assetManager.loadAssets(function () {
+        exports.state = state = "load_main_menu";
+        console.log("Loaded assets");
+        sprites.clear();
+      });
+      break;
+    case 'load_main_menu':
+      exports.state = state = 'main_menu';
+      mainMenu.init();
+      //debugger
+      break;
+    case 'main_menu':
+      sprites.update();
+    default:
+    //console.log("No state matches in update loop")
+  }
+};
+
+var draw = function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  sprites.draw();
+};
+
+var init = function init() {
+  exports.canvas = canvas = document.getElementById("map_editor");
+  exports.ctx = ctx = canvas.getContext("2d");
+  events.init(canvas);
+};
+
+exports.state = state;
+exports.sprites = sprites;
+exports.canvas = canvas;
+exports.ctx = ctx;
+exports.events = events;
+exports.update = update;
+exports.draw = draw;
+exports.init = init;
+
+},{"./asset_manager":1,"./events":4,"./main_menu":7,"./sprite_list":8}],6:[function(require,module,exports){
+"use strict";
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj["default"] = obj; return newObj; } }
+
+var _game = require('./game');
+
+var game = _interopRequireWildcard(_game);
+
+window.Game = game;
+
+var FPS = 60;
+
+var AnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || null;
+
+$(document).ready(function () {
+  Game.init();
+
+  if (AnimationFrame) {
+    var updateLoop = function updateLoop() {
+      Game.update();
+      AnimationFrame(updateLoop);
+    };
+    var drawLoop = function drawLoop() {
+      Game.draw();
+      AnimationFrame(drawLoop);
+    };
+
+    updateLoop();
+    drawLoop();
+  } else {
+    console.log("Falling back to setInterval, update your browser!");
+    setInterval(Game.update, 1000 / FPS);
+    setInterval(Game.draw, 1000 / FPS);
+  }
+});
+
+},{"./game":5}],7:[function(require,module,exports){
+"use strict";
+
+exports.__esModule = true;
+
+var _ui = require('./ui');
+
+var buttons = [];
+var canvas = undefined;
+var ctx = undefined;
+
+var draw = function draw() {
+  for (var _iterator = buttons, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+    var _ref;
+
+    if (_isArray) {
+      if (_i >= _iterator.length) break;
+      _ref = _iterator[_i++];
+    } else {
+      _i = _iterator.next();
+      if (_i.done) break;
+      _ref = _i.value;
+    }
+
+    var button = _ref;
+
+    buttons.draw();
+  }
+};
+
+var init = function init() {
+  canvas = Game.canvas;
+  ctx = Game.ctx;
+
+  var buttonY = function buttonY(nthButton) {
+    return canvas.height / 2 + nthButton * 40;
+  };
+  var buttonsWidth = canvas.width / 5;
+  var buttonColumnX = 20;
+  var buttonsHeight = 30;
+  var buttonColumnY = canvas.height / 2;
+
+  exports.buttons = buttons = [new _ui.UI.Button(buttonColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Map Editor"), new _ui.UI.Button(buttonColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Settings")];
+  Game.sprites.push(buttons);
+};
+
+exports.buttons = buttons;
+exports.init = init;
+exports.draw = draw;
+
+},{"./ui":9}],8:[function(require,module,exports){
+"use strict";
+
+exports.__esModule = true;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var SpriteList = (function () {
   function SpriteList() {
@@ -178,6 +384,25 @@ var SpriteList = (function () {
     }
   };
 
+  SpriteList.prototype.update = function update() {
+    for (var _iterator3 = Object.keys(this.list), _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
+      var _ref3;
+
+      if (_isArray3) {
+        if (_i3 >= _iterator3.length) break;
+        _ref3 = _iterator3[_i3++];
+      } else {
+        _i3 = _iterator3.next();
+        if (_i3.done) break;
+        _ref3 = _i3.value;
+      }
+
+      var key = _ref3;
+
+      this.list[key].update();
+    }
+  };
+
   SpriteList.prototype.clear = function clear() {
     this.list = {};
   };
@@ -185,148 +410,24 @@ var SpriteList = (function () {
   return SpriteList;
 })();
 
-var canvas = undefined;
-var ctx = undefined;
-var state = 'begin';
-var sprites = new SpriteList();
-var activeSprites = new SpriteList();
-var environmentSprites = new SpriteList();
+exports.SpriteList = SpriteList;
 
-var update = function update() {
-  switch (state) {
-    case 'begin':
-      exports.state = state = 'idle';
-      assetManager.loadAssets(function () {
-        exports.state = state = "main_menu";
-        console.log("Loaded assets");
-        sprites.clear();
-      });
-      break;
-    case 'main_menu':
-      exports.state = state = 'idle';
-      mainMenu.init();
-      //debugger
-      break;
-    default:
-    //console.log("No state matches in update loop")
-  }
-};
-
-var draw = function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  sprites.draw();
-};
-
-var init = function init() {
-  exports.canvas = canvas = document.getElementById("map_editor");
-  exports.ctx = ctx = canvas.getContext("2d");
-};
-
-exports.state = state;
-exports.sprites = sprites;
-exports.canvas = canvas;
-exports.ctx = ctx;
-exports.update = update;
-exports.draw = draw;
-exports.init = init;
-
-},{"./asset_manager":1,"./main_menu":5}],4:[function(require,module,exports){
-"use strict";
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj["default"] = obj; return newObj; } }
-
-var _game = require('./game');
-
-var game = _interopRequireWildcard(_game);
-
-window.game = game;
-
-var FPS = 60;
-
-var AnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || null;
-
-$(document).ready(function () {
-  game.init();
-
-  if (AnimationFrame) {
-    var updateLoop = function updateLoop() {
-      game.update();
-      AnimationFrame(updateLoop);
-    };
-    var drawLoop = function drawLoop() {
-      game.draw();
-      AnimationFrame(drawLoop);
-    };
-
-    updateLoop();
-    drawLoop();
-  } else {
-    console.log("Falling back to setInterval, update your browser!");
-    setInterval(game.update, 1000 / FPS);
-    setInterval(game.draw, 1000 / FPS);
-  }
-});
-
-},{"./game":3}],5:[function(require,module,exports){
-"use strict";
+},{}],9:[function(require,module,exports){
+'use strict';
 
 exports.__esModule = true;
 
-var _ui = require('./ui');
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-var buttons = [];
-var canvas = undefined;
-var ctx = undefined;
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var draw = function draw() {
-  for (var _iterator = buttons, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-    var _ref;
-
-    if (_isArray) {
-      if (_i >= _iterator.length) break;
-      _ref = _iterator[_i++];
-    } else {
-      _i = _iterator.next();
-      if (_i.done) break;
-      _ref = _i.value;
-    }
-
-    var button = _ref;
-
-    buttons.draw();
-  }
-};
-
-var init = function init() {
-  canvas = window.game.canvas;
-  ctx = window.game.ctx;
-
-  var buttonY = function buttonY(nthButton) {
-    return canvas.height / 2 + nthButton * 40;
-  };
-  var buttonsWidth = canvas.width / 5;
-  var buttonColumnX = 20;
-  var buttonsHeight = 30;
-  var buttonColumnY = canvas.height / 2;
-
-  exports.buttons = buttons = [new _ui.UI.Button(buttonColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Map Editor"), new _ui.UI.Button(buttonColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Settings")];
-  window.game.sprites.push(buttons);
-};
-
-exports.buttons = buttons;
-exports.init = init;
-exports.draw = draw;
-
-},{"./ui":6}],6:[function(require,module,exports){
-"use strict";
-
-exports.__esModule = true;
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var _entity = require('./entity');
+
+var _collision = require('./collision');
+
+var Collision = _interopRequireWildcard(_collision);
 
 var Button = (function (_Entity) {
   _inherits(Button, _Entity);
@@ -349,7 +450,7 @@ var Button = (function (_Entity) {
     this.ctx.fillStyle = this.background_color;
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
 
-    var fontSize = 20;
+    var fontSize = 24;
     this.ctx.fillStyle = this.text_color;
     this.ctx.font = fontSize + "px amatic-bold";
     this.ctx.textBaseline = "top";
@@ -360,6 +461,17 @@ var Button = (function (_Entity) {
     var textY = this.pos.y + this.height / 2 - fontSize / 2 - textMargin;
 
     this.ctx.fillText(this.text, textX, textY);
+  };
+
+  Button.prototype.update = function update() {
+    if (Collision.intersects(this, Game.events.mouse)) {
+      this.hovered = true;
+      console.log("Hovering over button");
+      if (Game.events.mouse.clicked) {
+        this.clicked = true;
+        console.log("Clicked button");
+      }
+    }
   };
 
   return Button;
@@ -402,4 +514,4 @@ var UI = { Button: Button, ProgressBar: ProgressBar };
 
 exports.UI = UI;
 
-},{"./entity":2}]},{},[4]);
+},{"./collision":2,"./entity":3}]},{},[6]);

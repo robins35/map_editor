@@ -1,6 +1,6 @@
 import * as game from './game'
 
-window.game = game
+window.Game = game
 
 const FPS = 60
 
@@ -12,15 +12,15 @@ const AnimationFrame = window.requestAnimationFrame ||
                       null;
 
 $(document).ready( () => {
-  game.init()
+  Game.init()
 
   if(AnimationFrame) {
     var updateLoop = () => {
-      game.update()
+      Game.update()
       AnimationFrame(updateLoop)
     }
     var drawLoop = () => {
-      game.draw()
+      Game.draw()
       AnimationFrame(drawLoop)
     }
 
@@ -29,8 +29,8 @@ $(document).ready( () => {
   }
   else {
     console.log("Falling back to setInterval, update your browser!")
-    setInterval(game.update, 1000/FPS)
-    setInterval(game.draw, 1000/FPS)
+    setInterval(Game.update, 1000/FPS)
+    setInterval(Game.draw, 1000/FPS)
   }
 })
 

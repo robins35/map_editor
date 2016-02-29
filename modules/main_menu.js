@@ -12,8 +12,8 @@ var draw = () => {
 
 
 var init = () => {
-  canvas = window.game.canvas
-  ctx = window.game.ctx
+  canvas = Game.canvas
+  ctx = Game.ctx
 
   let buttonY = (nthButton) => ((canvas.height / 2) + (nthButton * (40)))
   let buttonsWidth = canvas.width / 5
@@ -25,7 +25,7 @@ var init = () => {
     new UI.Button(buttonColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Map Editor"),
     new UI.Button(buttonColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Settings")
   ]
-  window.game.sprites.push(buttons)
+  Game.sprites.push(buttons)
 }
 
 
