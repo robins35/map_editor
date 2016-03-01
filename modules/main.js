@@ -15,11 +15,11 @@ $(document).ready( () => {
   Game.init()
 
   if(AnimationFrame) {
-    var updateLoop = () => {
+    let updateLoop = () => {
       Game.update()
       AnimationFrame(updateLoop)
     }
-    var drawLoop = () => {
+    let drawLoop = () => {
       Game.draw()
       AnimationFrame(drawLoop)
     }

@@ -3,11 +3,12 @@ import * as Collision from './collision'
 
 class Button extends Entity {
 
-  constructor(x, y, width, height, text) {
+  constructor(x, y, width, height, text, clickAction) {
     super(x, y)
     this.width = width
     this.height = height
     this.text = text
+    this.clickAction = clickAction
     this.clicked = false
     this.hovered = false
     this.background_color = "#cc6600"
@@ -24,10 +25,10 @@ class Button extends Entity {
     this.ctx.font = fontSize + "px amatic-bold"
     this.ctx.textBaseline = "top"
 
-    var textMargin = 3
-    var textSize = this.ctx.measureText(this.text)
-    var textX = this.pos.x + (this.width / 2) - (textSize.width / 2)
-    var textY = this.pos.y + (this.height / 2) - (fontSize / 2) - textMargin
+    let textMargin = 3
+    let textSize = this.ctx.measureText(this.text)
+    let textX = this.pos.x + (this.width / 2) - (textSize.width / 2)
+    let textY = this.pos.y + (this.height / 2) - (fontSize / 2) - textMargin
 
     this.ctx.fillText(this.text, textX, textY)
   }
@@ -35,10 +36,13 @@ class Button extends Entity {
   update() {
     if (Collision.intersects(this, Game.events.mouse)) {
       this.hovered = true
-      console.log("Hovering over button")
       if (Game.events.mouse.clicked) {
         this.clicked = true
-        console.log("Clicked button")
+        Game.events.mouse.clicked = false
+      }
+      else if (this.clicked && !Game.events.mouse.down) {
+        this.clicked = false
+        this.clickAction()
       }
     }
   }
@@ -71,6 +75,6 @@ class ProgressBar extends Entity {
   }
 }
 
-var UI = { Button, ProgressBar }
+let UI = { Button, ProgressBar }
 
 export { UI }

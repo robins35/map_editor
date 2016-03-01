@@ -1,13 +1,13 @@
-var mouse = {
+let mouse = {
   x: 0,
   y: 0,
   clicked: false,
   down: false
 }
 
-var keysDown = {}
+let keysDown = {}
 
-var init = (canvas) => {
+let init = (canvas) => {
   $(canvas).on('mousemove', (e) => {
     mouse.x = e.offsetX
     mouse.y = e.offsetY

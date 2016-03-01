@@ -82,7 +82,7 @@ exports.imgs = imgs;
 //     imgs : imgs
 // };
 
-},{"./ui":9}],2:[function(require,module,exports){
+},{"./ui":11}],2:[function(require,module,exports){
 "use strict";
 
 exports.__esModule = true;
@@ -183,11 +183,15 @@ var Events = _interopRequireWildcard(_events);
 
 var _asset_manager = require('./asset_manager');
 
-var assetManager = _interopRequireWildcard(_asset_manager);
+var AssetManager = _interopRequireWildcard(_asset_manager);
 
 var _main_menu = require('./main_menu');
 
-var mainMenu = _interopRequireWildcard(_main_menu);
+var MainMenu = _interopRequireWildcard(_main_menu);
+
+var _map_editor = require('./map_editor');
+
+var MapEditor = _interopRequireWildcard(_map_editor);
 
 var States = ['loading', 'ready', 'paused', 'menu'];
 
@@ -202,20 +206,27 @@ var environmentSprites = new _sprite_list.SpriteList();
 var update = function update() {
   switch (state) {
     case 'begin':
-      exports.state = state = 'idle';
-      assetManager.loadAssets(function () {
-        exports.state = state = "load_main_menu";
+      state = 'idle';
+      AssetManager.loadAssets(function () {
+        state = "load_main_menu";
         console.log("Loaded assets");
         sprites.clear();
       });
       break;
     case 'load_main_menu':
-      exports.state = state = 'main_menu';
-      mainMenu.init();
-      //debugger
+      state = 'main_menu';
+      MainMenu.init();
       break;
     case 'main_menu':
       sprites.update();
+      break;
+    case 'load_map_editor':
+      state = 'map_editor';
+      MapEditor.init();
+      break;
+    case 'map_editor':
+      sprites.update();
+      break;
     default:
     //console.log("No state matches in update loop")
   }
@@ -226,13 +237,17 @@ var draw = function draw() {
   sprites.draw();
 };
 
+var setState = function setState(_state) {
+  state = _state;
+};
+
 var init = function init() {
   exports.canvas = canvas = document.getElementById("map_editor");
   exports.ctx = ctx = canvas.getContext("2d");
   events.init(canvas);
 };
 
-exports.state = state;
+exports.setState = setState;
 exports.sprites = sprites;
 exports.canvas = canvas;
 exports.ctx = ctx;
@@ -241,7 +256,7 @@ exports.update = update;
 exports.draw = draw;
 exports.init = init;
 
-},{"./asset_manager":1,"./events":4,"./main_menu":7,"./sprite_list":8}],6:[function(require,module,exports){
+},{"./asset_manager":1,"./events":4,"./main_menu":7,"./map_editor":9,"./sprite_list":10}],6:[function(require,module,exports){
 "use strict";
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj["default"] = obj; return newObj; } }
@@ -260,17 +275,19 @@ $(document).ready(function () {
   Game.init();
 
   if (AnimationFrame) {
-    var updateLoop = function updateLoop() {
-      Game.update();
-      AnimationFrame(updateLoop);
-    };
-    var drawLoop = function drawLoop() {
-      Game.draw();
-      AnimationFrame(drawLoop);
-    };
+    (function () {
+      var updateLoop = function updateLoop() {
+        Game.update();
+        AnimationFrame(updateLoop);
+      };
+      var drawLoop = function drawLoop() {
+        Game.draw();
+        AnimationFrame(drawLoop);
+      };
 
-    updateLoop();
-    drawLoop();
+      updateLoop();
+      drawLoop();
+    })();
   } else {
     console.log("Falling back to setInterval, update your browser!");
     setInterval(Game.update, 1000 / FPS);
@@ -279,7 +296,7 @@ $(document).ready(function () {
 });
 
 },{"./game":5}],7:[function(require,module,exports){
-"use strict";
+'use strict';
 
 exports.__esModule = true;
 
@@ -320,7 +337,16 @@ var init = function init() {
   var buttonsHeight = 30;
   var buttonColumnY = canvas.height / 2;
 
-  exports.buttons = buttons = [new _ui.UI.Button(buttonColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Map Editor"), new _ui.UI.Button(buttonColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Settings")];
+  var loadMapEditor = function loadMapEditor() {
+    Game.sprites.clear();
+    Game.setState('load_map_editor');
+  };
+
+  var loadSettings = function loadSettings() {
+    console.log("Stubbing settings load action");
+  };
+
+  exports.buttons = buttons = [new _ui.UI.Button(buttonColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Map Editor", loadMapEditor), new _ui.UI.Button(buttonColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Settings", loadSettings)];
   Game.sprites.push(buttons);
 };
 
@@ -328,12 +354,84 @@ exports.buttons = buttons;
 exports.init = init;
 exports.draw = draw;
 
-},{"./ui":9}],8:[function(require,module,exports){
+},{"./ui":11}],8:[function(require,module,exports){
 "use strict";
 
 exports.__esModule = true;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Map = function Map() {
+  _classCallCheck(this, Map);
+};
+
+exports.Map = Map;
+
+},{}],9:[function(require,module,exports){
+'use strict';
+
+exports.__esModule = true;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _entity = require('./entity');
+
+var _map = require('./map');
+
+var canvas = undefined;
+var ctx = undefined;
+var grid = undefined;
+var map = new _map.Map();
+
+var Grid = (function (_Entity) {
+  _inherits(Grid, _Entity);
+
+  function Grid() {
+    var size = arguments.length <= 0 || arguments[0] === undefined ? 32 : arguments[0];
+
+    _classCallCheck(this, Grid);
+
+    _Entity.call(this, 0, 0);
+    this.size = size;
+    this.color = "#cccccc";
+  }
+
+  Grid.prototype.draw = function draw() {
+    ctx.beginPath();
+    for (var x = 0; x <= canvas.width; x += this.size) {
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+    }
+
+    for (var y = 0; y <= canvas.height; y += this.size) {
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+    }
+
+    ctx.strokeStyle = this.color;
+    ctx.stroke();
+  };
+
+  return Grid;
+})(_entity.Entity);
+
+var init = function init() {
+  ctx = Game.ctx;
+  canvas = Game.canvas;
+  grid = new Grid();
+  Game.sprites.push(grid);
+};
+
+exports.init = init;
+
+},{"./entity":3,"./map":8}],10:[function(require,module,exports){
+'use strict';
+
+exports.__esModule = true;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var SpriteList = (function () {
   function SpriteList() {
@@ -399,7 +497,11 @@ var SpriteList = (function () {
 
       var key = _ref3;
 
-      this.list[key].update();
+      if (this.list[key] == undefined) {
+        console.log('sprites deleted in middle of update');
+        continue;
+      }
+      if (this.list[key].update != undefined) this.list[key].update();
     }
   };
 
@@ -412,7 +514,7 @@ var SpriteList = (function () {
 
 exports.SpriteList = SpriteList;
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -432,13 +534,14 @@ var Collision = _interopRequireWildcard(_collision);
 var Button = (function (_Entity) {
   _inherits(Button, _Entity);
 
-  function Button(x, y, width, height, text) {
+  function Button(x, y, width, height, text, clickAction) {
     _classCallCheck(this, Button);
 
     _Entity.call(this, x, y);
     this.width = width;
     this.height = height;
     this.text = text;
+    this.clickAction = clickAction;
     this.clicked = false;
     this.hovered = false;
     this.background_color = "#cc6600";
@@ -466,10 +569,12 @@ var Button = (function (_Entity) {
   Button.prototype.update = function update() {
     if (Collision.intersects(this, Game.events.mouse)) {
       this.hovered = true;
-      console.log("Hovering over button");
       if (Game.events.mouse.clicked) {
         this.clicked = true;
-        console.log("Clicked button");
+        Game.events.mouse.clicked = false;
+      } else if (this.clicked && !Game.events.mouse.down) {
+        this.clicked = false;
+        this.clickAction();
       }
     }
   };

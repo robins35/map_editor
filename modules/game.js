@@ -1,23 +1,24 @@
 import { SpriteList } from './sprite_list'
 import * as Events from './events'
-import * as assetManager from './asset_manager'
-import * as mainMenu from './main_menu'
+import * as AssetManager from './asset_manager'
+import * as MainMenu from './main_menu'
+import * as MapEditor from './map_editor'
 
 const States = ['loading', 'ready', 'paused', 'menu']
 
-var canvas = undefined
-var ctx = undefined
-var events = Events
-var state = 'begin'
-var sprites = new SpriteList()
-var activeSprites = new SpriteList()
-var environmentSprites = new SpriteList()
+let canvas = undefined
+let ctx = undefined
+let events = Events
+let state = 'begin'
+let sprites = new SpriteList()
+let activeSprites = new SpriteList()
+let environmentSprites = new SpriteList()
 
-var update = () => {
+let update = () => {
   switch (state) {
     case 'begin':
       state = 'idle'
-      assetManager.loadAssets(() => {
+      AssetManager.loadAssets(() => {
         state = "load_main_menu";
         console.log("Loaded assets");
         sprites.clear()
@@ -25,25 +26,36 @@ var update = () => {
       break
     case 'load_main_menu':
       state = 'main_menu'
-      mainMenu.init()
-      //debugger
+      MainMenu.init()
       break
     case 'main_menu':
       sprites.update()
+      break
+    case 'load_map_editor':
+      state = 'map_editor'
+      MapEditor.init()
+      break
+    case 'map_editor':
+      sprites.update()
+      break
     default:
       //console.log("No state matches in update loop")
   }
 }
 
-var draw = () => {
+let draw = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   sprites.draw()
 }
 
-var init = () => {
+let setState = (_state) => {
+  state = _state
+}
+
+let init = () => {
   canvas = document.getElementById("map_editor")
   ctx = canvas.getContext("2d")
   events.init(canvas)
 }
 
-export { state, sprites, canvas, ctx, events, update, draw, init }
+export { setState, sprites, canvas, ctx, events, update, draw, init }

@@ -22,7 +22,12 @@ export class SpriteList {
 
   update() {
     for(let key of Object.keys(this.list)) {
-      this.list[key].update()
+      if (this.list[key] == undefined) {
+        console.log('sprites deleted in middle of update')
+        continue
+      }
+      if (this.list[key].update != undefined)
+        this.list[key].update()
     }
   }
 

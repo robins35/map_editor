@@ -1,17 +1,17 @@
 import { UI } from './ui'
 
-var buttons = []
-var canvas = undefined
-var ctx = undefined
+let buttons = []
+let canvas = undefined
+let ctx = undefined
 
-var draw = () => {
+let draw = () => {
   for (let button of buttons) {
     buttons.draw()
   }
 }
 
 
-var init = () => {
+let init = () => {
   canvas = Game.canvas
   ctx = Game.ctx
 
@@ -21,9 +21,18 @@ var init = () => {
   let buttonsHeight = 30
   let buttonColumnY = (canvas.height / 2)
 
+  let loadMapEditor = () => {
+    Game.sprites.clear()
+    Game.setState('load_map_editor')
+  }
+
+  let loadSettings = () => {
+    console.log("Stubbing settings load action")
+  }
+
   buttons = [
-    new UI.Button(buttonColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Map Editor"),
-    new UI.Button(buttonColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Settings")
+    new UI.Button(buttonColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Map Editor", loadMapEditor),
+    new UI.Button(buttonColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Settings", loadSettings)
   ]
   Game.sprites.push(buttons)
 }
