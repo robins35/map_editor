@@ -1,10 +1,12 @@
 import { SpriteList } from './sprite_list'
+import { Entity } from './entity'
 import * as Events from './events'
 import * as AssetManager from './asset_manager'
 import * as MainMenu from './main_menu'
 import * as MapEditor from './map_editor'
 
 const States = ['loading', 'ready', 'paused', 'menu']
+
 
 let canvas = undefined
 let ctx = undefined
@@ -36,6 +38,7 @@ let update = () => {
       MapEditor.init()
       break
     case 'map_editor':
+      MapEditor.update()
       sprites.update()
       break
     default:

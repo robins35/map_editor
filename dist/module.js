@@ -107,6 +107,7 @@ var Entity = (function () {
   function Entity(x, y) {
     _classCallCheck(this, Entity);
 
+    Entity.id = Entity.id === undefined ? 1 : Entity.id;
     this.id = Entity.id++;
     this.pos = { x: x, y: y };
     this.canvas = Game.canvas;
@@ -121,8 +122,6 @@ var Entity = (function () {
 })();
 
 exports.Entity = Entity;
-
-Entity.id = 1;
 
 },{}],4:[function(require,module,exports){
 'use strict';
@@ -177,6 +176,8 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 var _sprite_list = require('./sprite_list');
 
+var _entity = require('./entity');
+
 var _events = require('./events');
 
 var Events = _interopRequireWildcard(_events);
@@ -225,6 +226,7 @@ var update = function update() {
       MapEditor.init();
       break;
     case 'map_editor':
+      MapEditor.update();
       sprites.update();
       break;
     default:
@@ -256,7 +258,7 @@ exports.update = update;
 exports.draw = draw;
 exports.init = init;
 
-},{"./asset_manager":1,"./events":4,"./main_menu":7,"./map_editor":9,"./sprite_list":10}],6:[function(require,module,exports){
+},{"./asset_manager":1,"./entity":3,"./events":4,"./main_menu":7,"./map_editor":9,"./sprite_list":10}],6:[function(require,module,exports){
 "use strict";
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj["default"] = obj; return newObj; } }
@@ -361,8 +363,11 @@ exports.__esModule = true;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Map = function Map() {
+var Map = function Map(width, height) {
   _classCallCheck(this, Map);
+
+  this.width = width;
+  this.height = height;
 };
 
 exports.Map = Map;
@@ -380,53 +385,72 @@ var _entity = require('./entity');
 
 var _map = require('./map');
 
+var _view_port = require('./view_port');
+
 var canvas = undefined;
 var ctx = undefined;
 var grid = undefined;
-var map = new _map.Map();
+var viewPort = undefined;
+var map = undefined;
 
 var Grid = (function (_Entity) {
   _inherits(Grid, _Entity);
 
-  function Grid() {
-    var size = arguments.length <= 0 || arguments[0] === undefined ? 32 : arguments[0];
+  function Grid(_viewPort) {
+    var size = arguments.length <= 1 || arguments[1] === undefined ? 32 : arguments[1];
 
     _classCallCheck(this, Grid);
 
     _Entity.call(this, 0, 0);
     this.size = size;
     this.color = "#cccccc";
+    this.viewPort = _viewPort;
   }
 
   Grid.prototype.draw = function draw() {
     ctx.beginPath();
-    for (var x = 0; x <= canvas.width; x += this.size) {
+    for (var x = this.pos.x + 0.5; x <= canvas.width; x += this.size) {
       ctx.moveTo(x, 0);
       ctx.lineTo(x, canvas.height);
     }
 
-    for (var y = 0; y <= canvas.height; y += this.size) {
+    for (var y = this.pos.y + 0.5; y <= canvas.height; y += this.size) {
       ctx.moveTo(0, y);
       ctx.lineTo(canvas.width, y);
     }
 
     ctx.strokeStyle = this.color;
+    ctx.lineWidth = 1;
     ctx.stroke();
+  };
+
+  Grid.prototype.update = function update() {
+    var x = this.size - this.viewPort.pos.x % this.size;
+    var y = this.size - this.viewPort.pos.y % this.size;
+    this.move(x, y);
   };
 
   return Grid;
 })(_entity.Entity);
 
+var update = function update() {
+  viewPort.update();
+  grid.update();
+};
+
 var init = function init() {
   ctx = Game.ctx;
   canvas = Game.canvas;
-  grid = new Grid();
+  map = new _map.Map(canvas.width * 2, canvas.height * 2);
+  viewPort = new _view_port.ViewPort(map);
+  grid = new Grid(viewPort);
   Game.sprites.push(grid);
 };
 
 exports.init = init;
+exports.update = update;
 
-},{"./entity":3,"./map":8}],10:[function(require,module,exports){
+},{"./entity":3,"./map":8,"./view_port":12}],10:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -619,4 +643,55 @@ var UI = { Button: Button, ProgressBar: ProgressBar };
 
 exports.UI = UI;
 
-},{"./collision":2,"./entity":3}]},{},[6]);
+},{"./collision":2,"./entity":3}],12:[function(require,module,exports){
+'use strict';
+
+exports.__esModule = true;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _entity = require('./entity');
+
+var ViewPort = (function (_Entity) {
+  _inherits(ViewPort, _Entity);
+
+  function ViewPort(map) {
+    _classCallCheck(this, ViewPort);
+
+    _Entity.call(this, 0, 0);
+    this.map = map;
+    this.width = Game.canvas.width;
+    this.height = Game.canvas.height;
+    this.speed = 2;
+
+    this.maxX = map.width - this.width;
+    this.maxY = map.height - this.height;
+  }
+
+  ViewPort.prototype.update = function update() {
+    if (Game.events.keysDown[37]) {
+      this.pos.x -= this.speed;
+      if (this.pos.x < 0) this.pos.x = 0;
+    }
+    if (Game.events.keysDown[38]) {
+      this.pos.y -= this.speed;
+      if (this.pos.y < 0) this.pos.y = 0;
+    }
+    if (Game.events.keysDown[39]) {
+      this.pos.x += this.speed;
+      if (this.pos.x + this.width > this.map.width) this.pos.x = this.maxX;
+    }
+    if (Game.events.keysDown[40]) {
+      this.pos.y += this.speed;
+      if (this.pos.y + this.height > this.map.height) this.pos.y = this.maxY;
+    }
+  };
+
+  return ViewPort;
+})(_entity.Entity);
+
+exports.ViewPort = ViewPort;
+
+},{"./entity":3}]},{},[6]);
