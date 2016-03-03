@@ -94,7 +94,23 @@ var intersects = function intersects(obj, point) {
   return xIntersect && yIntersect;
 };
 
+var vectorSum = function vectorSum(vector1, vector2) {
+  return {
+    x: vector1.x + vector2.x,
+    y: vector1.y + vector2.y
+  };
+};
+
+var vectorDifference = function vectorDifference(vector1, vector2) {
+  return {
+    x: vector1.x - vector2.x,
+    y: vector1.y - vector2.y
+  };
+};
+
 exports.intersects = intersects;
+exports.vectorSum = vectorSum;
+exports.vectorDifference = vectorDifference;
 
 },{}],3:[function(require,module,exports){
 "use strict";
@@ -104,18 +120,34 @@ exports.__esModule = true;
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Entity = (function () {
-  function Entity(x, y) {
+  function Entity(x, y, width, height) {
     _classCallCheck(this, Entity);
 
     Entity.id = Entity.id === undefined ? 1 : Entity.id;
     this.id = Entity.id++;
     this.pos = { x: x, y: y };
+    this.width = width;
+    this.height = height;
     this.canvas = Game.canvas;
     this.ctx = Game.ctx;
   }
 
+  Entity.prototype.maxX = function maxX() {
+    return this.canvas.width - this.width;
+  };
+
+  Entity.prototype.maxY = function maxY() {
+    return this.canvas.height - this.height;
+  };
+
   Entity.prototype.move = function move(x, y) {
     this.pos = { x: x, y: y };
+  };
+
+  Entity.prototype.safeMove = function safeMove(x, y) {
+    if (x > this.maxX()) this.pos.x = this.maxX();else if (x < 0) this.pos.x = 0;else this.pos.x = x;
+
+    if (y > this.maxY()) this.pos.y = this.maxY();else if (y < 0) this.pos.y = 0;else this.pos.y = y;
   };
 
   return Entity;
@@ -131,7 +163,11 @@ var mouse = {
   x: 0,
   y: 0,
   clicked: false,
-  down: false
+  down: false,
+  rightClicked: false,
+  rightDown: false,
+  dragging: false,
+  dragStart: null
 };
 
 var keysDown = {};
@@ -142,16 +178,46 @@ var init = function init(canvas) {
     mouse.y = e.offsetY;
     mouse.clicked = e.which == 1 && !mouse.down;
     mouse.down = e.which == 1;
+    mouse.rightClicked = e.which == 3 && !mouse.rightDown;
+    mouse.rightDown = e.which == 3;
+    if (e.which == 1 && mouse.down && !mouse.clicked && mouse.dragging == false) {
+      mouse.dragging = true;
+      mouse.dragStart = { x: mouse.x, y: mouse.y };
+    }
   });
 
   $(canvas).on('mousedown', function (e) {
-    mouse.clicked = !mouse.down;
-    mouse.down = true;
+    if (e.which == 1) {
+      mouse.clicked = !mouse.down;
+      mouse.down = true;
+    } else if (e.which == 3) {
+      mouse.rightClicked = !mouse.rightDown;
+      mouse.rightDown = true;
+    }
   });
 
   $(canvas).on('mouseup', function (e) {
-    mouse.down = false;
-    mouse.clicked = false;
+    if (e.which == 1) {
+      mouse.down = false;
+      mouse.clicked = false;
+      if (mouse.dragging) {
+        mouse.dragging = false;
+        mouse.dragStart = null;
+        $(canvas).css({ 'cursor': 'default' });
+      }
+    } else if (e.which == 3) {
+      mouse.rightDown = false;
+      mouse.rightClicked = false;
+    }
+  });
+
+  $(canvas).on('contextmenu', function (e) {
+    return false;
+  });
+
+  $(canvas).on('mouseleave', function (e) {
+    mouse.dragging = false;
+    mouse.dragStar = null;
   });
 
   $(document).on('keydown', function (e) {
@@ -401,7 +467,7 @@ var Grid = (function (_Entity) {
 
     _classCallCheck(this, Grid);
 
-    _Entity.call(this, 0, 0);
+    _Entity.call(this, 0, 0, canvas.width, canvas.height);
     this.size = size;
     this.color = "#cccccc";
     this.viewPort = _viewPort;
@@ -409,14 +475,14 @@ var Grid = (function (_Entity) {
 
   Grid.prototype.draw = function draw() {
     ctx.beginPath();
-    for (var x = this.pos.x + 0.5; x <= canvas.width; x += this.size) {
+    for (var x = this.pos.x + 0.5; x <= this.width; x += this.size) {
       ctx.moveTo(x, 0);
-      ctx.lineTo(x, canvas.height);
+      ctx.lineTo(x, this.height);
     }
 
-    for (var y = this.pos.y + 0.5; y <= canvas.height; y += this.size) {
+    for (var y = this.pos.y + 0.5; y <= this.height; y += this.size) {
       ctx.moveTo(0, y);
-      ctx.lineTo(canvas.width, y);
+      ctx.lineTo(this.width, y);
     }
 
     ctx.strokeStyle = this.color;
@@ -561,9 +627,7 @@ var Button = (function (_Entity) {
   function Button(x, y, width, height, text, clickAction) {
     _classCallCheck(this, Button);
 
-    _Entity.call(this, x, y);
-    this.width = width;
-    this.height = height;
+    _Entity.call(this, x, y, width, height);
     this.text = text;
     this.clickAction = clickAction;
     this.clicked = false;
@@ -612,11 +676,9 @@ var ProgressBar = (function (_Entity2) {
   function ProgressBar(total) {
     _classCallCheck(this, ProgressBar);
 
-    _Entity2.call(this, 200, 200);
+    _Entity2.call(this, 200, 200, 300, 20);
     this.total = total;
     this.progress = 0;
-    this.width = 300;
-    this.height = 20;
     this.color = "#ffffff";
   }
 
@@ -648,11 +710,17 @@ exports.UI = UI;
 
 exports.__esModule = true;
 
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var _entity = require('./entity');
+
+var _collision = require('./collision');
+
+var Collision = _interopRequireWildcard(_collision);
 
 var ViewPort = (function (_Entity) {
   _inherits(ViewPort, _Entity);
@@ -660,32 +728,43 @@ var ViewPort = (function (_Entity) {
   function ViewPort(map) {
     _classCallCheck(this, ViewPort);
 
-    _Entity.call(this, 0, 0);
+    _Entity.call(this, 0, 0, Game.canvas.width, Game.canvas.height);
     this.map = map;
-    this.width = Game.canvas.width;
-    this.height = Game.canvas.height;
     this.speed = 2;
-
-    this.maxX = map.width - this.width;
-    this.maxY = map.height - this.height;
+    this.positionAtDragStart = null;
   }
 
+  ViewPort.prototype.maxX = function maxX() {
+    return this.map.width - this.width;
+  };
+
+  ViewPort.prototype.maxY = function maxY() {
+    return this.map.height - this.height;
+  };
+
   ViewPort.prototype.update = function update() {
-    if (Game.events.keysDown[37]) {
-      this.pos.x -= this.speed;
-      if (this.pos.x < 0) this.pos.x = 0;
-    }
-    if (Game.events.keysDown[38]) {
-      this.pos.y -= this.speed;
-      if (this.pos.y < 0) this.pos.y = 0;
-    }
-    if (Game.events.keysDown[39]) {
-      this.pos.x += this.speed;
-      if (this.pos.x + this.width > this.map.width) this.pos.x = this.maxX;
-    }
-    if (Game.events.keysDown[40]) {
-      this.pos.y += this.speed;
-      if (this.pos.y + this.height > this.map.height) this.pos.y = this.maxY;
+    if (Game.events.keysDown[37]) this.safeMove(this.pos.x - this.speed, this.pos.y);
+
+    if (Game.events.keysDown[38]) this.safeMove(this.pos.x, this.pos.y - this.speed);
+
+    if (Game.events.keysDown[39]) this.safeMove(this.pos.x + this.speed, this.pos.y);
+
+    if (Game.events.keysDown[40]) this.safeMove(this.pos.x, this.pos.y + this.speed);
+
+    if (Game.events.mouse.dragging) {
+      if (this.positionAtDragStart === null) {
+        this.positionAtDragStart = Object.assign({}, this.pos);
+        $(Game.canvas).css({ 'cursor': 'move' });
+      }
+
+      var start = Game.events.mouse.dragStart;
+      var end = { x: Game.events.mouse.x, y: Game.events.mouse.y };
+      var moveVector = Collision.vectorDifference(start, end);
+
+      var movePosition = Collision.vectorSum(this.positionAtDragStart, moveVector);
+      this.safeMove(movePosition.x, movePosition.y);
+    } else {
+      this.positionAtDragStart = null;
     }
   };
 
@@ -694,4 +773,4 @@ var ViewPort = (function (_Entity) {
 
 exports.ViewPort = ViewPort;
 
-},{"./entity":3}]},{},[6]);
+},{"./collision":2,"./entity":3}]},{},[6]);

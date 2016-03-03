@@ -4,9 +4,7 @@ import * as Collision from './collision'
 class Button extends Entity {
 
   constructor(x, y, width, height, text, clickAction) {
-    super(x, y)
-    this.width = width
-    this.height = height
+    super(x, y, width, height)
     this.text = text
     this.clickAction = clickAction
     this.clicked = false
@@ -50,11 +48,9 @@ class Button extends Entity {
 
 class ProgressBar extends Entity {
   constructor (total) {
-    super(200, 200)
+    super(200, 200, 300, 20)
     this.total = total
     this.progress = 0
-    this.width = 300
-    this.height = 20
     this.color = "#ffffff"
   }
 

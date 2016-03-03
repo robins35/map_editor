@@ -1,37 +1,50 @@
 import { Entity } from './entity'
+import * as Collision from './collision'
 
 export class ViewPort extends Entity {
   constructor(map) {
-    super(0, 0)
+    super(0, 0, Game.canvas.width, Game.canvas.height)
     this.map = map
-    this.width = Game.canvas.width
-    this.height = Game.canvas.height
     this.speed = 2
+    this.positionAtDragStart = null
+  }
 
-    this.maxX = map.width - this.width
-    this.maxY = map.height - this.height
+  maxX() {
+    return this.map.width - this.width
+  }
+
+  maxY() {
+    return this.map.height - this.height
   }
 
   update() {
-    if(Game.events.keysDown[37]) {
-      this.pos.x -= this.speed
-      if(this.pos.x < 0)
-        this.pos.x = 0
+    if(Game.events.keysDown[37])
+      this.safeMove(this.pos.x - this.speed, this.pos.y)
+
+    if(Game.events.keysDown[38]) 
+      this.safeMove(this.pos.x, this.pos.y - this.speed)
+
+    if(Game.events.keysDown[39])
+      this.safeMove(this.pos.x + this.speed, this.pos.y)
+
+    if(Game.events.keysDown[40])
+      this.safeMove(this.pos.x, this.pos.y + this.speed)
+
+    if(Game.events.mouse.dragging) {
+      if(this.positionAtDragStart === null) {
+        this.positionAtDragStart = Object.assign({}, this.pos)
+        $(Game.canvas).css({'cursor' : 'move'})
+      }
+
+      let start = Game.events.mouse.dragStart
+      let end = { x: Game.events.mouse.x, y: Game.events.mouse.y }
+      let moveVector = Collision.vectorDifference(start, end)
+
+      let movePosition = Collision.vectorSum(this.positionAtDragStart, moveVector)
+      this.safeMove(movePosition.x, movePosition.y)
     }
-    if(Game.events.keysDown[38]) {
-      this.pos.y -= this.speed
-      if(this.pos.y < 0)
-        this.pos.y = 0
-    }
-    if(Game.events.keysDown[39]) {
-      this.pos.x += this.speed
-      if((this.pos.x + this.width) > this.map.width)
-        this.pos.x = this.maxX
-    }
-    if(Game.events.keysDown[40]) {
-      this.pos.y += this.speed
-      if((this.pos.y + this.height) > this.map.height)
-        this.pos.y = this.maxY
+    else {
+      this.positionAtDragStart = null
     }
   }
 }

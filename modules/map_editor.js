@@ -10,7 +10,7 @@ let map = undefined
 
 class Grid extends Entity {
   constructor(_viewPort, size = 32) {
-    super(0, 0)
+    super(0, 0, canvas.width, canvas.height)
     this.size = size
     this.color = "#cccccc"
     this.viewPort = _viewPort
@@ -18,14 +18,14 @@ class Grid extends Entity {
 
   draw() {
     ctx.beginPath()
-    for(let x = this.pos.x + 0.5; x <= canvas.width; x += this.size) {
+    for(let x = this.pos.x + 0.5; x <= this.width; x += this.size) {
       ctx.moveTo(x, 0)
-      ctx.lineTo(x, canvas.height)
+      ctx.lineTo(x, this.height)
     }
 
-    for(let y = this.pos.y + 0.5; y <= canvas.height; y += this.size) {
+    for(let y = this.pos.y + 0.5; y <= this.height; y += this.size) {
       ctx.moveTo(0, y)
-      ctx.lineTo(canvas.width, y)
+      ctx.lineTo(this.width, y)
     }
 
     ctx.strokeStyle = this.color
