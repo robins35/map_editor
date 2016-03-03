@@ -37,3 +37,41 @@ export class Entity {
       this.pos.y = y
   }
 }
+
+export class EntityList {
+  constructor() {
+    this.list = {}
+  }
+
+  push(entity) {
+    if(entity instanceof Array) {
+      for(let _entity of entity) {
+        this.push(_entity)
+      }
+    }
+    else {
+      this.list[entity.id] = entity
+    }
+  }
+
+  draw() {
+    for(let key of Object.keys(this.list)) {
+      this.list[key].draw()
+    }
+  }
+
+  update() {
+    for(let key of Object.keys(this.list)) {
+      if (this.list[key] == undefined) {
+        console.log('entity deleted in middle of update')
+        continue
+      }
+      if (this.list[key].update != undefined)
+        this.list[key].update()
+    }
+  }
+
+  clear() {
+    this.list = {}
+  }
+}

@@ -26,7 +26,7 @@ var loadImagePaths = (downloadCallback) => {
 
 var loadImages = function(downloadCallback) {
     var progressBar = new UI.ProgressBar(imgPaths.length)
-    Game.sprites.push(progressBar)
+    Game.uiElements.push(progressBar)
 
     if (imgPaths.length == 0) downloadCallback();
     for (var i = 0; i < imgPaths.length; i++) {

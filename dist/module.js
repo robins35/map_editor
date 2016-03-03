@@ -31,7 +31,7 @@ var loadImagePaths = function loadImagePaths(downloadCallback) {
 
 var loadImages = function loadImages(downloadCallback) {
     var progressBar = new _ui.UI.ProgressBar(imgPaths.length);
-    Game.sprites.push(progressBar);
+    Game.uiElements.push(progressBar);
 
     if (imgPaths.length == 0) downloadCallback();
     for (var i = 0; i < imgPaths.length; i++) {
@@ -82,7 +82,7 @@ exports.imgs = imgs;
 //     imgs : imgs
 // };
 
-},{"./ui":11}],2:[function(require,module,exports){
+},{"./ui":10}],2:[function(require,module,exports){
 "use strict";
 
 exports.__esModule = true;
@@ -113,11 +113,11 @@ exports.vectorSum = vectorSum;
 exports.vectorDifference = vectorDifference;
 
 },{}],3:[function(require,module,exports){
-"use strict";
+'use strict';
 
 exports.__esModule = true;
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var Entity = (function () {
   function Entity(x, y, width, height) {
@@ -154,6 +154,87 @@ var Entity = (function () {
 })();
 
 exports.Entity = Entity;
+
+var EntityList = (function () {
+  function EntityList() {
+    _classCallCheck(this, EntityList);
+
+    this.list = {};
+  }
+
+  EntityList.prototype.push = function push(entity) {
+    if (entity instanceof Array) {
+      for (var _iterator = entity, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+        var _ref;
+
+        if (_isArray) {
+          if (_i >= _iterator.length) break;
+          _ref = _iterator[_i++];
+        } else {
+          _i = _iterator.next();
+          if (_i.done) break;
+          _ref = _i.value;
+        }
+
+        var _entity = _ref;
+
+        this.push(_entity);
+      }
+    } else {
+      this.list[entity.id] = entity;
+    }
+  };
+
+  EntityList.prototype.draw = function draw() {
+    for (var _iterator2 = Object.keys(this.list), _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+      var _ref2;
+
+      if (_isArray2) {
+        if (_i2 >= _iterator2.length) break;
+        _ref2 = _iterator2[_i2++];
+      } else {
+        _i2 = _iterator2.next();
+        if (_i2.done) break;
+        _ref2 = _i2.value;
+      }
+
+      var key = _ref2;
+
+      this.list[key].draw();
+    }
+  };
+
+  EntityList.prototype.update = function update() {
+    for (var _iterator3 = Object.keys(this.list), _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
+      var _ref3;
+
+      if (_isArray3) {
+        if (_i3 >= _iterator3.length) break;
+        _ref3 = _iterator3[_i3++];
+      } else {
+        _i3 = _iterator3.next();
+        if (_i3.done) break;
+        _ref3 = _i3.value;
+      }
+
+      var key = _ref3;
+
+      if (this.list[key] == undefined) {
+        console.log('entity deleted in middle of update');
+        continue;
+      }
+      if (this.list[key].update != undefined) this.list[key].update();
+    }
+  };
+
+  EntityList.prototype.clear = function clear() {
+    this.list = {};
+  };
+
+  return EntityList;
+})();
+
+exports.EntityList = EntityList;
 
 },{}],4:[function(require,module,exports){
 'use strict';
@@ -240,8 +321,6 @@ exports.__esModule = true;
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-var _sprite_list = require('./sprite_list');
-
 var _entity = require('./entity');
 
 var _events = require('./events');
@@ -266,9 +345,9 @@ var canvas = undefined;
 var ctx = undefined;
 var events = Events;
 var state = 'begin';
-var sprites = new _sprite_list.SpriteList();
-var activeSprites = new _sprite_list.SpriteList();
-var environmentSprites = new _sprite_list.SpriteList();
+var sprites = new _entity.EntityList();
+var uiElements = new _entity.EntityList();
+var environmentElements = new _entity.EntityList();
 
 var update = function update() {
   switch (state) {
@@ -277,7 +356,7 @@ var update = function update() {
       AssetManager.loadAssets(function () {
         state = "load_main_menu";
         console.log("Loaded assets");
-        sprites.clear();
+        uiElements.clear();
       });
       break;
     case 'load_main_menu':
@@ -285,7 +364,7 @@ var update = function update() {
       MainMenu.init();
       break;
     case 'main_menu':
-      sprites.update();
+      uiElements.update();
       break;
     case 'load_map_editor':
       state = 'map_editor';
@@ -294,6 +373,8 @@ var update = function update() {
     case 'map_editor':
       MapEditor.update();
       sprites.update();
+      uiElements.update();
+      environmentElements.update();
       break;
     default:
     //console.log("No state matches in update loop")
@@ -303,6 +384,8 @@ var update = function update() {
 var draw = function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   sprites.draw();
+  uiElements.draw();
+  environmentElements.draw();
 };
 
 var setState = function setState(_state) {
@@ -315,8 +398,11 @@ var init = function init() {
   events.init(canvas);
 };
 
+exports.AssetManager = AssetManager;
 exports.setState = setState;
 exports.sprites = sprites;
+exports.uiElements = uiElements;
+exports.environmentElements = environmentElements;
 exports.canvas = canvas;
 exports.ctx = ctx;
 exports.events = events;
@@ -324,7 +410,7 @@ exports.update = update;
 exports.draw = draw;
 exports.init = init;
 
-},{"./asset_manager":1,"./entity":3,"./events":4,"./main_menu":7,"./map_editor":9,"./sprite_list":10}],6:[function(require,module,exports){
+},{"./asset_manager":1,"./entity":3,"./events":4,"./main_menu":7,"./map_editor":9}],6:[function(require,module,exports){
 "use strict";
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj["default"] = obj; return newObj; } }
@@ -406,7 +492,7 @@ var init = function init() {
   var buttonColumnY = canvas.height / 2;
 
   var loadMapEditor = function loadMapEditor() {
-    Game.sprites.clear();
+    Game.uiElements.clear();
     Game.setState('load_map_editor');
   };
 
@@ -415,14 +501,14 @@ var init = function init() {
   };
 
   exports.buttons = buttons = [new _ui.UI.Button(buttonColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Map Editor", loadMapEditor), new _ui.UI.Button(buttonColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Settings", loadSettings)];
-  Game.sprites.push(buttons);
+  Game.uiElements.push(buttons);
 };
 
 exports.buttons = buttons;
 exports.init = init;
 exports.draw = draw;
 
-},{"./ui":11}],8:[function(require,module,exports){
+},{"./ui":10}],8:[function(require,module,exports){
 "use strict";
 
 exports.__esModule = true;
@@ -457,20 +543,48 @@ var canvas = undefined;
 var ctx = undefined;
 var grid = undefined;
 var viewPort = undefined;
+var textureMenu = undefined;
 var map = undefined;
 
-var Grid = (function (_Entity) {
-  _inherits(Grid, _Entity);
+var TextureMenu = (function (_Entity) {
+  _inherits(TextureMenu, _Entity);
 
-  function Grid(_viewPort) {
-    var size = arguments.length <= 1 || arguments[1] === undefined ? 32 : arguments[1];
+  function TextureMenu() {
+    _classCallCheck(this, TextureMenu);
+
+    var height = Game.canvas.height / 5;
+    var y = Game.canvas.height - height;
+    _Entity.call(this, 0, y, Game.canvas.width, height);
+    this.backgroundColor = '#381807';
+    this.opacity = 0.4;
+    this.padding = 5;
+  }
+
+  TextureMenu.prototype.draw = function draw() {
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.fillStyle = this.backgroundColor;
+    this.ctx.globalAlpha = this.opacity;
+    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+    this.ctx.restore();
+  };
+
+  return TextureMenu;
+})(_entity.Entity);
+
+var Grid = (function (_Entity2) {
+  _inherits(Grid, _Entity2);
+
+  function Grid(_viewPort, _textureMenu) {
+    var size = arguments.length <= 2 || arguments[2] === undefined ? 32 : arguments[2];
 
     _classCallCheck(this, Grid);
 
-    _Entity.call(this, 0, 0, canvas.width, canvas.height);
+    _Entity2.call(this, 0, 0, canvas.width, textureMenu.pos.y);
     this.size = size;
     this.color = "#cccccc";
     this.viewPort = _viewPort;
+    this.textureMenu = _textureMenu;
   }
 
   Grid.prototype.draw = function draw() {
@@ -501,7 +615,7 @@ var Grid = (function (_Entity) {
 
 var update = function update() {
   viewPort.update();
-  grid.update();
+  //grid.update()
 };
 
 var init = function init() {
@@ -509,102 +623,16 @@ var init = function init() {
   canvas = Game.canvas;
   map = new _map.Map(canvas.width * 2, canvas.height * 2);
   viewPort = new _view_port.ViewPort(map);
-  grid = new Grid(viewPort);
-  Game.sprites.push(grid);
+  textureMenu = new TextureMenu();
+  grid = new Grid(viewPort, textureMenu);
+  Game.uiElements.push(textureMenu);
+  Game.environmentElements.push(grid);
 };
 
 exports.init = init;
 exports.update = update;
 
-},{"./entity":3,"./map":8,"./view_port":12}],10:[function(require,module,exports){
-'use strict';
-
-exports.__esModule = true;
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-var SpriteList = (function () {
-  function SpriteList() {
-    _classCallCheck(this, SpriteList);
-
-    this.list = {};
-  }
-
-  SpriteList.prototype.push = function push(sprite) {
-    if (sprite instanceof Array) {
-      for (var _iterator = sprite, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-        var _ref;
-
-        if (_isArray) {
-          if (_i >= _iterator.length) break;
-          _ref = _iterator[_i++];
-        } else {
-          _i = _iterator.next();
-          if (_i.done) break;
-          _ref = _i.value;
-        }
-
-        var _sprite = _ref;
-
-        this.push(_sprite);
-      }
-    } else {
-      this.list[sprite.id] = sprite;
-    }
-  };
-
-  SpriteList.prototype.draw = function draw() {
-    for (var _iterator2 = Object.keys(this.list), _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
-      var _ref2;
-
-      if (_isArray2) {
-        if (_i2 >= _iterator2.length) break;
-        _ref2 = _iterator2[_i2++];
-      } else {
-        _i2 = _iterator2.next();
-        if (_i2.done) break;
-        _ref2 = _i2.value;
-      }
-
-      var key = _ref2;
-
-      this.list[key].draw();
-    }
-  };
-
-  SpriteList.prototype.update = function update() {
-    for (var _iterator3 = Object.keys(this.list), _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
-      var _ref3;
-
-      if (_isArray3) {
-        if (_i3 >= _iterator3.length) break;
-        _ref3 = _iterator3[_i3++];
-      } else {
-        _i3 = _iterator3.next();
-        if (_i3.done) break;
-        _ref3 = _i3.value;
-      }
-
-      var key = _ref3;
-
-      if (this.list[key] == undefined) {
-        console.log('sprites deleted in middle of update');
-        continue;
-      }
-      if (this.list[key].update != undefined) this.list[key].update();
-    }
-  };
-
-  SpriteList.prototype.clear = function clear() {
-    this.list = {};
-  };
-
-  return SpriteList;
-})();
-
-exports.SpriteList = SpriteList;
-
-},{}],11:[function(require,module,exports){
+},{"./entity":3,"./map":8,"./view_port":11}],10:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -632,17 +660,17 @@ var Button = (function (_Entity) {
     this.clickAction = clickAction;
     this.clicked = false;
     this.hovered = false;
-    this.background_color = "#cc6600";
-    this.text_color = "#ffffff";
+    this.backgroundColor = "#cc6600";
+    this.textColor = "#ffffff";
   }
 
   Button.prototype.draw = function draw() {
     this.ctx.beginPath();
-    this.ctx.fillStyle = this.background_color;
+    this.ctx.fillStyle = this.backgroundColor;
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
 
     var fontSize = 24;
-    this.ctx.fillStyle = this.text_color;
+    this.ctx.fillStyle = this.textColor;
     this.ctx.font = fontSize + "px amatic-bold";
     this.ctx.textBaseline = "top";
 
@@ -705,7 +733,7 @@ var UI = { Button: Button, ProgressBar: ProgressBar };
 
 exports.UI = UI;
 
-},{"./collision":2,"./entity":3}],12:[function(require,module,exports){
+},{"./collision":2,"./entity":3}],11:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;

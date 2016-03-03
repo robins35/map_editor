@@ -6,14 +6,36 @@ let canvas = undefined
 let ctx = undefined
 let grid = undefined
 let viewPort = undefined
+let textureMenu = undefined
 let map = undefined
 
+class TextureMenu extends Entity {
+  constructor() {
+    let height = Game.canvas.height / 5
+    let y = Game.canvas.height - height
+    super(0, y, Game.canvas.width, height)
+    this.backgroundColor = '#381807'
+    this.opacity = 0.4
+    this.padding = 5
+  }
+
+  draw() {
+    this.ctx.save()
+    this.ctx.beginPath()
+    this.ctx.fillStyle = this.backgroundColor
+    this.ctx.globalAlpha = this.opacity
+    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+    this.ctx.restore()
+  }
+}
+
 class Grid extends Entity {
-  constructor(_viewPort, size = 32) {
-    super(0, 0, canvas.width, canvas.height)
+  constructor(_viewPort, _textureMenu, size = 32) {
+    super(0, 0, canvas.width, textureMenu.pos.y)
     this.size = size
     this.color = "#cccccc"
     this.viewPort = _viewPort
+    this.textureMenu = _textureMenu
   }
 
   draw() {
@@ -42,7 +64,7 @@ class Grid extends Entity {
 
 let update = () => {
   viewPort.update()
-  grid.update()
+  //grid.update()
 }
 
 let init = () => {
@@ -50,8 +72,10 @@ let init = () => {
   canvas = Game.canvas
   map = new Map(canvas.width * 2, canvas.height * 2)
   viewPort = new ViewPort(map)
-  grid = new Grid(viewPort)
-  Game.sprites.push(grid)
+  textureMenu = new TextureMenu()
+  grid = new Grid(viewPort, textureMenu)
+  Game.uiElements.push(textureMenu)
+  Game.environmentElements.push(grid)
 }
 
 export { init, update }

@@ -1,5 +1,4 @@
-import { SpriteList } from './sprite_list'
-import { Entity } from './entity'
+import { Entity, EntityList } from './entity'
 import * as Events from './events'
 import * as AssetManager from './asset_manager'
 import * as MainMenu from './main_menu'
@@ -12,9 +11,9 @@ let canvas = undefined
 let ctx = undefined
 let events = Events
 let state = 'begin'
-let sprites = new SpriteList()
-let activeSprites = new SpriteList()
-let environmentSprites = new SpriteList()
+let sprites = new EntityList()
+let uiElements = new EntityList()
+let environmentElements = new EntityList()
 
 let update = () => {
   switch (state) {
@@ -23,7 +22,7 @@ let update = () => {
       AssetManager.loadAssets(() => {
         state = "load_main_menu";
         console.log("Loaded assets");
-        sprites.clear()
+        uiElements.clear()
       })
       break
     case 'load_main_menu':
@@ -31,7 +30,7 @@ let update = () => {
       MainMenu.init()
       break
     case 'main_menu':
-      sprites.update()
+      uiElements.update()
       break
     case 'load_map_editor':
       state = 'map_editor'
@@ -40,6 +39,8 @@ let update = () => {
     case 'map_editor':
       MapEditor.update()
       sprites.update()
+      uiElements.update()
+      environmentElements.update()
       break
     default:
       //console.log("No state matches in update loop")
@@ -49,6 +50,8 @@ let update = () => {
 let draw = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   sprites.draw()
+  uiElements.draw()
+  environmentElements.draw()
 }
 
 let setState = (_state) => {
@@ -61,4 +64,16 @@ let init = () => {
   events.init(canvas)
 }
 
-export { setState, sprites, canvas, ctx, events, update, draw, init }
+export {
+  AssetManager,
+  setState,
+  sprites,
+  uiElements,
+  environmentElements,
+  canvas,
+  ctx,
+  events,
+  update,
+  draw,
+  init
+}

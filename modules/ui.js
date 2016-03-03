@@ -9,17 +9,17 @@ class Button extends Entity {
     this.clickAction = clickAction
     this.clicked = false
     this.hovered = false
-    this.background_color = "#cc6600"
-    this.text_color = "#ffffff"
+    this.backgroundColor = "#cc6600"
+    this.textColor = "#ffffff"
   }
 
   draw () {
     this.ctx.beginPath()
-    this.ctx.fillStyle = this.background_color
+    this.ctx.fillStyle = this.backgroundColor
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
 
     let fontSize = 24
-    this.ctx.fillStyle = this.text_color
+    this.ctx.fillStyle = this.textColor
     this.ctx.font = fontSize + "px amatic-bold"
     this.ctx.textBaseline = "top"
 
