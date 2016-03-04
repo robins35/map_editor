@@ -1,5 +1,5 @@
 import { Entity } from './entity'
-import { Map } from './map'
+import { Map, Texture } from './map'
 import { ViewPort } from './view_port'
 
 let canvas = undefined
@@ -10,15 +10,49 @@ let textureMenu = undefined
 let map = undefined
 
 class TextureMenu extends Entity {
-  constructor() {
-    let height = Game.canvas.height / 5
-    let y = Game.canvas.height - height
+  constructor(viewPort) {
+    let height = Game.canvas.height - viewPort.height
+    let y = viewPort.height
     super(0, y, Game.canvas.width, height)
     this.backgroundColor = '#381807'
     this.opacity = 0.4
-    this.leftRightPadding = 30
-    this.imagePadding = 5
     this.textures = Game.AssetManager.imgs["textures"]
+    this.textureWidth = this.textures[Object.keys(this.textures)[0]].width
+    this.imagePadding = 5
+
+    let minimumTextureRowWidth = this.width - 80
+    let textureColumnCount = Math.trunc(minimumTextureRowWidth / (this.textureWidth + this.imagePadding))
+    let textureRowWidth = textureColumnCount * (this.textureWidth + this.imagePadding)
+
+    let minimumTextureRowHeight = this.height - (this.imagePadding*2)
+    let textureRowCount = Math.trunc(minimumTextureRowHeight / (this.textureWidth + this.imagePadding))
+    let textureRowHeight = (textureRowCount * (this.textureWidth + this.imagePadding)) - this.imagePadding
+
+    this.leftRightPadding = (this.width - textureRowWidth) / 2
+    this.topBottomPadding = (this.height - textureRowHeight) / 2
+    this.texturesPerPage = textureColumnCount * textureRowCount
+
+    this.loadTextureObjects(1)
+  }
+
+  loadTextureObjects(page) {
+    let x = this.pos.x + this.leftRightPadding
+    let y = this.pos.y + this.topBottomPadding
+    let count = 0
+
+    this.textureObjects = []
+
+    for(let key of Object.keys(this.textures)) {
+      let texture = new Texture(x, y, this.textures[key])
+      count++
+
+      x += texture.width + this.imagePadding
+      if((x + texture.width) > (this.width - this.leftRightPadding)) {
+        x = this.pos.x + this.leftRightPadding
+        y += texture.height + this.imagePadding
+        if(count > this.texturesPerPage)
+          break
+    }
   }
 
   draw() {
@@ -29,20 +63,8 @@ class TextureMenu extends Entity {
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
     this.ctx.restore()
 
-    let x = this.pos.x + this.leftRightPadding
-    let y = this.pos.y + this.imagePadding
-
-
-    for(let key of Object.keys(this.textures)) {
-      let texture = this.textures[key]
-      this.ctx.drawImage(texture, x, y, texture.width, texture.height)
-      x += texture.width + this.imagePadding
-      if((x + texture.width) > (this.width - this.leftRightPadding)) {
-        x = this.pos.x + this.leftRightPadding
-        y += texture.height + this.imagePadding
-        if((y + texture.height + this.imagePadding) > (this.pos.y + this.height))
-          break
-      }
+    for(let texture of this.textureObjects) {
+      this.ctx.drawImage(texture.img, texture.x, texture.y, texture.width, texture.height)
     }
   }
 }
@@ -82,15 +104,18 @@ class Grid extends Entity {
 
 let update = () => {
   viewPort.update()
-  //grid.update()
 }
 
 let init = () => {
   ctx = Game.ctx
   canvas = Game.canvas
   map = new Map(canvas.width * 2, canvas.height * 2)
-  viewPort = new ViewPort(map)
-  textureMenu = new TextureMenu()
+
+  let viewPortWidth = canvas.width
+  let viewPortHeight = canvas.height - (canvas.height / 5)
+
+  viewPort = new ViewPort(viewPortWidth, viewPortHeight, map)
+  textureMenu = new TextureMenu(viewPort)
   grid = new Grid(viewPort, textureMenu)
   Game.uiElements.push(textureMenu)
   Game.environmentElements.push(grid)

@@ -58,7 +58,7 @@ let init = (canvas) => {
 
   $(canvas).on('mouseleave', (e) => {
     mouse.dragging = false
-    mouse.dragStar =  null
+    mouse.dragStart =  null
   });
 
   $(document).on('keydown', (e) => {

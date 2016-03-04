@@ -299,7 +299,7 @@ var init = function init(canvas) {
 
   $(canvas).on('mouseleave', function (e) {
     mouse.dragging = false;
-    mouse.dragStar = null;
+    mouse.dragStart = null;
   });
 
   $(document).on('keydown', function (e) {
@@ -353,22 +353,22 @@ var environmentElements = new _entity.EntityList();
 var update = function update() {
   switch (state) {
     case 'begin':
-      state = 'idle';
+      exports.state = state = 'idle';
       AssetManager.loadAssets(function () {
-        state = "load_main_menu";
+        exports.state = state = "load_main_menu";
         console.log("Loaded assets");
         uiElements.clear();
       });
       break;
     case 'load_main_menu':
-      state = 'main_menu';
+      exports.state = state = 'main_menu';
       MainMenu.init();
       break;
     case 'main_menu':
       uiElements.update();
       break;
     case 'load_map_editor':
-      state = 'map_editor';
+      exports.state = state = 'map_editor';
       MapEditor.init();
       break;
     case 'map_editor':
@@ -390,7 +390,7 @@ var draw = function draw() {
 };
 
 var setState = function setState(_state) {
-  state = _state;
+  exports.state = state = _state;
 };
 
 var init = function init() {
@@ -401,6 +401,7 @@ var init = function init() {
 
 exports.AssetManager = AssetManager;
 exports.setState = setState;
+exports.state = state;
 exports.sprites = sprites;
 exports.uiElements = uiElements;
 exports.environmentElements = environmentElements;
@@ -510,11 +511,15 @@ exports.init = init;
 exports.draw = draw;
 
 },{"./ui":10}],8:[function(require,module,exports){
-"use strict";
+'use strict';
 
 exports.__esModule = true;
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var _entity = require('./entity');
 
 var Map = function Map(width, height) {
   _classCallCheck(this, Map);
@@ -525,7 +530,22 @@ var Map = function Map(width, height) {
 
 exports.Map = Map;
 
-},{}],9:[function(require,module,exports){
+var Texture = (function (_Entity) {
+  _inherits(Texture, _Entity);
+
+  function Texture(x, y, img) {
+    _classCallCheck(this, Texture);
+
+    _Entity.call(this, x, y, img.width, img.height);
+    this.img = img;
+  }
+
+  return Texture;
+})(_entity.Entity);
+
+exports.Texture = Texture;
+
+},{"./entity":3}],9:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -550,17 +570,28 @@ var map = undefined;
 var TextureMenu = (function (_Entity) {
   _inherits(TextureMenu, _Entity);
 
-  function TextureMenu() {
+  function TextureMenu(viewPort) {
     _classCallCheck(this, TextureMenu);
 
-    var height = Game.canvas.height / 5;
-    var y = Game.canvas.height - height;
+    var height = Game.canvas.height - viewPort.height;
+    var y = viewPort.height;
     _Entity.call(this, 0, y, Game.canvas.width, height);
     this.backgroundColor = '#381807';
     this.opacity = 0.4;
-    this.leftRightPadding = 30;
-    this.imagePadding = 5;
     this.textures = Game.AssetManager.imgs["textures"];
+    this.textureWidth = this.textures[Object.keys(this.textures)[0]].width;
+    this.imagePadding = 5;
+
+    var minimumTextureRowWidth = this.width - 80;
+    var textureColumnCount = Math.trunc(minimumTextureRowWidth / (this.textureWidth + this.imagePadding));
+    var textureRowWidth = textureColumnCount * (this.textureWidth + this.imagePadding);
+
+    var minimumTextureRowHeight = this.height - this.imagePadding * 2;
+    var textureRowCount = Math.trunc(minimumTextureRowHeight / (this.textureWidth + this.imagePadding));
+    var textureRowHeight = textureRowCount * (this.textureWidth + this.imagePadding) - this.imagePadding;
+
+    this.leftRightPadding = (this.width - textureRowWidth) / 2;
+    this.topBottomPadding = (this.height - textureRowHeight) / 2;
   }
 
   TextureMenu.prototype.draw = function draw() {
@@ -572,7 +603,7 @@ var TextureMenu = (function (_Entity) {
     this.ctx.restore();
 
     var x = this.pos.x + this.leftRightPadding;
-    var y = this.pos.y + this.imagePadding;
+    var y = this.pos.y + this.topBottomPadding;
 
     for (var _iterator = Object.keys(this.textures), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
       var _ref;
@@ -645,15 +676,18 @@ var Grid = (function (_Entity2) {
 
 var update = function update() {
   viewPort.update();
-  //grid.update()
 };
 
 var init = function init() {
   ctx = Game.ctx;
   canvas = Game.canvas;
   map = new _map.Map(canvas.width * 2, canvas.height * 2);
-  viewPort = new _view_port.ViewPort(map);
-  textureMenu = new TextureMenu();
+
+  var viewPortWidth = canvas.width;
+  var viewPortHeight = canvas.height - canvas.height / 5;
+
+  viewPort = new _view_port.ViewPort(viewPortWidth, viewPortHeight, map);
+  textureMenu = new TextureMenu(viewPort);
   grid = new Grid(viewPort, textureMenu);
   Game.uiElements.push(textureMenu);
   Game.environmentElements.push(grid);
@@ -783,10 +817,10 @@ var Collision = _interopRequireWildcard(_collision);
 var ViewPort = (function (_Entity) {
   _inherits(ViewPort, _Entity);
 
-  function ViewPort(map) {
+  function ViewPort(width, height, map) {
     _classCallCheck(this, ViewPort);
 
-    _Entity.call(this, 0, 0, Game.canvas.width, Game.canvas.height);
+    _Entity.call(this, 0, 0, width, height);
     this.map = map;
     this.speed = 2;
     this.positionAtDragStart = null;
@@ -809,18 +843,23 @@ var ViewPort = (function (_Entity) {
 
     if (Game.events.keysDown[40]) this.safeMove(this.pos.x, this.pos.y + this.speed);
 
-    if (Game.events.mouse.dragging) {
-      if (this.positionAtDragStart === null) {
-        this.positionAtDragStart = Object.assign({}, this.pos);
-        $(Game.canvas).css({ 'cursor': 'move' });
+    // console.log(Game.events.mouse.dragging)
+    // console.log(Collision.intersects(this, Game.events.mouse.dragStart) + "\n")
+    if (Game.state == 'map_editor' && Game.events.mouse.dragging) {
+      var dragStartPositionOnMap = Collision.vectorSum(this.pos, Game.events.mouse.dragStart);
+      if (Collision.intersects(this, dragStartPositionOnMap)) {
+        if (this.positionAtDragStart === null) {
+          this.positionAtDragStart = Object.assign({}, this.pos);
+          $(Game.canvas).css({ 'cursor': 'move' });
+        }
+
+        var start = Game.events.mouse.dragStart;
+        var end = { x: Game.events.mouse.x, y: Game.events.mouse.y };
+        var moveVector = Collision.vectorDifference(start, end);
+
+        var movePosition = Collision.vectorSum(this.positionAtDragStart, moveVector);
+        this.safeMove(movePosition.x, movePosition.y);
       }
-
-      var start = Game.events.mouse.dragStart;
-      var end = { x: Game.events.mouse.x, y: Game.events.mouse.y };
-      var moveVector = Collision.vectorDifference(start, end);
-
-      var movePosition = Collision.vectorSum(this.positionAtDragStart, moveVector);
-      this.safeMove(movePosition.x, movePosition.y);
     } else {
       this.positionAtDragStart = null;
     }

@@ -67,6 +67,7 @@ let init = () => {
 export {
   AssetManager,
   setState,
+  state,
   sprites,
   uiElements,
   environmentElements,
