@@ -16,7 +16,9 @@ class TextureMenu extends Entity {
     super(0, y, Game.canvas.width, height)
     this.backgroundColor = '#381807'
     this.opacity = 0.4
-    this.padding = 5
+    this.leftRightPadding = 30
+    this.imagePadding = 5
+    this.textures = Game.AssetManager.imgs["textures"]
   }
 
   draw() {
@@ -26,6 +28,22 @@ class TextureMenu extends Entity {
     this.ctx.globalAlpha = this.opacity
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
     this.ctx.restore()
+
+    let x = this.pos.x + this.leftRightPadding
+    let y = this.pos.y + this.imagePadding
+
+
+    for(let key of Object.keys(this.textures)) {
+      let texture = this.textures[key]
+      this.ctx.drawImage(texture, x, y, texture.width, texture.height)
+      x += texture.width + this.imagePadding
+      if((x + texture.width) > (this.width - this.leftRightPadding)) {
+        x = this.pos.x + this.leftRightPadding
+        y += texture.height + this.imagePadding
+        if((y + texture.height + this.imagePadding) > (this.pos.y + this.height))
+          break
+      }
+    }
   }
 }
 

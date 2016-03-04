@@ -63,7 +63,6 @@ export class EntityList {
   update() {
     for(let key of Object.keys(this.list)) {
       if (this.list[key] == undefined) {
-        console.log('entity deleted in middle of update')
         continue
       }
       if (this.list[key].update != undefined)

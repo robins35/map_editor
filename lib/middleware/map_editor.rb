@@ -8,7 +8,7 @@ class MapEditor
     response = Rack::Response.new
 
     case "#{request.path}"
-    when '/load_textures'
+    when '/load_images'
       response.write Dir.glob("public/images/textures/*").map{|p| p.gsub('public', '')}.to_json
       response.finish
       #binding.remote_pry

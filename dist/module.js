@@ -18,7 +18,7 @@ var loadImagePaths = function loadImagePaths(downloadCallback) {
     $.ajax({
         dataType: "json",
         method: "GET",
-        url: '/load_textures',
+        url: '/load_images',
         error: function error(_error) {
             console.log("ERROR: " + _error);
         },
@@ -36,21 +36,30 @@ var loadImages = function loadImages(downloadCallback) {
     if (imgPaths.length == 0) downloadCallback();
     for (var i = 0; i < imgPaths.length; i++) {
         (function (src) {
-            var name = src.split('/').slice(-1)[0].split('.')[0];imgs[name] = new Image();
+            var image_type, image_name;
 
-            imgs[name].addEventListener("load", function () {
+            var _src$split$slice = src.split('/').slice(-2);
+
+            image_type = _src$split$slice[0];
+            image_name = _src$split$slice[1];
+
+            if (imgs[image_type] === undefined) imgs[image_type] = {};
+
+            imgs[image_type][image_name] = new Image();
+
+            imgs[image_type][image_name].addEventListener("load", function () {
                 successCount++;
                 progressBar.progress++;
                 if (isDone()) downloadCallback();
             }, false);
 
-            imgs[name].addEventListener("error", function () {
+            imgs[image_type][image_name].addEventListener("error", function () {
                 errorCount++;
                 console.log("Error loading image " + this.src);
                 if (isDone()) downloadCallback();
             }, false);
 
-            imgs[name].src = src;
+            imgs[image_type][image_name].src = src;
         })(imgPaths[i]);
     }
 };
@@ -63,8 +72,8 @@ var loadAssets = function loadAssets(downloadCallback) {
     loadImagePaths(downloadCallback);
 };
 
-var getImage = function getImage(name) {
-    return imgs[name];
+var getImage = function getImage(image_type, image_name) {
+    return imgs[image_type][image_name];
 };
 
 exports.loadAssets = loadAssets;
@@ -74,13 +83,6 @@ exports.imgs = imgs;
 // var getAudio = function(name) {
 //     return snds[name];
 // }
-
-// module.exports = {
-//     loadAssets : loadAssets,
-//     getImage : getImage,
-//     getAudio : getAudio,
-//     imgs : imgs
-// };
 
 },{"./ui":10}],2:[function(require,module,exports){
 "use strict";
@@ -113,11 +115,11 @@ exports.vectorSum = vectorSum;
 exports.vectorDifference = vectorDifference;
 
 },{}],3:[function(require,module,exports){
-'use strict';
+"use strict";
 
 exports.__esModule = true;
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Entity = (function () {
   function Entity(x, y, width, height) {
@@ -220,7 +222,6 @@ var EntityList = (function () {
       var key = _ref3;
 
       if (this.list[key] == undefined) {
-        console.log('entity deleted in middle of update');
         continue;
       }
       if (this.list[key].update != undefined) this.list[key].update();
@@ -557,7 +558,9 @@ var TextureMenu = (function (_Entity) {
     _Entity.call(this, 0, y, Game.canvas.width, height);
     this.backgroundColor = '#381807';
     this.opacity = 0.4;
-    this.padding = 5;
+    this.leftRightPadding = 30;
+    this.imagePadding = 5;
+    this.textures = Game.AssetManager.imgs["textures"];
   }
 
   TextureMenu.prototype.draw = function draw() {
@@ -567,6 +570,33 @@ var TextureMenu = (function (_Entity) {
     this.ctx.globalAlpha = this.opacity;
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
     this.ctx.restore();
+
+    var x = this.pos.x + this.leftRightPadding;
+    var y = this.pos.y + this.imagePadding;
+
+    for (var _iterator = Object.keys(this.textures), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+      var _ref;
+
+      if (_isArray) {
+        if (_i >= _iterator.length) break;
+        _ref = _iterator[_i++];
+      } else {
+        _i = _iterator.next();
+        if (_i.done) break;
+        _ref = _i.value;
+      }
+
+      var key = _ref;
+
+      var texture = this.textures[key];
+      this.ctx.drawImage(texture, x, y, texture.width, texture.height);
+      x += texture.width + this.imagePadding;
+      if (x + texture.width > this.width - this.leftRightPadding) {
+        x = this.pos.x + this.leftRightPadding;
+        y += texture.height + this.imagePadding;
+        if (y + texture.height + this.imagePadding > this.pos.y + this.height) break;
+      }
+    }
   };
 
   return TextureMenu;

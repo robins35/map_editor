@@ -13,7 +13,7 @@ var loadImagePaths = (downloadCallback) => {
   $.ajax({
     dataType: "json",
     method: "GET",
-    url: '/load_textures',
+    url: '/load_images',
     error: (error) => {
       console.log(`ERROR: ${error}`)
     },
@@ -31,21 +31,27 @@ var loadImages = function(downloadCallback) {
     if (imgPaths.length == 0) downloadCallback();
     for (var i = 0; i < imgPaths.length; i++) {
         (function(src) {
-            var name = src.split('/').slice(-1)[0].split('.')[0]; imgs[name] = new Image();
+            var image_type, image_name
+            [image_type, image_name] = src.split('/').slice(-2)
 
-            imgs[name].addEventListener("load", function() {
+            if(imgs[image_type] === undefined)
+              imgs[image_type] = {}
+
+            imgs[image_type][image_name] = new Image()
+
+            imgs[image_type][image_name].addEventListener("load", function() {
                 successCount++;
                 progressBar.progress++
                 if (isDone()) downloadCallback();
             }, false);
 
-            imgs[name].addEventListener("error", function() {
+            imgs[image_type][image_name].addEventListener("error", function() {
                 errorCount++;
                 console.log(`Error loading image ${this.src}`)
                 if (isDone()) downloadCallback();
             }, false);
 
-            imgs[name].src = src;
+            imgs[image_type][image_name].src = src;
         })(imgPaths[i]);
     }
 }
@@ -58,20 +64,12 @@ var loadAssets = function(downloadCallback) {
     loadImagePaths(downloadCallback)
 }
 
-var getImage = function(name) {
-    return imgs[name];
+var getImage = function(image_type, image_name) {
+    return imgs[image_type][image_name];
 }
-
 
 export { loadAssets, getImage, imgs }
 
 // var getAudio = function(name) {
 //     return snds[name];
 // }
-
-// module.exports = {
-//     loadAssets : loadAssets,
-//     getImage : getImage,
-//     getAudio : getAudio,
-//     imgs : imgs
-// };
