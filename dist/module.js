@@ -37,11 +37,9 @@ var loadImages = function loadImages(downloadCallback) {
     for (var i = 0; i < imgPaths.length; i++) {
         (function (src) {
             var image_type, image_name;
-
-            var _src$split$slice = src.split('/').slice(-2);
-
-            image_type = _src$split$slice[0];
-            image_name = _src$split$slice[1];
+            var imagePath = src.split('/').slice(-2);
+            image_type = imagePath[0];
+            image_name = imagePath[1].split('.').slice(0, -1).join('.');
 
             if (imgs[image_type] === undefined) imgs[image_type] = {};
 
@@ -580,32 +578,53 @@ var TextureMenu = (function (_Entity) {
     this.opacity = 0.4;
     this.textures = Game.AssetManager.imgs["textures"];
     this.textureWidth = this.textures[Object.keys(this.textures)[0]].width;
-    this.imagePadding = 5;
+    this.setupMenuProperties();
+    this.texturesPerPage = this.textureColumnCount * this.textureRowCount;
 
+    this.setupIcons();
+
+    this.loadTextureObjects(1);
+  }
+
+  TextureMenu.prototype.setupMenuProperties = function setupMenuProperties() {
+    this.imagePadding = 5;
     var minimumTextureRowWidth = this.width - 80;
-    var textureColumnCount = Math.trunc(minimumTextureRowWidth / (this.textureWidth + this.imagePadding));
-    var textureRowWidth = textureColumnCount * (this.textureWidth + this.imagePadding);
+    this.textureColumnCount = Math.trunc(minimumTextureRowWidth / (this.textureWidth + this.imagePadding));
+    var textureRowWidth = this.textureColumnCount * (this.textureWidth + this.imagePadding) - this.imagePadding;
 
     var minimumTextureRowHeight = this.height - this.imagePadding * 2;
-    var textureRowCount = Math.trunc(minimumTextureRowHeight / (this.textureWidth + this.imagePadding));
-    var textureRowHeight = textureRowCount * (this.textureWidth + this.imagePadding) - this.imagePadding;
+    this.textureRowCount = Math.trunc(minimumTextureRowHeight / (this.textureWidth + this.imagePadding));
+    var textureRowHeight = this.textureRowCount * (this.textureWidth + this.imagePadding) - this.imagePadding;
 
     this.leftRightPadding = (this.width - textureRowWidth) / 2;
     this.topBottomPadding = (this.height - textureRowHeight) / 2;
-  }
+  };
 
-  TextureMenu.prototype.draw = function draw() {
-    this.ctx.save();
-    this.ctx.beginPath();
-    this.ctx.fillStyle = this.backgroundColor;
-    this.ctx.globalAlpha = this.opacity;
-    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-    this.ctx.restore();
+  TextureMenu.prototype.setupIcons = function setupIcons() {
+    var allIcons = Game.AssetManager.imgs["icons"];
+    this.icons = [];
 
+    var icon = allIcons["left_arrow"];
+    icon.pos = { x: this.imagePadding, y: this.pos.y + this.height / 2 - icon.height / 2 };
+    this.icons.push(icon);
+
+    icon = allIcons["right_arrow"];
+    icon.pos = { x: this.width - icon.width - this.imagePadding, y: this.pos.y + this.height / 2 - icon.height / 2 };
+    this.icons.push(icon);
+  };
+
+  TextureMenu.prototype.loadTextureObjects = function loadTextureObjects(page) {
     var x = this.pos.x + this.leftRightPadding;
     var y = this.pos.y + this.topBottomPadding;
+    var currentRow = 0;
+    var currentColumn = 0;
 
-    for (var _iterator = Object.keys(this.textures), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+    this.textureObjects = [];
+
+    var sliceStart = (page - 1) * this.texturesPerPage;
+    var textureKeys = Object.keys(this.textures).slice(sliceStart, sliceStart + this.texturesPerPage);
+
+    for (var _iterator = textureKeys, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
       var _ref;
 
       if (_isArray) {
@@ -619,14 +638,59 @@ var TextureMenu = (function (_Entity) {
 
       var key = _ref;
 
-      var texture = this.textures[key];
-      this.ctx.drawImage(texture, x, y, texture.width, texture.height);
+      var texture = new _map.Texture(x, y, this.textures[key]);
+      this.textureObjects.push(texture);
+      currentColumn++;
+
       x += texture.width + this.imagePadding;
-      if (x + texture.width > this.width - this.leftRightPadding) {
+      if (currentColumn >= this.textureColumnCount) {
         x = this.pos.x + this.leftRightPadding;
         y += texture.height + this.imagePadding;
-        if (y + texture.height + this.imagePadding > this.pos.y + this.height) break;
+        currentColumn = 0;
+        currentRow++;
+        if (currentRow >= this.textureRowCount) break;
       }
+    }
+  };
+
+  TextureMenu.prototype.draw = function draw() {
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.fillStyle = this.backgroundColor;
+    this.ctx.globalAlpha = this.opacity;
+    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+    this.ctx.restore();
+
+    for (var _iterator2 = this.textureObjects, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+      var _ref2;
+
+      if (_isArray2) {
+        if (_i2 >= _iterator2.length) break;
+        _ref2 = _iterator2[_i2++];
+      } else {
+        _i2 = _iterator2.next();
+        if (_i2.done) break;
+        _ref2 = _i2.value;
+      }
+
+      var texture = _ref2;
+
+      this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height);
+    }for (var _iterator3 = this.icons, _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
+      var _ref3;
+
+      if (_isArray3) {
+        if (_i3 >= _iterator3.length) break;
+        _ref3 = _iterator3[_i3++];
+      } else {
+        _i3 = _iterator3.next();
+        if (_i3.done) break;
+        _ref3 = _i3.value;
+      }
+
+      var icon = _ref3;
+
+      this.ctx.drawImage(icon, icon.pos.x, icon.pos.y, icon.width, icon.height);
     }
   };
 
@@ -843,8 +907,6 @@ var ViewPort = (function (_Entity) {
 
     if (Game.events.keysDown[40]) this.safeMove(this.pos.x, this.pos.y + this.speed);
 
-    // console.log(Game.events.mouse.dragging)
-    // console.log(Collision.intersects(this, Game.events.mouse.dragStart) + "\n")
     if (Game.state == 'map_editor' && Game.events.mouse.dragging) {
       var dragStartPositionOnMap = Collision.vectorSum(this.pos, Game.events.mouse.dragStart);
       if (Collision.intersects(this, dragStartPositionOnMap)) {

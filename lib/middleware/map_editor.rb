@@ -9,7 +9,7 @@ class MapEditor
 
     case "#{request.path}"
     when '/load_images'
-      response.write Dir.glob("public/images/textures/*").map{|p| p.gsub('public', '')}.to_json
+      response.write Dir.glob("public/images/*/*").map{|p| p.gsub('public', '')}.to_json
       response.finish
       #binding.remote_pry
     else

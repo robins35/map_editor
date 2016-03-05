@@ -30,8 +30,6 @@ export class ViewPort extends Entity {
     if(Game.events.keysDown[40])
       this.safeMove(this.pos.x, this.pos.y + this.speed)
 
-    // console.log(Game.events.mouse.dragging)
-    // console.log(Collision.intersects(this, Game.events.mouse.dragStart) + "\n")
     if(Game.state == 'map_editor' && Game.events.mouse.dragging) {
       let dragStartPositionOnMap = Collision.vectorSum(this.pos, Game.events.mouse.dragStart)
       if(Collision.intersects(this, dragStartPositionOnMap)) {

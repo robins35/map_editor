@@ -32,7 +32,9 @@ var loadImages = function(downloadCallback) {
     for (var i = 0; i < imgPaths.length; i++) {
         (function(src) {
             var image_type, image_name
-            [image_type, image_name] = src.split('/').slice(-2)
+            let imagePath = src.split('/').slice(-2)
+            image_type = imagePath[0]
+            image_name = imagePath[1].split('.').slice(0, -1).join('.')
 
             if(imgs[image_type] === undefined)
               imgs[image_type] = {}

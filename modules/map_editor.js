@@ -18,40 +18,66 @@ class TextureMenu extends Entity {
     this.opacity = 0.4
     this.textures = Game.AssetManager.imgs["textures"]
     this.textureWidth = this.textures[Object.keys(this.textures)[0]].width
-    this.imagePadding = 5
+    this.setupMenuProperties()
+    this.texturesPerPage = this.textureColumnCount * this.textureRowCount
 
+    this.setupIcons()
+
+    this.loadTextureObjects(1)
+  }
+
+  setupMenuProperties() {
+    this.imagePadding = 5
     let minimumTextureRowWidth = this.width - 80
-    let textureColumnCount = Math.trunc(minimumTextureRowWidth / (this.textureWidth + this.imagePadding))
-    let textureRowWidth = textureColumnCount * (this.textureWidth + this.imagePadding)
+    this.textureColumnCount = Math.trunc(minimumTextureRowWidth / (this.textureWidth + this.imagePadding))
+    let textureRowWidth = (this.textureColumnCount * (this.textureWidth + this.imagePadding)) - this.imagePadding
 
     let minimumTextureRowHeight = this.height - (this.imagePadding*2)
-    let textureRowCount = Math.trunc(minimumTextureRowHeight / (this.textureWidth + this.imagePadding))
-    let textureRowHeight = (textureRowCount * (this.textureWidth + this.imagePadding)) - this.imagePadding
+    this.textureRowCount = Math.trunc(minimumTextureRowHeight / (this.textureWidth + this.imagePadding))
+    let textureRowHeight = (this.textureRowCount * (this.textureWidth + this.imagePadding)) - this.imagePadding
 
     this.leftRightPadding = (this.width - textureRowWidth) / 2
     this.topBottomPadding = (this.height - textureRowHeight) / 2
-    this.texturesPerPage = textureColumnCount * textureRowCount
+  }
 
-    this.loadTextureObjects(1)
+  setupIcons() {
+    let allIcons = Game.AssetManager.imgs["icons"]
+    this.icons = []
+
+    let icon = allIcons["left_arrow"]
+    icon.pos = { x: this.imagePadding, y: (this.pos.y + (this.height / 2)) - (icon.height / 2) }
+    this.icons.push(icon)
+
+    icon = allIcons["right_arrow"]
+    icon.pos = { x: (this.width - icon.width) - this.imagePadding, y: (this.pos.y + (this.height / 2)) - (icon.height / 2) }
+    this.icons.push(icon)
   }
 
   loadTextureObjects(page) {
     let x = this.pos.x + this.leftRightPadding
     let y = this.pos.y + this.topBottomPadding
-    let count = 0
+    let currentRow = 0
+    let currentColumn = 0
 
     this.textureObjects = []
 
-    for(let key of Object.keys(this.textures)) {
+    let sliceStart = (page - 1) * this.texturesPerPage
+    let textureKeys = Object.keys(this.textures).slice(sliceStart, sliceStart + this.texturesPerPage)
+
+    for(let key of textureKeys) {
       let texture = new Texture(x, y, this.textures[key])
-      count++
+      this.textureObjects.push(texture)
+      currentColumn++
 
       x += texture.width + this.imagePadding
-      if((x + texture.width) > (this.width - this.leftRightPadding)) {
+      if(currentColumn >= this.textureColumnCount) {
         x = this.pos.x + this.leftRightPadding
         y += texture.height + this.imagePadding
-        if(count > this.texturesPerPage)
+        currentColumn = 0
+        currentRow++
+        if(currentRow >= this.textureRowCount)
           break
+      }
     }
   }
 
@@ -63,9 +89,11 @@ class TextureMenu extends Entity {
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
     this.ctx.restore()
 
-    for(let texture of this.textureObjects) {
-      this.ctx.drawImage(texture.img, texture.x, texture.y, texture.width, texture.height)
-    }
+    for(let texture of this.textureObjects)
+      this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height)
+
+    for(let icon of this.icons)
+      this.ctx.drawImage(icon, icon.pos.x, icon.pos.y, icon.width, icon.height)
   }
 }
 
