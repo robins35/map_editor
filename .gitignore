@@ -3,6 +3,4 @@
 node_modules
 .sass-cache
 
-*duptest*.png
-
 tags
