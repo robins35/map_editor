@@ -1,6 +1,7 @@
 import { Entity } from './entity'
 import { Map, Texture } from './map'
 import { ViewPort } from './view_port'
+import * as Collision from './collision'
 
 let canvas = undefined
 let ctx = undefined
@@ -20,10 +21,12 @@ class TextureMenu extends Entity {
     this.textureWidth = this.textures[Object.keys(this.textures)[0]].width
     this.setupMenuProperties()
     this.texturesPerPage = this.textureColumnCount * this.textureRowCount
+    this.totalPages = Math.ceil(Object.keys(this.textures).length / this.texturesPerPage)
+    this.page = 1
 
     this.setupIcons()
 
-    this.loadTextureObjects(1)
+    this.loadTextureObjects()
   }
 
   setupMenuProperties() {
@@ -42,18 +45,22 @@ class TextureMenu extends Entity {
 
   setupIcons() {
     let allIcons = Game.AssetManager.imgs["icons"]
-    this.icons = []
+    this.icons = {}
 
     let icon = allIcons["left_arrow"]
     icon.pos = { x: this.imagePadding, y: (this.pos.y + (this.height / 2)) - (icon.height / 2) }
-    this.icons.push(icon)
+    icon.clickAction = this.previousPage.bind(this)
+    if(this.page <= 1) icon.hidden = true
+    this.icons["left_arrow"] = icon
 
     icon = allIcons["right_arrow"]
     icon.pos = { x: (this.width - icon.width) - this.imagePadding, y: (this.pos.y + (this.height / 2)) - (icon.height / 2) }
-    this.icons.push(icon)
+    icon.clickAction = this.nextPage.bind(this)
+    if(this.page >= this.totalPages) icon.hidden = true
+    this.icons["right_arrow"] = icon
   }
 
-  loadTextureObjects(page) {
+  loadTextureObjects() {
     let x = this.pos.x + this.leftRightPadding
     let y = this.pos.y + this.topBottomPadding
     let currentRow = 0
@@ -61,7 +68,7 @@ class TextureMenu extends Entity {
 
     this.textureObjects = []
 
-    let sliceStart = (page - 1) * this.texturesPerPage
+    let sliceStart = (this.page - 1) * this.texturesPerPage
     let textureKeys = Object.keys(this.textures).slice(sliceStart, sliceStart + this.texturesPerPage)
 
     for(let key of textureKeys) {
@@ -81,6 +88,32 @@ class TextureMenu extends Entity {
     }
   }
 
+  updateArrowIcons() {
+    if(this.page == this.totalPages)
+      this.icons["right_arrow"].hidden = true
+    else
+      this.icons["right_arrow"].hidden = false
+
+    if(this.page == 1)
+      this.icons["left_arrow"].hidden = true
+    else
+      this.icons["left_arrow"].hidden = false
+  }
+
+  nextPage() {
+    if(this.page >= this.totalPages) return
+    this.page++
+    this.updateArrowIcons()
+    this.loadTextureObjects()
+  }
+
+  previousPage() {
+    if(this.page <= 1) return
+    this.page--
+    this.updateArrowIcons()
+    this.loadTextureObjects()
+  }
+
   draw() {
     this.ctx.save()
     this.ctx.beginPath()
@@ -89,11 +122,42 @@ class TextureMenu extends Entity {
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
     this.ctx.restore()
 
-    for(let texture of this.textureObjects)
+    for(let texture of this.textureObjects) {
       this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height)
+      if(texture.hovering) {
+        this.ctx.lineWidth = 2
+        this.ctx.strokeStyle = "#90c3d4"
+        this.ctx.strokeRect(texture.pos.x, texture.pos.y, texture.width, texture.height)
+      }
+    }
 
-    for(let icon of this.icons)
-      this.ctx.drawImage(icon, icon.pos.x, icon.pos.y, icon.width, icon.height)
+    for(let iconKey of Object.keys(this.icons)) {
+      let icon = this.icons[iconKey]
+      if(!icon.hidden)
+        this.ctx.drawImage(icon, icon.pos.x, icon.pos.y, icon.width, icon.height)
+    }
+  }
+
+  update() {
+    if(Collision.intersects(this, Game.events.mouse)) {
+      for(let texture of this.textureObjects) {
+        if(Collision.intersects(texture, Game.events.mouse)) {
+          texture.hovering = true
+        }
+        else {
+          texture.hovering = false
+        }
+      }
+
+      if(Game.events.mouse.clicked && Collision.intersects(this, Game.events.mouse)) {
+        Game.events.mouse.clicked = false
+        for(let iconKey of Object.keys(this.icons)) {
+          let icon = this.icons[iconKey]
+          if(!icon.hidden && Collision.intersects(icon, Game.events.mouse))
+            icon.clickAction()
+        }
+      }
+    }
   }
 }
 

@@ -548,6 +548,8 @@ exports.Texture = Texture;
 
 exports.__esModule = true;
 
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
@@ -557,6 +559,10 @@ var _entity = require('./entity');
 var _map = require('./map');
 
 var _view_port = require('./view_port');
+
+var _collision = require('./collision');
+
+var Collision = _interopRequireWildcard(_collision);
 
 var canvas = undefined;
 var ctx = undefined;
@@ -580,10 +586,12 @@ var TextureMenu = (function (_Entity) {
     this.textureWidth = this.textures[Object.keys(this.textures)[0]].width;
     this.setupMenuProperties();
     this.texturesPerPage = this.textureColumnCount * this.textureRowCount;
+    this.totalPages = Math.ceil(Object.keys(this.textures).length / this.texturesPerPage);
+    this.page = 1;
 
     this.setupIcons();
 
-    this.loadTextureObjects(1);
+    this.loadTextureObjects();
   }
 
   TextureMenu.prototype.setupMenuProperties = function setupMenuProperties() {
@@ -602,18 +610,22 @@ var TextureMenu = (function (_Entity) {
 
   TextureMenu.prototype.setupIcons = function setupIcons() {
     var allIcons = Game.AssetManager.imgs["icons"];
-    this.icons = [];
+    this.icons = {};
 
     var icon = allIcons["left_arrow"];
     icon.pos = { x: this.imagePadding, y: this.pos.y + this.height / 2 - icon.height / 2 };
-    this.icons.push(icon);
+    icon.clickAction = this.previousPage.bind(this);
+    if (this.page <= 1) icon.hidden = true;
+    this.icons["left_arrow"] = icon;
 
     icon = allIcons["right_arrow"];
     icon.pos = { x: this.width - icon.width - this.imagePadding, y: this.pos.y + this.height / 2 - icon.height / 2 };
-    this.icons.push(icon);
+    icon.clickAction = this.nextPage.bind(this);
+    if (this.page >= this.totalPages) icon.hidden = true;
+    this.icons["right_arrow"] = icon;
   };
 
-  TextureMenu.prototype.loadTextureObjects = function loadTextureObjects(page) {
+  TextureMenu.prototype.loadTextureObjects = function loadTextureObjects() {
     var x = this.pos.x + this.leftRightPadding;
     var y = this.pos.y + this.topBottomPadding;
     var currentRow = 0;
@@ -621,7 +633,7 @@ var TextureMenu = (function (_Entity) {
 
     this.textureObjects = [];
 
-    var sliceStart = (page - 1) * this.texturesPerPage;
+    var sliceStart = (this.page - 1) * this.texturesPerPage;
     var textureKeys = Object.keys(this.textures).slice(sliceStart, sliceStart + this.texturesPerPage);
 
     for (var _iterator = textureKeys, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
@@ -653,6 +665,26 @@ var TextureMenu = (function (_Entity) {
     }
   };
 
+  TextureMenu.prototype.updateArrowIcons = function updateArrowIcons() {
+    if (this.page == this.totalPages) this.icons["right_arrow"].hidden = true;else this.icons["right_arrow"].hidden = false;
+
+    if (this.page == 1) this.icons["left_arrow"].hidden = true;else this.icons["left_arrow"].hidden = false;
+  };
+
+  TextureMenu.prototype.nextPage = function nextPage() {
+    if (this.page >= this.totalPages) return;
+    this.page++;
+    this.updateArrowIcons();
+    this.loadTextureObjects();
+  };
+
+  TextureMenu.prototype.previousPage = function previousPage() {
+    if (this.page <= 1) return;
+    this.page--;
+    this.updateArrowIcons();
+    this.loadTextureObjects();
+  };
+
   TextureMenu.prototype.draw = function draw() {
     this.ctx.save();
     this.ctx.beginPath();
@@ -676,7 +708,14 @@ var TextureMenu = (function (_Entity) {
       var texture = _ref2;
 
       this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height);
-    }for (var _iterator3 = this.icons, _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
+      if (texture.hovering) {
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeStyle = "#90c3d4";
+        this.ctx.strokeRect(texture.pos.x, texture.pos.y, texture.width, texture.height);
+      }
+    }
+
+    for (var _iterator3 = Object.keys(this.icons), _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
       var _ref3;
 
       if (_isArray3) {
@@ -688,9 +727,56 @@ var TextureMenu = (function (_Entity) {
         _ref3 = _i3.value;
       }
 
-      var icon = _ref3;
+      var iconKey = _ref3;
 
-      this.ctx.drawImage(icon, icon.pos.x, icon.pos.y, icon.width, icon.height);
+      var icon = this.icons[iconKey];
+      if (!icon.hidden) this.ctx.drawImage(icon, icon.pos.x, icon.pos.y, icon.width, icon.height);
+    }
+  };
+
+  TextureMenu.prototype.update = function update() {
+    if (Collision.intersects(this, Game.events.mouse)) {
+      for (var _iterator4 = this.textureObjects, _isArray4 = Array.isArray(_iterator4), _i4 = 0, _iterator4 = _isArray4 ? _iterator4 : _iterator4[Symbol.iterator]();;) {
+        var _ref4;
+
+        if (_isArray4) {
+          if (_i4 >= _iterator4.length) break;
+          _ref4 = _iterator4[_i4++];
+        } else {
+          _i4 = _iterator4.next();
+          if (_i4.done) break;
+          _ref4 = _i4.value;
+        }
+
+        var texture = _ref4;
+
+        if (Collision.intersects(texture, Game.events.mouse)) {
+          texture.hovering = true;
+        } else {
+          texture.hovering = false;
+        }
+      }
+
+      if (Game.events.mouse.clicked && Collision.intersects(this, Game.events.mouse)) {
+        Game.events.mouse.clicked = false;
+        for (var _iterator5 = Object.keys(this.icons), _isArray5 = Array.isArray(_iterator5), _i5 = 0, _iterator5 = _isArray5 ? _iterator5 : _iterator5[Symbol.iterator]();;) {
+          var _ref5;
+
+          if (_isArray5) {
+            if (_i5 >= _iterator5.length) break;
+            _ref5 = _iterator5[_i5++];
+          } else {
+            _i5 = _iterator5.next();
+            if (_i5.done) break;
+            _ref5 = _i5.value;
+          }
+
+          var iconKey = _ref5;
+
+          var icon = this.icons[iconKey];
+          if (!icon.hidden && Collision.intersects(icon, Game.events.mouse)) icon.clickAction();
+        }
+      }
     }
   };
 
@@ -760,7 +846,7 @@ var init = function init() {
 exports.init = init;
 exports.update = update;
 
-},{"./entity":3,"./map":8,"./view_port":11}],10:[function(require,module,exports){
+},{"./collision":2,"./entity":3,"./map":8,"./view_port":11}],10:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
