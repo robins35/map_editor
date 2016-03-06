@@ -4,9 +4,10 @@ import * as Collision from './collision'
 export class ViewPort extends Entity {
   constructor(width, height, map) {
     super(0, 0, width, height)
-    this.map = map
     this.speed = 2
     this.positionAtDragStart = null
+    this.map = map
+    this.map.viewPort = this
   }
 
   maxX() {

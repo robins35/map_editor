@@ -3,6 +3,8 @@ import { Map, Texture } from './map'
 import { ViewPort } from './view_port'
 import * as Collision from './collision'
 
+const textureSize = 32
+
 let canvas = undefined
 let ctx = undefined
 let grid = undefined
@@ -71,7 +73,7 @@ class TextureMenu extends Entity {
     this.textureObjects = [[]]
 
     for(let key of textureKeys) {
-      let texture = new Texture(x, y, this.textures[key])
+      let texture = new Texture(x, y, key, this.textures[key])
       this.textureObjects[page].push(texture)
       currentColumn++
 
@@ -173,10 +175,11 @@ class TextureMenu extends Entity {
 }
 
 class Grid extends Entity {
-  constructor(_viewPort, _textureMenu, size = 32) {
+  constructor(_map, _viewPort, _textureMenu, size = 32) {
     super(0, 0, canvas.width, textureMenu.pos.y)
     this.size = size
     this.color = "#cccccc"
+    this.map = _map
     this.viewPort = _viewPort
     this.textureMenu = _textureMenu
     this.texturePreview = null
@@ -224,7 +227,17 @@ class Grid extends Entity {
 
         let x = this.pos.x + (columnIntersected * this.size)
         let y = this.pos.y + (rowIntersected * this.size)
-        this.texturePreview = new Texture(x, y, this.textureMenu.selectedTexture.img)
+        if(this.texturePreview) {
+          this.texturePreview.pos = {x, y}
+        }
+        else {
+          this.texturePreview = new Texture(x, y, this.textureMenu.selectedTexture.key, this.textureMenu.selectedTexture.img)
+        }
+
+        if(Game.events.mouse.rightClicked) {
+          Game.events.mouse.rightClicked = false
+          this.map.addTile(this.texturePreview)
+        }
       }
       else {
         this.texturePreview = null
@@ -240,16 +253,16 @@ let update = () => {
 let init = () => {
   ctx = Game.ctx
   canvas = Game.canvas
-  map = new Map(canvas.width * 2, canvas.height * 2)
+  map = new Map(canvas.width * 2, canvas.height * 2, textureSize)
 
   let viewPortWidth = canvas.width
   let viewPortHeight = canvas.height - (canvas.height / 5)
 
   viewPort = new ViewPort(viewPortWidth, viewPortHeight, map)
   textureMenu = new TextureMenu(viewPort)
-  grid = new Grid(viewPort, textureMenu)
+  grid = new Grid(map, viewPort, textureMenu)
   Game.uiElements.push(textureMenu)
-  Game.environmentElements.push(grid)
+  Game.environmentElements.push([map, grid])
 }
 
 export { init, update }
