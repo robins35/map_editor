@@ -50,8 +50,8 @@ let update = () => {
 let draw = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   sprites.draw()
-  uiElements.draw()
   environmentElements.draw()
+  uiElements.draw()
 }
 
 let setState = (_state) => {

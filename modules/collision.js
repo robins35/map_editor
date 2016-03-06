@@ -18,4 +18,8 @@ let vectorDifference = (vector1, vector2) => {
   }
 }
 
-export { intersects, vectorSum, vectorDifference }
+let pointsAreEqual = (point1, point2) => {
+  return point1.x == point2.x && point1.y == point2.y
+}
+
+export { intersects, vectorSum, vectorDifference, pointsAreEqual }

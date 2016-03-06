@@ -108,9 +108,14 @@ var vectorDifference = function vectorDifference(vector1, vector2) {
   };
 };
 
+var pointsAreEqual = function pointsAreEqual(point1, point2) {
+  return point1.x == point2.x && point1.y == point2.y;
+};
+
 exports.intersects = intersects;
 exports.vectorSum = vectorSum;
 exports.vectorDifference = vectorDifference;
+exports.pointsAreEqual = pointsAreEqual;
 
 },{}],3:[function(require,module,exports){
 "use strict";
@@ -383,8 +388,8 @@ var update = function update() {
 var draw = function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   sprites.draw();
-  uiElements.draw();
   environmentElements.draw();
+  uiElements.draw();
 };
 
 var setState = function setState(_state) {
@@ -529,6 +534,7 @@ var Map = (function () {
   function Map(width, height, textureSize) {
     _classCallCheck(this, Map);
 
+    this.id = "map";
     this.width = Math.trunc(width / textureSize) * textureSize;
     this.height = Math.trunc(height / textureSize) * textureSize;
     this.textureSize = textureSize;
@@ -650,8 +656,7 @@ var TextureMenu = (function (_Entity) {
     var height = Game.canvas.height - viewPort.height;
     var y = viewPort.height;
     _Entity.call(this, 0, y, Game.canvas.width, height);
-    this.backgroundColor = '#381807';
-    this.opacity = 0.4;
+    this.backgroundColor = '#2a1d16';
     this.textures = Game.AssetManager.imgs["textures"];
     this.selectedTexture = null;
     this.textureWidth = this.textures[Object.keys(this.textures)[0]].width;
@@ -758,12 +763,9 @@ var TextureMenu = (function (_Entity) {
   };
 
   TextureMenu.prototype.draw = function draw() {
-    this.ctx.save();
     this.ctx.beginPath();
     this.ctx.fillStyle = this.backgroundColor;
-    this.ctx.globalAlpha = this.opacity;
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-    this.ctx.restore();
 
     for (var _iterator2 = this.textureObjects[this.page], _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
       var _ref2;
@@ -871,25 +873,36 @@ var Grid = (function (_Entity2) {
 
     _classCallCheck(this, Grid);
 
-    _Entity2.call(this, 0, 0, canvas.width, textureMenu.pos.y);
+    _Entity2.call(this, 0, 0, canvas.width - canvas.width % size, textureMenu.pos.y - textureMenu.pos.y % size);
+    this.drawWidth = canvas.width;
+    this.drawHeight = textureMenu.pos.y;
     this.size = size;
     this.color = "#cccccc";
     this.map = _map;
     this.viewPort = _viewPort;
     this.textureMenu = _textureMenu;
     this.texturePreview = null;
+    this.lastTexturePlacedAt = null;
+    this.texturePreviewAlpha = 0.3;
   }
+
+  Grid.prototype.resetDimensions = function resetDimensions() {
+    var xToRight = canvas.width - this.pos.x;
+    this.width = xToRight - xToRight % this.size;
+    var yToBottom = this.textureMenu.pos.y - this.pos.y;
+    this.height = yToBottom - yToBottom % this.size;
+  };
 
   Grid.prototype.draw = function draw() {
     ctx.beginPath();
-    for (var x = this.pos.x + 0.5; x <= this.width; x += this.size) {
+    for (var x = this.pos.x + 0.5; x <= this.drawWidth; x += this.size) {
       ctx.moveTo(x, 0);
-      ctx.lineTo(x, this.height);
+      ctx.lineTo(x, this.drawHeight);
     }
 
-    for (var y = this.pos.y + 0.5; y <= this.height; y += this.size) {
+    for (var y = this.pos.y + 0.5; y <= this.drawHeight; y += this.size) {
       ctx.moveTo(0, y);
-      ctx.lineTo(this.width, y);
+      ctx.lineTo(this.drawWidth, y);
     }
 
     ctx.strokeStyle = this.color;
@@ -898,7 +911,7 @@ var Grid = (function (_Entity2) {
 
     if (this.texturePreview && !this.viewPort.positionAtDragStart) {
       this.ctx.save();
-      this.ctx.globalAlpha = 0.3;
+      this.ctx.globalAlpha = this.texturePreviewAlpha;
 
       var texture = this.texturePreview;
       this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height);
@@ -914,6 +927,7 @@ var Grid = (function (_Entity2) {
     var x = xOffset ? this.size - xOffset : 0;
     var y = yOffset ? this.size - yOffset : 0;
     this.move(x, y);
+    this.resetDimensions();
 
     if (this.textureMenu.selectedTexture) {
       if (Collision.intersects(this, Game.events.mouse)) {
@@ -928,9 +942,14 @@ var Grid = (function (_Entity2) {
           this.texturePreview = new _map2.Texture(_x2, _y, this.textureMenu.selectedTexture.key, this.textureMenu.selectedTexture.img);
         }
 
-        if (Game.events.mouse.rightClicked) {
-          Game.events.mouse.rightClicked = false;
-          this.map.addTile(this.texturePreview);
+        if (Game.events.mouse.rightDown) {
+          if (!this.lastTexturePlacedAt || !Collision.pointsAreEqual(this.texturePreview.pos, this.lastTexturePlacedAt)) {
+
+            this.lastTexturePlacedAt = this.texturePreview.pos;
+            this.map.addTile(this.texturePreview);
+          }
+        } else if (this.lastTexturePlacedAt && !Game.events.mouse.rightDown) {
+          this.lastTexturePlacedAt = null;
         }
       } else {
         this.texturePreview = null;

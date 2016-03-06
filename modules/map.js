@@ -3,6 +3,7 @@ import * as Collision from './collision'
 
 export class Map {
   constructor(width, height, textureSize) {
+    this.id = "map"
     this.width = Math.trunc(width / textureSize) * textureSize
     this.height = Math.trunc(height / textureSize) * textureSize
     this.textureSize = textureSize

@@ -17,8 +17,7 @@ class TextureMenu extends Entity {
     let height = Game.canvas.height - viewPort.height
     let y = viewPort.height
     super(0, y, Game.canvas.width, height)
-    this.backgroundColor = '#381807'
-    this.opacity = 0.4
+    this.backgroundColor = '#2a1d16'
     this.textures = Game.AssetManager.imgs["textures"]
     this.selectedTexture = null
     this.textureWidth = this.textures[Object.keys(this.textures)[0]].width
@@ -118,12 +117,9 @@ class TextureMenu extends Entity {
   }
 
   draw() {
-    this.ctx.save()
     this.ctx.beginPath()
     this.ctx.fillStyle = this.backgroundColor
-    this.ctx.globalAlpha = this.opacity
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
-    this.ctx.restore()
 
     for(let texture of this.textureObjects[this.page]) {
       this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height)
@@ -176,25 +172,37 @@ class TextureMenu extends Entity {
 
 class Grid extends Entity {
   constructor(_map, _viewPort, _textureMenu, size = 32) {
-    super(0, 0, canvas.width, textureMenu.pos.y)
+    super(0, 0, canvas.width - (canvas.width % size),
+        textureMenu.pos.y - (textureMenu.pos.y % size))
+    this.drawWidth = canvas.width
+    this.drawHeight = textureMenu.pos.y
     this.size = size
     this.color = "#cccccc"
     this.map = _map
     this.viewPort = _viewPort
     this.textureMenu = _textureMenu
     this.texturePreview = null
+    this.lastTexturePlacedAt = null
+    this.texturePreviewAlpha = 0.3
+  }
+
+  resetDimensions() {
+    let xToRight = canvas.width - this.pos.x
+    this.width = xToRight - (xToRight % this.size)
+    let yToBottom = this.textureMenu.pos.y - this.pos.y
+    this.height = yToBottom - (yToBottom % this.size)
   }
 
   draw() {
     ctx.beginPath()
-    for(let x = this.pos.x + 0.5; x <= this.width; x += this.size) {
+    for(let x = this.pos.x + 0.5; x <= this.drawWidth; x += this.size) {
       ctx.moveTo(x, 0)
-      ctx.lineTo(x, this.height)
+      ctx.lineTo(x, this.drawHeight)
     }
 
-    for(let y = this.pos.y + 0.5; y <= this.height; y += this.size) {
+    for(let y = this.pos.y + 0.5; y <= this.drawHeight; y += this.size) {
       ctx.moveTo(0, y)
-      ctx.lineTo(this.width, y)
+      ctx.lineTo(this.drawWidth, y)
     }
 
     ctx.strokeStyle = this.color
@@ -203,7 +211,7 @@ class Grid extends Entity {
 
     if(this.texturePreview && !this.viewPort.positionAtDragStart) {
       this.ctx.save()
-      this.ctx.globalAlpha = 0.3
+      this.ctx.globalAlpha = this.texturePreviewAlpha
 
       let texture = this.texturePreview
       this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height)
@@ -219,6 +227,7 @@ class Grid extends Entity {
     let x = xOffset ? this.size - xOffset : 0
     let y = yOffset ? this.size - yOffset : 0
     this.move(x, y)
+    this.resetDimensions()
 
     if(this.textureMenu.selectedTexture) {
       if(Collision.intersects(this, Game.events.mouse)) {
@@ -234,9 +243,16 @@ class Grid extends Entity {
           this.texturePreview = new Texture(x, y, this.textureMenu.selectedTexture.key, this.textureMenu.selectedTexture.img)
         }
 
-        if(Game.events.mouse.rightClicked) {
-          Game.events.mouse.rightClicked = false
-          this.map.addTile(this.texturePreview)
+        if(Game.events.mouse.rightDown) {
+          if(!this.lastTexturePlacedAt ||
+              !Collision.pointsAreEqual(this.texturePreview.pos, this.lastTexturePlacedAt)) {
+
+            this.lastTexturePlacedAt = this.texturePreview.pos
+            this.map.addTile(this.texturePreview)
+          }
+        }
+        else if(this.lastTexturePlacedAt && !Game.events.mouse.rightDown) {
+          this.lastTexturePlacedAt = null
         }
       }
       else {
