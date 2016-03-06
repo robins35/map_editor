@@ -1,6 +1,90 @@
 import {Entity} from './entity'
 import * as Collision from './collision'
 
+class Command {
+  constructor(list, previous, next, command, params) {
+    this.list = list
+    this.command = command
+    this.params = params
+    this.previous = previous
+    this.next = next
+  }
+
+  reverseCommand() {
+    switch (this.command) {
+      case 'addTile':
+        let texture = this.params[0]
+        let column = Math.trunc(texture.pos.x / texture.width)
+        let row = Math.trunc(texture.pos.y / texture.height)
+        this.list.map[column][row] = undefined
+        break
+      case 'load_main_menu':
+        break
+      case 'main_menu':
+        break
+      case 'load_map_editor':
+        break
+      case 'map_editor':
+        break
+      default:
+        console.error(`Trying to undo unknown command: ${this.command}`)
+    }
+  }
+
+  applyCommand() {
+    switch(this.command) {
+      case 'addTile':
+        let texture = this.params[0]
+        let column = Math.trunc(texture.pos.x / texture.width)
+        let row = Math.trunc(texture.pos.y / texture.height)
+        this.list.map[column][row] = texture
+        break
+      default:
+        console.error(`Trying to redo unknown command: ${this.command}`)
+    }
+  }
+}
+
+class CommandHistory {
+  constructor(map) {
+    this.map = map
+    this.head = null
+    this.tail = null
+    this.current = null
+    this.length = 0
+  }
+
+  push(commandString, params) {
+    let command = new Command(this, this.tail, null, commandString, params)
+
+    if(!this.head)
+      this.head = command
+    this.tail.next = command
+    this.tail = command
+
+    if(this.length > 40)
+      this.head = this.head.next
+    else
+      this.length++
+  }
+
+  undo() {
+    if(this.tail) {
+      this.tail.reverseCommand()
+      this.tail = this.tail.previous
+      this.length--
+    }
+  }
+
+  redo() {
+    if(this.tail && this.tail.next) {
+      this.tail = this.tail.next
+      this.tail.applyCommand()
+      this.length++
+    }
+  }
+}
+
 export class Map {
   constructor(width, height, textureSize) {
     this.id = "map"
@@ -10,6 +94,7 @@ export class Map {
     this.columns = this.width / textureSize
     this.rows = this.height / textureSize
     this.viewPort = null
+    this.history = new CommandHistory(this.map)
 
     this.map = []
     this.layout = []
@@ -36,7 +121,12 @@ export class Map {
     let texture = new Texture(x, y, _texture.key, _texture.img)
 
     this.map[column][row] = texture
-    this.layout[column][row] = texture.key
+    this.history.push("addTile", [texture])
+    //this.layout[column][row] = texture.key
+  }
+
+  removeTile(_texture) {
+    // Pending
   }
 
   draw() {

@@ -530,6 +530,94 @@ var _collision = require('./collision');
 
 var Collision = _interopRequireWildcard(_collision);
 
+var Command = (function () {
+  function Command(list, previous, next, command, params) {
+    _classCallCheck(this, Command);
+
+    this.list = list;
+    this.command = command;
+    this.params = params;
+    this.previous = previous;
+    this.next = next;
+  }
+
+  Command.prototype.reverseCommand = function reverseCommand() {
+    switch (this.command) {
+      case 'addTile':
+        var texture = this.params[0];
+        var column = Math.trunc(texture.pos.x / texture.width);
+        var row = Math.trunc(texture.pos.y / texture.height);
+        this.list.map[column][row] = undefined;
+        break;
+      case 'load_main_menu':
+        break;
+      case 'main_menu':
+        break;
+      case 'load_map_editor':
+        break;
+      case 'map_editor':
+        break;
+      default:
+        console.error('Trying to undo unknown command: ' + this.command);
+    }
+  };
+
+  Command.prototype.applyCommand = function applyCommand() {
+    switch (this.command) {
+      case 'addTile':
+        var texture = this.params[0];
+        var column = Math.trunc(texture.pos.x / texture.width);
+        var row = Math.trunc(texture.pos.y / texture.height);
+        this.list.map[column][row] = texture;
+        break;
+      default:
+        console.error('Trying to redo unknown command: ' + this.command);
+    }
+  };
+
+  return Command;
+})();
+
+var CommandHistory = (function () {
+  function CommandHistory(map) {
+    _classCallCheck(this, CommandHistory);
+
+    this.map = map;
+    this.head = null;
+    this.tail = null;
+    this.current = null;
+    this.length = 0;
+  }
+
+  CommandHistory.prototype.push = function push(commandString, params) {
+    var command = new Command(this, this.tail, null, commandString, params);
+
+    if (!this.head) this.head = command;
+    this.tail.next = command;
+    this.tail = command;
+
+    if (this.length > 40) this.head = this.head.next;else this.length++;
+  };
+
+  CommandHistory.prototype.undo = function undo() {
+    if (this.tail) {
+      this.tail.reverseCommand();
+      this.tail = this.tail.previous;
+      this.length--;
+    }
+  };
+
+  CommandHistory.prototype.redo = function redo() {
+    if (this.tail && this.tail.next) {
+      this.tail = this.tail.next;
+      this.tail.applyCommand();
+      this.length++;
+    }
+  };
+
+  return CommandHistory;
+})();
+
 var Map = (function () {
   function Map(width, height, textureSize) {
     _classCallCheck(this, Map);
@@ -541,6 +629,7 @@ var Map = (function () {
     this.columns = this.width / textureSize;
     this.rows = this.height / textureSize;
     this.viewPort = null;
+    this.history = new CommandHistory(this.map);
 
     this.map = [];
     this.layout = [];
@@ -566,7 +655,12 @@ var Map = (function () {
     var texture = new Texture(x, y, _texture.key, _texture.img);
 
     this.map[column][row] = texture;
-    this.layout[column][row] = texture.key;
+    this.history.push("addTile", [texture]);
+    //this.layout[column][row] = texture.key
+  };
+
+  Map.prototype.removeTile = function removeTile(_texture) {
+    // Pending
   };
 
   Map.prototype.draw = function draw() {
