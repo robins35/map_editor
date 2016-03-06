@@ -22,12 +22,11 @@ class TextureMenu extends Entity {
     this.textureWidth = this.textures[Object.keys(this.textures)[0]].width
     this.setupMenuProperties()
     this.texturesPerPage = this.textureColumnCount * this.textureRowCount
-    this.totalPages = Math.ceil(Object.keys(this.textures).length / this.texturesPerPage)
-    this.page = 1
 
+    this.initTextureObjects()
+    this.totalPages = this.textureObjects.length
+    this.page = 0
     this.setupIcons()
-
-    this.loadTextureObjects()
   }
 
   setupMenuProperties() {
@@ -51,30 +50,29 @@ class TextureMenu extends Entity {
     let icon = allIcons["left_arrow"]
     icon.pos = { x: this.imagePadding, y: (this.pos.y + (this.height / 2)) - (icon.height / 2) }
     icon.clickAction = this.previousPage.bind(this)
-    if(this.page <= 1) icon.hidden = true
+    if(this.page <= 0) icon.hidden = true
     this.icons["left_arrow"] = icon
 
     icon = allIcons["right_arrow"]
     icon.pos = { x: (this.width - icon.width) - this.imagePadding, y: (this.pos.y + (this.height / 2)) - (icon.height / 2) }
     icon.clickAction = this.nextPage.bind(this)
-    if(this.page >= this.totalPages) icon.hidden = true
+    if(this.page >= (this.totalPages - 1)) icon.hidden = true
     this.icons["right_arrow"] = icon
   }
 
-  loadTextureObjects() {
+  initTextureObjects() {
     let x = this.pos.x + this.leftRightPadding
     let y = this.pos.y + this.topBottomPadding
     let currentRow = 0
     let currentColumn = 0
 
-    this.textureObjects = []
-
-    let sliceStart = (this.page - 1) * this.texturesPerPage
-    let textureKeys = Object.keys(this.textures).slice(sliceStart, sliceStart + this.texturesPerPage)
+    let textureKeys = Object.keys(this.textures)
+    let page = 0
+    this.textureObjects = [[]]
 
     for(let key of textureKeys) {
       let texture = new Texture(x, y, this.textures[key])
-      this.textureObjects.push(texture)
+      this.textureObjects[page].push(texture)
       currentColumn++
 
       x += texture.width + this.imagePadding
@@ -83,36 +81,38 @@ class TextureMenu extends Entity {
         y += texture.height + this.imagePadding
         currentColumn = 0
         currentRow++
-        if(currentRow >= this.textureRowCount)
-          break
+        if(currentRow >= this.textureRowCount) {
+          y = this.pos.y + this.topBottomPadding
+          currentRow = 0
+          page++
+          this.textureObjects[page] = []
+        }
       }
     }
   }
 
   updateArrowIcons() {
-    if(this.page == this.totalPages)
+    if(this.page == (this.totalPages - 1))
       this.icons["right_arrow"].hidden = true
     else
       this.icons["right_arrow"].hidden = false
 
-    if(this.page == 1)
+    if(this.page == 0)
       this.icons["left_arrow"].hidden = true
     else
       this.icons["left_arrow"].hidden = false
   }
 
   nextPage() {
-    if(this.page >= this.totalPages) return
+    if(this.page >= (this.totalPages - 1)) return
     this.page++
     this.updateArrowIcons()
-    this.loadTextureObjects()
   }
 
   previousPage() {
-    if(this.page <= 1) return
+    if(this.page <= 0) return
     this.page--
     this.updateArrowIcons()
-    this.loadTextureObjects()
   }
 
   draw() {
@@ -123,7 +123,7 @@ class TextureMenu extends Entity {
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
     this.ctx.restore()
 
-    for(let texture of this.textureObjects) {
+    for(let texture of this.textureObjects[this.page]) {
       this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height)
       if(this.selectedTexture && this.selectedTexture.id == texture.id) {
         this.ctx.lineWidth = 3
@@ -148,7 +148,7 @@ class TextureMenu extends Entity {
 
   update() {
     if(Collision.intersects(this, Game.events.mouse)) {
-      for(let texture of this.textureObjects) {
+      for(let texture of this.textureObjects[this.page]) {
         if(Collision.intersects(texture, Game.events.mouse)) {
           texture.hovering = true
           if(Game.events.mouse.clicked) {
@@ -160,7 +160,7 @@ class TextureMenu extends Entity {
         }
       }
 
-      if(Game.events.mouse.clicked && Collision.intersects(this, Game.events.mouse)) {
+      if(Game.events.mouse.clicked) {
         Game.events.mouse.clicked = false
         for(let iconKey of Object.keys(this.icons)) {
           let icon = this.icons[iconKey]

@@ -587,12 +587,11 @@ var TextureMenu = (function (_Entity) {
     this.textureWidth = this.textures[Object.keys(this.textures)[0]].width;
     this.setupMenuProperties();
     this.texturesPerPage = this.textureColumnCount * this.textureRowCount;
-    this.totalPages = Math.ceil(Object.keys(this.textures).length / this.texturesPerPage);
-    this.page = 1;
 
+    this.initTextureObjects();
+    this.totalPages = this.textureObjects.length;
+    this.page = 0;
     this.setupIcons();
-
-    this.loadTextureObjects();
   }
 
   TextureMenu.prototype.setupMenuProperties = function setupMenuProperties() {
@@ -616,26 +615,25 @@ var TextureMenu = (function (_Entity) {
     var icon = allIcons["left_arrow"];
     icon.pos = { x: this.imagePadding, y: this.pos.y + this.height / 2 - icon.height / 2 };
     icon.clickAction = this.previousPage.bind(this);
-    if (this.page <= 1) icon.hidden = true;
+    if (this.page <= 0) icon.hidden = true;
     this.icons["left_arrow"] = icon;
 
     icon = allIcons["right_arrow"];
     icon.pos = { x: this.width - icon.width - this.imagePadding, y: this.pos.y + this.height / 2 - icon.height / 2 };
     icon.clickAction = this.nextPage.bind(this);
-    if (this.page >= this.totalPages) icon.hidden = true;
+    if (this.page >= this.totalPages - 1) icon.hidden = true;
     this.icons["right_arrow"] = icon;
   };
 
-  TextureMenu.prototype.loadTextureObjects = function loadTextureObjects() {
+  TextureMenu.prototype.initTextureObjects = function initTextureObjects() {
     var x = this.pos.x + this.leftRightPadding;
     var y = this.pos.y + this.topBottomPadding;
     var currentRow = 0;
     var currentColumn = 0;
 
-    this.textureObjects = [];
-
-    var sliceStart = (this.page - 1) * this.texturesPerPage;
-    var textureKeys = Object.keys(this.textures).slice(sliceStart, sliceStart + this.texturesPerPage);
+    var textureKeys = Object.keys(this.textures);
+    var page = 0;
+    this.textureObjects = [[]];
 
     for (var _iterator = textureKeys, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
       var _ref;
@@ -652,7 +650,7 @@ var TextureMenu = (function (_Entity) {
       var key = _ref;
 
       var texture = new _map.Texture(x, y, this.textures[key]);
-      this.textureObjects.push(texture);
+      this.textureObjects[page].push(texture);
       currentColumn++;
 
       x += texture.width + this.imagePadding;
@@ -661,29 +659,32 @@ var TextureMenu = (function (_Entity) {
         y += texture.height + this.imagePadding;
         currentColumn = 0;
         currentRow++;
-        if (currentRow >= this.textureRowCount) break;
+        if (currentRow >= this.textureRowCount) {
+          y = this.pos.y + this.topBottomPadding;
+          currentRow = 0;
+          page++;
+          this.textureObjects[page] = [];
+        }
       }
     }
   };
 
   TextureMenu.prototype.updateArrowIcons = function updateArrowIcons() {
-    if (this.page == this.totalPages) this.icons["right_arrow"].hidden = true;else this.icons["right_arrow"].hidden = false;
+    if (this.page == this.totalPages - 1) this.icons["right_arrow"].hidden = true;else this.icons["right_arrow"].hidden = false;
 
-    if (this.page == 1) this.icons["left_arrow"].hidden = true;else this.icons["left_arrow"].hidden = false;
+    if (this.page == 0) this.icons["left_arrow"].hidden = true;else this.icons["left_arrow"].hidden = false;
   };
 
   TextureMenu.prototype.nextPage = function nextPage() {
-    if (this.page >= this.totalPages) return;
+    if (this.page >= this.totalPages - 1) return;
     this.page++;
     this.updateArrowIcons();
-    this.loadTextureObjects();
   };
 
   TextureMenu.prototype.previousPage = function previousPage() {
-    if (this.page <= 1) return;
+    if (this.page <= 0) return;
     this.page--;
     this.updateArrowIcons();
-    this.loadTextureObjects();
   };
 
   TextureMenu.prototype.draw = function draw() {
@@ -694,7 +695,7 @@ var TextureMenu = (function (_Entity) {
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
     this.ctx.restore();
 
-    for (var _iterator2 = this.textureObjects, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+    for (var _iterator2 = this.textureObjects[this.page], _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
       var _ref2;
 
       if (_isArray2) {
@@ -742,7 +743,7 @@ var TextureMenu = (function (_Entity) {
 
   TextureMenu.prototype.update = function update() {
     if (Collision.intersects(this, Game.events.mouse)) {
-      for (var _iterator4 = this.textureObjects, _isArray4 = Array.isArray(_iterator4), _i4 = 0, _iterator4 = _isArray4 ? _iterator4 : _iterator4[Symbol.iterator]();;) {
+      for (var _iterator4 = this.textureObjects[this.page], _isArray4 = Array.isArray(_iterator4), _i4 = 0, _iterator4 = _isArray4 ? _iterator4 : _iterator4[Symbol.iterator]();;) {
         var _ref4;
 
         if (_isArray4) {
@@ -766,7 +767,7 @@ var TextureMenu = (function (_Entity) {
         }
       }
 
-      if (Game.events.mouse.clicked && Collision.intersects(this, Game.events.mouse)) {
+      if (Game.events.mouse.clicked) {
         Game.events.mouse.clicked = false;
         for (var _iterator5 = Object.keys(this.icons), _isArray5 = Array.isArray(_iterator5), _i5 = 0, _iterator5 = _isArray5 ? _iterator5 : _iterator5[Symbol.iterator]();;) {
           var _ref5;
