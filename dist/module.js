@@ -566,14 +566,14 @@ var Map = (function () {
   Map.prototype.draw = function draw() {
     if (this.viewPort) {
       var startColumn = Math.trunc(this.viewPort.pos.x / this.textureSize);
-      var endColumn = startColumn + Math.ceil(this.viewPort.width / this.textureSize);
+      var endColumn = startColumn + Math.trunc(this.viewPort.width / this.textureSize);
       var startRow = Math.trunc(this.viewPort.pos.y / this.textureSize);
-      var endRow = startRow + Math.ceil(this.viewPort.height / this.textureSize);
+      var endRow = startRow + Math.trunc(this.viewPort.height / this.textureSize);
     } else {
       var startColumn = 0;
-      var endColumn = startColumn + Math.ceil(Game.canvas.width / this.textureSize);
+      var endColumn = startColumn + Math.trunc(Game.canvas.width / this.textureSize);
       var startRow = 0;
-      var endRow = startRow + Math.ceil(Game.canvas.height / this.textureSize);
+      var endRow = startRow + Math.trunc(Game.canvas.height / this.textureSize);
     }
 
     for (var column = startColumn; column <= endColumn; column++) {
@@ -582,10 +582,10 @@ var Map = (function () {
 
         if (texture === undefined) continue;
 
-        var x = Collision.vectorDifference(this.viewPort.pos.x, column * this.textureSize);
-        var y = Collision.vectorDifference(this.viewPort.pos.y, row * this.textureSize);
+        var absolutePosition = { x: column * this.textureSize, y: row * this.textureSize };
+        var pos = Collision.vectorDifference(absolutePosition, this.viewPort.pos);
 
-        Game.ctx.drawImage(texture.img, x, y, texture.width, texture.height);
+        Game.ctx.drawImage(texture.img, pos.x, pos.y, texture.width, texture.height);
       }
     }
   };
