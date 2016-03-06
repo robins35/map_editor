@@ -18,6 +18,7 @@ class TextureMenu extends Entity {
     this.backgroundColor = '#381807'
     this.opacity = 0.4
     this.textures = Game.AssetManager.imgs["textures"]
+    this.selectedTexture = null
     this.textureWidth = this.textures[Object.keys(this.textures)[0]].width
     this.setupMenuProperties()
     this.texturesPerPage = this.textureColumnCount * this.textureRowCount
@@ -124,7 +125,14 @@ class TextureMenu extends Entity {
 
     for(let texture of this.textureObjects) {
       this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height)
-      if(texture.hovering) {
+      if(this.selectedTexture && this.selectedTexture.id == texture.id) {
+        this.ctx.lineWidth = 3
+        this.ctx.strokeStyle = "#00ff00"
+        this.ctx.strokeRect(texture.pos.x, texture.pos.y, texture.width, texture.height)
+      }
+      if(texture.hovering && (!this.selectedTexture ||
+            (this.selectedTexture &&
+              this.selectedTexture.id != texture.id))) {
         this.ctx.lineWidth = 2
         this.ctx.strokeStyle = "#90c3d4"
         this.ctx.strokeRect(texture.pos.x, texture.pos.y, texture.width, texture.height)
@@ -143,6 +151,9 @@ class TextureMenu extends Entity {
       for(let texture of this.textureObjects) {
         if(Collision.intersects(texture, Game.events.mouse)) {
           texture.hovering = true
+          if(Game.events.mouse.clicked) {
+            this.selectedTexture = texture
+          }
         }
         else {
           texture.hovering = false
@@ -168,6 +179,7 @@ class Grid extends Entity {
     this.color = "#cccccc"
     this.viewPort = _viewPort
     this.textureMenu = _textureMenu
+    this.texturePreview = null
   }
 
   draw() {
@@ -185,12 +197,39 @@ class Grid extends Entity {
     ctx.strokeStyle = this.color
     ctx.lineWidth = 1
     ctx.stroke()
+
+    if(this.texturePreview && !this.viewPort.positionAtDragStart) {
+      this.ctx.save()
+      this.ctx.globalAlpha = 0.3
+
+      let texture = this.texturePreview
+      this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height)
+
+      this.ctx.restore()
+    }
   }
 
   update() {
-    let x = this.size - (this.viewPort.pos.x % this.size)
-    let y = this.size - (this.viewPort.pos.y % this.size)
+    let xOffset = this.viewPort.pos.x % this.size
+    let yOffset = this.viewPort.pos.y % this.size
+
+    let x = xOffset ? this.size - xOffset : 0
+    let y = yOffset ? this.size - yOffset : 0
     this.move(x, y)
+
+    if(this.textureMenu.selectedTexture) {
+      if(Collision.intersects(this, Game.events.mouse)) {
+        let columnIntersected = Math.trunc((Game.events.mouse.x - this.pos.x) / this.size)
+        let rowIntersected = Math.trunc((Game.events.mouse.y - this.pos.y) / this.size)
+
+        let x = this.pos.x + (columnIntersected * this.size)
+        let y = this.pos.y + (rowIntersected * this.size)
+        this.texturePreview = new Texture(x, y, this.textureMenu.selectedTexture.img)
+      }
+      else {
+        this.texturePreview = null
+      }
+    }
   }
 }
 
