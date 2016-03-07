@@ -10,13 +10,19 @@ class Command {
     this.next = next
   }
 
+  merge(params) {
+    this.params = this.params.concat(params)
+  }
+
   reverseCommand() {
     switch (this.command) {
       case 'addTile':
-        let texture = this.params[0]
-        let column = Math.trunc(texture.pos.x / texture.width)
-        let row = Math.trunc(texture.pos.y / texture.height)
-        this.list.map[column][row] = undefined
+        let textures = this.params
+        for(let texture of textures) {
+          let column = Math.trunc(texture.pos.x / texture.width)
+          let row = Math.trunc(texture.pos.y / texture.height)
+          this.list.map[column][row] = undefined
+        }
         break
       case 'load_main_menu':
         break
@@ -55,13 +61,15 @@ class CommandHistory {
   }
 
   push(commandString, params) {
-    let command = new Command(this, this.tail, null, commandString, params)
+    let command = new Command(this, this.current, null, commandString, params)
 
     if(!this.head)
       this.head = command
 
-    if(this.tail)
+    if(this.tail) {
       this.tail.next = command
+      command.previous = this.tail
+    }
     this.tail = command
 
     if(this.length > 40)
@@ -72,8 +80,14 @@ class CommandHistory {
     this.current = this.tail
   }
 
+  merge(params) {
+    if(this.current) {
+      this.current.merge(params)
+    }
+  }
+
   undo() {
-    if(this.tail) {
+    if(this.current) {
       this.current.reverseCommand()
       this.current = this.current.previous
       this.length--
@@ -109,7 +123,7 @@ export class Map {
     this.history = new CommandHistory(this.map)
   }
 
-  addTile(_texture) {
+  addTile(_texture, addToLastCommand) {
     if(this.viewPort) {
       var x = this.viewPort.pos.x + _texture.pos.x
       var y = this.viewPort.pos.y + _texture.pos.y
@@ -125,7 +139,12 @@ export class Map {
     let texture = new Texture(x, y, _texture.key, _texture.img)
 
     this.map[column][row] = texture
-    this.history.push("addTile", [texture])
+    if(addToLastCommand) {
+      this.history.merge([texture])
+    }
+    else {
+      this.history.push("addTile", [texture])
+    }
     //this.layout[column][row] = texture.key
   }
 

@@ -184,6 +184,8 @@ class Grid extends Entity {
     this.texturePreview = null
     this.lastTexturePlacedAt = null
     this.texturePreviewAlpha = 0.3
+    this.undoing = false
+    this.addToLastCommand = false
   }
 
   resetDimensions() {
@@ -229,8 +231,13 @@ class Grid extends Entity {
     this.move(x, y)
     this.resetDimensions()
 
-    if(Game.events.controlKeysDown[90] || Game.events.keysDown[85])
-      this.map.undo()
+    if(!this.undoing && (Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
+      this.undoing = true
+      this.map.history.undo()
+    }
+    else if(this.undoing && !(Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
+      this.undoing = false
+    }
 
     if(this.textureMenu.selectedTexture) {
       if(Collision.intersects(this, Game.events.mouse)) {
@@ -251,11 +258,13 @@ class Grid extends Entity {
               !Collision.pointsAreEqual(this.texturePreview.pos, this.lastTexturePlacedAt)) {
 
             this.lastTexturePlacedAt = this.texturePreview.pos
-            this.map.addTile(this.texturePreview)
+            this.map.addTile(this.texturePreview, this.addToLastCommand)
+            this.addToLastCommand = true
           }
         }
         else if(this.lastTexturePlacedAt && !Game.events.mouse.rightDown) {
           this.lastTexturePlacedAt = null
+          this.addToLastCommand = false
         }
       }
       else {

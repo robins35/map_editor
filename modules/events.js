@@ -63,7 +63,7 @@ let init = (canvas) => {
   });
 
   $(document).on('keydown', (e) => {
-    if(controlKeysDown)
+    if(!$.isEmptyObject(controlKeysDown))
       controlKeysDown[e.keyCode] = true
     else
       keysDown[e.keyCode] = true
@@ -72,11 +72,10 @@ let init = (canvas) => {
       controlKeysDown = keysDown
       keysDown = {}
     }
-    console.log(e.keyCode)
   });
 
   $(document).on('keyup', (e) => {
-    if(controlKeysDown) {
+    if(!$.isEmptyObject(controlKeysDown)) {
       delete controlKeysDown[e.keyCode]
       if(e.keyCode == 17) {
         keysDown = controlKeysDown

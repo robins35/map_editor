@@ -307,17 +307,16 @@ var init = function init(canvas) {
   });
 
   $(document).on('keydown', function (e) {
-    if (controlKeysDown) controlKeysDown[e.keyCode] = true;else keysDown[e.keyCode] = true;
+    if (!$.isEmptyObject(controlKeysDown)) controlKeysDown[e.keyCode] = true;else keysDown[e.keyCode] = true;
 
     if (e.keyCode == 17) {
       exports.controlKeysDown = controlKeysDown = keysDown;
       exports.keysDown = keysDown = {};
     }
-    console.log(e.keyCode);
   });
 
   $(document).on('keyup', function (e) {
-    if (controlKeysDown) {
+    if (!$.isEmptyObject(controlKeysDown)) {
       delete controlKeysDown[e.keyCode];
       if (e.keyCode == 17) {
         exports.keysDown = keysDown = controlKeysDown;
@@ -557,13 +556,32 @@ var Command = (function () {
     this.next = next;
   }
 
+  Command.prototype.merge = function merge(params) {
+    this.params = this.params.concat(params);
+  };
+
   Command.prototype.reverseCommand = function reverseCommand() {
     switch (this.command) {
       case 'addTile':
-        var texture = this.params[0];
-        var column = Math.trunc(texture.pos.x / texture.width);
-        var row = Math.trunc(texture.pos.y / texture.height);
-        this.list.map[column][row] = undefined;
+        var textures = this.params;
+        for (var _iterator = textures, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+          var _ref;
+
+          if (_isArray) {
+            if (_i >= _iterator.length) break;
+            _ref = _iterator[_i++];
+          } else {
+            _i = _iterator.next();
+            if (_i.done) break;
+            _ref = _i.value;
+          }
+
+          var texture = _ref;
+
+          var column = Math.trunc(texture.pos.x / texture.width);
+          var row = Math.trunc(texture.pos.y / texture.height);
+          this.list.map[column][row] = undefined;
+        }
         break;
       case 'load_main_menu':
         break;
@@ -606,11 +624,14 @@ var CommandHistory = (function () {
   }
 
   CommandHistory.prototype.push = function push(commandString, params) {
-    var command = new Command(this, this.tail, null, commandString, params);
+    var command = new Command(this, this.current, null, commandString, params);
 
     if (!this.head) this.head = command;
 
-    if (this.tail) this.tail.next = command;
+    if (this.tail) {
+      this.tail.next = command;
+      command.previous = this.tail;
+    }
     this.tail = command;
 
     if (this.length > 40) this.head = this.head.next;else this.length++;
@@ -618,8 +639,14 @@ var CommandHistory = (function () {
     this.current = this.tail;
   };
 
+  CommandHistory.prototype.merge = function merge(params) {
+    if (this.current) {
+      this.current.merge(params);
+    }
+  };
+
   CommandHistory.prototype.undo = function undo() {
-    if (this.tail) {
+    if (this.current) {
       this.current.reverseCommand();
       this.current = this.current.previous;
       this.length--;
@@ -659,7 +686,7 @@ var Map = (function () {
     this.history = new CommandHistory(this.map);
   }
 
-  Map.prototype.addTile = function addTile(_texture) {
+  Map.prototype.addTile = function addTile(_texture, addToLastCommand) {
     if (this.viewPort) {
       var x = this.viewPort.pos.x + _texture.pos.x;
       var y = this.viewPort.pos.y + _texture.pos.y;
@@ -674,7 +701,11 @@ var Map = (function () {
     var texture = new Texture(x, y, _texture.key, _texture.img);
 
     this.map[column][row] = texture;
-    this.history.push("addTile", [texture]);
+    if (addToLastCommand) {
+      this.history.merge([texture]);
+    } else {
+      this.history.push("addTile", [texture]);
+    }
     //this.layout[column][row] = texture.key
   };
 
@@ -997,6 +1028,8 @@ var Grid = (function (_Entity2) {
     this.texturePreview = null;
     this.lastTexturePlacedAt = null;
     this.texturePreviewAlpha = 0.3;
+    this.undoing = false;
+    this.addToLastCommand = false;
   }
 
   Grid.prototype.resetDimensions = function resetDimensions() {
@@ -1042,7 +1075,12 @@ var Grid = (function (_Entity2) {
     this.move(x, y);
     this.resetDimensions();
 
-    if (Game.events.controlKeysDown[90] || Game.events.keysDown[85]) this.map.undo();
+    if (!this.undoing && (Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
+      this.undoing = true;
+      this.map.history.undo();
+    } else if (this.undoing && !(Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
+      this.undoing = false;
+    }
 
     if (this.textureMenu.selectedTexture) {
       if (Collision.intersects(this, Game.events.mouse)) {
@@ -1061,10 +1099,12 @@ var Grid = (function (_Entity2) {
           if (!this.lastTexturePlacedAt || !Collision.pointsAreEqual(this.texturePreview.pos, this.lastTexturePlacedAt)) {
 
             this.lastTexturePlacedAt = this.texturePreview.pos;
-            this.map.addTile(this.texturePreview);
+            this.map.addTile(this.texturePreview, this.addToLastCommand);
+            this.addToLastCommand = true;
           }
         } else if (this.lastTexturePlacedAt && !Game.events.mouse.rightDown) {
           this.lastTexturePlacedAt = null;
+          this.addToLastCommand = false;
         }
       } else {
         this.texturePreview = null;
