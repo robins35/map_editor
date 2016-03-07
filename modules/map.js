@@ -59,27 +59,31 @@ class CommandHistory {
 
     if(!this.head)
       this.head = command
-    this.tail.next = command
+
+    if(this.tail)
+      this.tail.next = command
     this.tail = command
 
     if(this.length > 40)
       this.head = this.head.next
     else
       this.length++
+
+    this.current = this.tail
   }
 
   undo() {
     if(this.tail) {
-      this.tail.reverseCommand()
-      this.tail = this.tail.previous
+      this.current.reverseCommand()
+      this.current = this.current.previous
       this.length--
     }
   }
 
   redo() {
-    if(this.tail && this.tail.next) {
-      this.tail = this.tail.next
-      this.tail.applyCommand()
+    if(this.current && this.current.next) {
+      this.current = this.current.next
+      this.current.applyCommand()
       this.length++
     }
   }
@@ -94,7 +98,6 @@ export class Map {
     this.columns = this.width / textureSize
     this.rows = this.height / textureSize
     this.viewPort = null
-    this.history = new CommandHistory(this.map)
 
     this.map = []
     this.layout = []
@@ -103,6 +106,7 @@ export class Map {
       this.map[column] = []
       this.layout[column] = []
     }
+    this.history = new CommandHistory(this.map)
   }
 
   addTile(_texture) {

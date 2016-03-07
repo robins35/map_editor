@@ -229,6 +229,9 @@ class Grid extends Entity {
     this.move(x, y)
     this.resetDimensions()
 
+    if(Game.events.controlKeysDown[90] || Game.events.keysDown[85])
+      this.map.undo()
+
     if(this.textureMenu.selectedTexture) {
       if(Collision.intersects(this, Game.events.mouse)) {
         let columnIntersected = Math.trunc((Game.events.mouse.x - this.pos.x) / this.size)

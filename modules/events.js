@@ -10,6 +10,7 @@ let mouse = {
 }
 
 let keysDown = {}
+let controlKeysDown = {}
 
 let init = (canvas) => {
   $(canvas).on('mousemove', (e) => {
@@ -62,12 +63,30 @@ let init = (canvas) => {
   });
 
   $(document).on('keydown', (e) => {
-    keysDown[e.keyCode] = true
+    if(controlKeysDown)
+      controlKeysDown[e.keyCode] = true
+    else
+      keysDown[e.keyCode] = true
+
+    if(e.keyCode == 17) {
+      controlKeysDown = keysDown
+      keysDown = {}
+    }
+    console.log(e.keyCode)
   });
 
   $(document).on('keyup', (e) => {
-    delete keysDown[e.keyCode]
+    if(controlKeysDown) {
+      delete controlKeysDown[e.keyCode]
+      if(e.keyCode == 17) {
+        keysDown = controlKeysDown
+        controlKeysDown = {}
+      }
+    }
+    else {
+      delete keysDown[e.keyCode]
+    }
   });
 }
 
-export { init, mouse, keysDown}
+export { init, mouse, keysDown, controlKeysDown }

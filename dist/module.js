@@ -256,6 +256,7 @@ var mouse = {
 };
 
 var keysDown = {};
+var controlKeysDown = {};
 
 var init = function init(canvas) {
   $(canvas).on('mousemove', function (e) {
@@ -306,17 +307,32 @@ var init = function init(canvas) {
   });
 
   $(document).on('keydown', function (e) {
-    keysDown[e.keyCode] = true;
+    if (controlKeysDown) controlKeysDown[e.keyCode] = true;else keysDown[e.keyCode] = true;
+
+    if (e.keyCode == 17) {
+      exports.controlKeysDown = controlKeysDown = keysDown;
+      exports.keysDown = keysDown = {};
+    }
+    console.log(e.keyCode);
   });
 
   $(document).on('keyup', function (e) {
-    delete keysDown[e.keyCode];
+    if (controlKeysDown) {
+      delete controlKeysDown[e.keyCode];
+      if (e.keyCode == 17) {
+        exports.keysDown = keysDown = controlKeysDown;
+        exports.controlKeysDown = controlKeysDown = {};
+      }
+    } else {
+      delete keysDown[e.keyCode];
+    }
   });
 };
 
 exports.init = init;
 exports.mouse = mouse;
 exports.keysDown = keysDown;
+exports.controlKeysDown = controlKeysDown;
 
 },{}],5:[function(require,module,exports){
 'use strict';
@@ -593,24 +609,27 @@ var CommandHistory = (function () {
     var command = new Command(this, this.tail, null, commandString, params);
 
     if (!this.head) this.head = command;
-    this.tail.next = command;
+
+    if (this.tail) this.tail.next = command;
     this.tail = command;
 
     if (this.length > 40) this.head = this.head.next;else this.length++;
+
+    this.current = this.tail;
   };
 
   CommandHistory.prototype.undo = function undo() {
     if (this.tail) {
-      this.tail.reverseCommand();
-      this.tail = this.tail.previous;
+      this.current.reverseCommand();
+      this.current = this.current.previous;
       this.length--;
     }
   };
 
   CommandHistory.prototype.redo = function redo() {
-    if (this.tail && this.tail.next) {
-      this.tail = this.tail.next;
-      this.tail.applyCommand();
+    if (this.current && this.current.next) {
+      this.current = this.current.next;
+      this.current.applyCommand();
       this.length++;
     }
   };
@@ -629,7 +648,6 @@ var Map = (function () {
     this.columns = this.width / textureSize;
     this.rows = this.height / textureSize;
     this.viewPort = null;
-    this.history = new CommandHistory(this.map);
 
     this.map = [];
     this.layout = [];
@@ -638,6 +656,7 @@ var Map = (function () {
       this.map[column] = [];
       this.layout[column] = [];
     }
+    this.history = new CommandHistory(this.map);
   }
 
   Map.prototype.addTile = function addTile(_texture) {
@@ -1022,6 +1041,8 @@ var Grid = (function (_Entity2) {
     var y = yOffset ? this.size - yOffset : 0;
     this.move(x, y);
     this.resetDimensions();
+
+    if (Game.events.controlKeysDown[90] || Game.events.keysDown[85]) this.map.undo();
 
     if (this.textureMenu.selectedTexture) {
       if (Collision.intersects(this, Game.events.mouse)) {
