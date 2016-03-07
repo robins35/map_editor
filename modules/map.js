@@ -3,6 +3,8 @@ import * as Collision from './collision'
 
 class Command {
   constructor(list, previous, next, command, params) {
+    Command.id = (Command.id === undefined) ? 1 : Command.id
+    this.id = Command.id++
     this.list = list
     this.command = command
     this.params = params
@@ -19,9 +21,7 @@ class Command {
       case 'addTile':
         let textures = this.params
         for(let texture of textures) {
-          let column = Math.trunc(texture.pos.x / texture.width)
-          let row = Math.trunc(texture.pos.y / texture.height)
-          this.list.map[column][row] = undefined
+          this.list.map.removeTile(texture)
         }
         break
       case 'load_main_menu':
@@ -40,10 +40,10 @@ class Command {
   applyCommand() {
     switch(this.command) {
       case 'addTile':
-        let texture = this.params[0]
-        let column = Math.trunc(texture.pos.x / texture.width)
-        let row = Math.trunc(texture.pos.y / texture.height)
-        this.list.map[column][row] = texture
+        let textures = this.params
+        for(let texture of textures) {
+          this.list.map.addTileFromHistory(texture)
+        }
         break
       default:
         console.error(`Trying to redo unknown command: ${this.command}`)
@@ -58,6 +58,28 @@ class CommandHistory {
     this.tail = null
     this.current = null
     this.length = 0
+  }
+
+  print() {
+    let current = this.head
+    let str = ''
+    while(current) {
+      if (current.id == this.head.id)
+        str += "HEAD"
+      else if (this.current && current.id == this.current.id)
+        str += "CURRENT"
+      else if (current.id == this.tail.id)
+        str += "TAIL"
+      else
+        str += current.id
+
+      str += "-" + current.params.length
+
+      if(current.next)
+        str += " --> "
+      current = current.next
+    }
+      console.log(str)
   }
 
   push(commandString, params) {
@@ -92,14 +114,23 @@ class CommandHistory {
       this.current = this.current.previous
       this.length--
     }
+    this.print()
   }
 
   redo() {
-    if(this.current && this.current.next) {
-      this.current = this.current.next
-      this.current.applyCommand()
-      this.length++
+    if(this.current) {
+      if (this.current.next) {
+        this.current = this.current.next
+        this.current.applyCommand()
+        this.length++
+      }
     }
+    else if(this.head) {
+      this.current = this.head
+      this.current.applyCommand()
+      this.length = 1
+    }
+    this.print()
   }
 }
 
@@ -120,7 +151,7 @@ export class Map {
       this.map[column] = []
       this.layout[column] = []
     }
-    this.history = new CommandHistory(this.map)
+    this.commandHistory = new CommandHistory(this)
   }
 
   addTile(_texture, addToLastCommand) {
@@ -140,16 +171,24 @@ export class Map {
 
     this.map[column][row] = texture
     if(addToLastCommand) {
-      this.history.merge([texture])
+      this.commandHistory.merge([texture])
     }
     else {
-      this.history.push("addTile", [texture])
+      this.commandHistory.push("addTile", [texture])
     }
     //this.layout[column][row] = texture.key
   }
 
-  removeTile(_texture) {
-    // Pending
+  addTileFromHistory(texture) {
+    let column = Math.trunc(texture.pos.x / texture.width)
+    let row = Math.trunc(texture.pos.y / texture.height)
+    this.map[column][row] = texture
+  }
+
+  removeTile(texture) {
+    let column = Math.trunc(texture.pos.x / texture.width)
+    let row = Math.trunc(texture.pos.y / texture.height)
+    this.map[column][row] = undefined
   }
 
   draw() {

@@ -307,7 +307,12 @@ var init = function init(canvas) {
   });
 
   $(document).on('keydown', function (e) {
-    if (!$.isEmptyObject(controlKeysDown)) controlKeysDown[e.keyCode] = true;else keysDown[e.keyCode] = true;
+    if (!$.isEmptyObject(controlKeysDown)) {
+      controlKeysDown[e.keyCode] = true;
+      if (e.keyCode == 82) {
+        if (e.preventDefault) e.preventDefault();else return false;
+      }
+    } else keysDown[e.keyCode] = true;
 
     if (e.keyCode == 17) {
       exports.controlKeysDown = controlKeysDown = keysDown;
@@ -549,6 +554,8 @@ var Command = (function () {
   function Command(list, previous, next, command, params) {
     _classCallCheck(this, Command);
 
+    Command.id = Command.id === undefined ? 1 : Command.id;
+    this.id = Command.id++;
     this.list = list;
     this.command = command;
     this.params = params;
@@ -578,9 +585,7 @@ var Command = (function () {
 
           var texture = _ref;
 
-          var column = Math.trunc(texture.pos.x / texture.width);
-          var row = Math.trunc(texture.pos.y / texture.height);
-          this.list.map[column][row] = undefined;
+          this.list.map.removeTile(texture);
         }
         break;
       case 'load_main_menu':
@@ -599,10 +604,23 @@ var Command = (function () {
   Command.prototype.applyCommand = function applyCommand() {
     switch (this.command) {
       case 'addTile':
-        var texture = this.params[0];
-        var column = Math.trunc(texture.pos.x / texture.width);
-        var row = Math.trunc(texture.pos.y / texture.height);
-        this.list.map[column][row] = texture;
+        var textures = this.params;
+        for (var _iterator2 = textures, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+          var _ref2;
+
+          if (_isArray2) {
+            if (_i2 >= _iterator2.length) break;
+            _ref2 = _iterator2[_i2++];
+          } else {
+            _i2 = _iterator2.next();
+            if (_i2.done) break;
+            _ref2 = _i2.value;
+          }
+
+          var texture = _ref2;
+
+          this.list.map.addTileFromHistory(texture);
+        }
         break;
       default:
         console.error('Trying to redo unknown command: ' + this.command);
@@ -622,6 +640,20 @@ var CommandHistory = (function () {
     this.current = null;
     this.length = 0;
   }
+
+  CommandHistory.prototype.print = function print() {
+    var current = this.head;
+    var str = '';
+    while (current) {
+      if (current.id == this.head.id) str += "HEAD";else if (this.current && current.id == this.current.id) str += "CURRENT";else if (current.id == this.tail.id) str += "TAIL";else str += current.id;
+
+      str += "-" + current.params.length;
+
+      if (current.next) str += " --> ";
+      current = current.next;
+    }
+    console.log(str);
+  };
 
   CommandHistory.prototype.push = function push(commandString, params) {
     var command = new Command(this, this.current, null, commandString, params);
@@ -651,14 +683,22 @@ var CommandHistory = (function () {
       this.current = this.current.previous;
       this.length--;
     }
+    this.print();
   };
 
   CommandHistory.prototype.redo = function redo() {
-    if (this.current && this.current.next) {
-      this.current = this.current.next;
+    if (this.current) {
+      if (this.current.next) {
+        this.current = this.current.next;
+        this.current.applyCommand();
+        this.length++;
+      }
+    } else if (this.head) {
+      this.current = this.head;
       this.current.applyCommand();
-      this.length++;
+      this.length = 1;
     }
+    this.print();
   };
 
   return CommandHistory;
@@ -683,7 +723,7 @@ var Map = (function () {
       this.map[column] = [];
       this.layout[column] = [];
     }
-    this.history = new CommandHistory(this.map);
+    this.commandHistory = new CommandHistory(this);
   }
 
   Map.prototype.addTile = function addTile(_texture, addToLastCommand) {
@@ -702,15 +742,23 @@ var Map = (function () {
 
     this.map[column][row] = texture;
     if (addToLastCommand) {
-      this.history.merge([texture]);
+      this.commandHistory.merge([texture]);
     } else {
-      this.history.push("addTile", [texture]);
+      this.commandHistory.push("addTile", [texture]);
     }
     //this.layout[column][row] = texture.key
   };
 
-  Map.prototype.removeTile = function removeTile(_texture) {
-    // Pending
+  Map.prototype.addTileFromHistory = function addTileFromHistory(texture) {
+    var column = Math.trunc(texture.pos.x / texture.width);
+    var row = Math.trunc(texture.pos.y / texture.height);
+    this.map[column][row] = texture;
+  };
+
+  Map.prototype.removeTile = function removeTile(texture) {
+    var column = Math.trunc(texture.pos.x / texture.width);
+    var row = Math.trunc(texture.pos.y / texture.height);
+    this.map[column][row] = undefined;
   };
 
   Map.prototype.draw = function draw() {
@@ -1029,6 +1077,7 @@ var Grid = (function (_Entity2) {
     this.lastTexturePlacedAt = null;
     this.texturePreviewAlpha = 0.3;
     this.undoing = false;
+    this.redoing = false;
     this.addToLastCommand = false;
   }
 
@@ -1076,10 +1125,19 @@ var Grid = (function (_Entity2) {
     this.resetDimensions();
 
     if (!this.undoing && (Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
+      console.log("Calling UNDO on map history");
       this.undoing = true;
-      this.map.history.undo();
+      this.map.commandHistory.undo();
     } else if (this.undoing && !(Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
       this.undoing = false;
+    }
+
+    if (!this.redoing && (Game.events.controlKeysDown[82] || Game.events.controlKeysDown[89])) {
+      console.log("Calling REDO on map history");
+      this.redoing = true;
+      this.map.commandHistory.redo();
+    } else if (this.redoing && !(Game.events.controlKeysDown[82] || Game.events.controlKeysDown[89])) {
+      this.redoing = false;
     }
 
     if (this.textureMenu.selectedTexture) {

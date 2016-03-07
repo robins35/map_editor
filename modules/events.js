@@ -63,8 +63,15 @@ let init = (canvas) => {
   });
 
   $(document).on('keydown', (e) => {
-    if(!$.isEmptyObject(controlKeysDown))
+    if(!$.isEmptyObject(controlKeysDown)) {
       controlKeysDown[e.keyCode] = true
+      if(e.keyCode == 82) {
+        if(e.preventDefault)
+          e.preventDefault()
+        else
+          return false
+      }
+    }
     else
       keysDown[e.keyCode] = true
 

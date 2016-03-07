@@ -185,6 +185,7 @@ class Grid extends Entity {
     this.lastTexturePlacedAt = null
     this.texturePreviewAlpha = 0.3
     this.undoing = false
+    this.redoing = false
     this.addToLastCommand = false
   }
 
@@ -232,11 +233,21 @@ class Grid extends Entity {
     this.resetDimensions()
 
     if(!this.undoing && (Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
+      console.log("Calling UNDO on map history")
       this.undoing = true
-      this.map.history.undo()
+      this.map.commandHistory.undo()
     }
     else if(this.undoing && !(Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
       this.undoing = false
+    }
+
+    if(!this.redoing && (Game.events.controlKeysDown[82] || Game.events.controlKeysDown[89])) {
+      console.log("Calling REDO on map history")
+      this.redoing = true
+      this.map.commandHistory.redo()
+    }
+    else if (this.redoing && !(Game.events.controlKeysDown[82] || Game.events.controlKeysDown[89])) {
+      this.redoing = false
     }
 
     if(this.textureMenu.selectedTexture) {
