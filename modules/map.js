@@ -88,18 +88,17 @@ class CommandHistory {
     if(!this.head)
       this.head = command
 
-    if(this.tail) {
-      this.tail.next = command
-      command.previous = this.tail
+    if(this.current) {
+      this.current.next = command
     }
-    this.tail = command
+
+    this.current = command
+    this.tail = this.current
 
     if(this.length > 40)
       this.head = this.head.next
     else
       this.length++
-
-    this.current = this.tail
   }
 
   merge(params) {
