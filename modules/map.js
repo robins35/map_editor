@@ -19,10 +19,14 @@ class Command {
   reverseCommand() {
     switch (this.command) {
       case 'addTile':
+        let that = this
         let textures = this.params
-        for(let texture of textures) {
-          this.list.map.removeTile(texture)
-        }
+        this.list.map.viewPort.centerObject(textures[0].pos)
+        setTimeout(function() {
+          for(let texture of textures) {
+            that.list.map.removeTile(texture)
+          }
+        }, 100)
         break
       case 'load_main_menu':
         break
@@ -40,10 +44,14 @@ class Command {
   applyCommand() {
     switch(this.command) {
       case 'addTile':
+        let that = this
         let textures = this.params
-        for(let texture of textures) {
-          this.list.map.addTileFromHistory(texture)
-        }
+        this.list.map.viewPort.centerObject(textures[0].pos)
+        setTimeout(function() {
+          for(let texture of textures) {
+            that.list.map.addTileFromHistory(texture)
+          }
+        }, 100)
         break
       default:
         console.error(`Trying to redo unknown command: ${this.command}`)
@@ -113,7 +121,6 @@ class CommandHistory {
       this.current = this.current.previous
       this.length--
     }
-    this.print()
   }
 
   redo() {
@@ -129,7 +136,6 @@ class CommandHistory {
       this.current.applyCommand()
       this.length = 1
     }
-    this.print()
   }
 }
 

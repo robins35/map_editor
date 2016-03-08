@@ -570,23 +570,27 @@ var Command = (function () {
   Command.prototype.reverseCommand = function reverseCommand() {
     switch (this.command) {
       case 'addTile':
+        var that = this;
         var textures = this.params;
-        for (var _iterator = textures, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-          var _ref;
+        this.list.map.viewPort.centerObject(textures[0].pos);
+        setTimeout(function () {
+          for (var _iterator = textures, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+            var _ref;
 
-          if (_isArray) {
-            if (_i >= _iterator.length) break;
-            _ref = _iterator[_i++];
-          } else {
-            _i = _iterator.next();
-            if (_i.done) break;
-            _ref = _i.value;
+            if (_isArray) {
+              if (_i >= _iterator.length) break;
+              _ref = _iterator[_i++];
+            } else {
+              _i = _iterator.next();
+              if (_i.done) break;
+              _ref = _i.value;
+            }
+
+            var texture = _ref;
+
+            that.list.map.removeTile(texture);
           }
-
-          var texture = _ref;
-
-          this.list.map.removeTile(texture);
-        }
+        }, 100);
         break;
       case 'load_main_menu':
         break;
@@ -604,23 +608,27 @@ var Command = (function () {
   Command.prototype.applyCommand = function applyCommand() {
     switch (this.command) {
       case 'addTile':
+        var that = this;
         var textures = this.params;
-        for (var _iterator2 = textures, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
-          var _ref2;
+        this.list.map.viewPort.centerObject(textures[0].pos);
+        setTimeout(function () {
+          for (var _iterator2 = textures, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+            var _ref2;
 
-          if (_isArray2) {
-            if (_i2 >= _iterator2.length) break;
-            _ref2 = _iterator2[_i2++];
-          } else {
-            _i2 = _iterator2.next();
-            if (_i2.done) break;
-            _ref2 = _i2.value;
+            if (_isArray2) {
+              if (_i2 >= _iterator2.length) break;
+              _ref2 = _iterator2[_i2++];
+            } else {
+              _i2 = _iterator2.next();
+              if (_i2.done) break;
+              _ref2 = _i2.value;
+            }
+
+            var texture = _ref2;
+
+            that.list.map.addTileFromHistory(texture);
           }
-
-          var texture = _ref2;
-
-          this.list.map.addTileFromHistory(texture);
-        }
+        }, 100);
         break;
       default:
         console.error('Trying to redo unknown command: ' + this.command);
@@ -682,7 +690,6 @@ var CommandHistory = (function () {
       this.current = this.current.previous;
       this.length--;
     }
-    this.print();
   };
 
   CommandHistory.prototype.redo = function redo() {
@@ -697,7 +704,6 @@ var CommandHistory = (function () {
       this.current.applyCommand();
       this.length = 1;
     }
-    this.print();
   };
 
   return CommandHistory;
@@ -1331,6 +1337,13 @@ var ViewPort = (function (_Entity) {
 
   ViewPort.prototype.maxY = function maxY() {
     return this.map.height - this.height;
+  };
+
+  ViewPort.prototype.centerObject = function centerObject(pos) {
+    var x = pos.x - this.width / 2;
+    var y = pos.y - this.height / 2;
+
+    this.safeMove(x, y);
   };
 
   ViewPort.prototype.update = function update() {
