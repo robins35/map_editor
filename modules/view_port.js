@@ -18,11 +18,13 @@ export class ViewPort extends Entity {
     return this.map.height - this.height
   }
 
-  centerObject(pos) {
-    let x = pos.x - (this.width / 2)
-    let y = pos.y - (this.height / 2)
+  moveToObject(pos) {
+    if (!Collision.intersects(this, pos)) {
+      let x = pos.x - (this.width / 2)
+      let y = pos.y - (this.height / 2)
 
-    this.safeMove(x, y)
+      this.safeMove(x, y)
+    }
   }
 
   update() {

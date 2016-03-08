@@ -569,7 +569,7 @@ var Command = (function () {
   Command.prototype.reverseCommand = function reverseCommand() {
     switch (this.command) {
       case 'addTile':
-        this.list.map.viewPort.centerObject(this.params[0].pos);
+        this.list.map.viewPort.moveToObject(this.params[0].pos);
         setTimeout((function () {
           for (var _iterator = this.params, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
             var _ref;
@@ -591,7 +591,7 @@ var Command = (function () {
         break;
       case 'eraseTile':
         if (this.params[0] == undefined) debugger;
-        this.list.map.viewPort.centerObject(this.params[0].pos);
+        this.list.map.viewPort.moveToObject(this.params[0].pos);
         setTimeout((function () {
           for (var _iterator2 = this.params, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
             var _ref2;
@@ -620,7 +620,7 @@ var Command = (function () {
   Command.prototype.applyCommand = function applyCommand() {
     switch (this.command) {
       case 'addTile':
-        this.list.map.viewPort.centerObject(this.params[0].pos);
+        this.list.map.viewPort.moveToObject(this.params[0].pos);
         setTimeout((function () {
           for (var _iterator3 = this.params, _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
             var _ref3;
@@ -641,7 +641,7 @@ var Command = (function () {
         }).bind(this), 100);
         break;
       case 'eraseTile':
-        this.list.map.viewPort.centerObject(this.params[0].pos);
+        this.list.map.viewPort.moveToObject(this.params[0].pos);
         setTimeout((function () {
           for (var _iterator4 = this.params, _isArray4 = Array.isArray(_iterator4), _i4 = 0, _iterator4 = _isArray4 ? _iterator4 : _iterator4[Symbol.iterator]();;) {
             var _ref4;
@@ -1432,11 +1432,13 @@ var ViewPort = (function (_Entity) {
     return this.map.height - this.height;
   };
 
-  ViewPort.prototype.centerObject = function centerObject(pos) {
-    var x = pos.x - this.width / 2;
-    var y = pos.y - this.height / 2;
+  ViewPort.prototype.moveToObject = function moveToObject(pos) {
+    if (!Collision.intersects(this, pos)) {
+      var x = pos.x - this.width / 2;
+      var y = pos.y - this.height / 2;
 
-    this.safeMove(x, y);
+      this.safeMove(x, y);
+    }
   };
 
   ViewPort.prototype.update = function update() {

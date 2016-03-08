@@ -19,7 +19,7 @@ class Command {
   reverseCommand() {
     switch (this.command) {
       case 'addTile':
-        this.list.map.viewPort.centerObject(this.params[0].pos)
+        this.list.map.viewPort.moveToObject(this.params[0].pos)
         setTimeout(function() {
           for(let texture of this.params) {
             this.list.map.removeTileFromHistory(texture)
@@ -29,7 +29,7 @@ class Command {
       case 'eraseTile':
         if(this.params[0] == undefined)
           debugger
-        this.list.map.viewPort.centerObject(this.params[0].pos)
+        this.list.map.viewPort.moveToObject(this.params[0].pos)
         setTimeout(function() {
           for(let texture of this.params) {
             if(texture == undefined)
@@ -46,7 +46,7 @@ class Command {
   applyCommand() {
     switch(this.command) {
       case 'addTile':
-        this.list.map.viewPort.centerObject(this.params[0].pos)
+        this.list.map.viewPort.moveToObject(this.params[0].pos)
         setTimeout(function() {
           for(let texture of this.params) {
             this.list.map.addTileFromHistory(texture)
@@ -54,7 +54,7 @@ class Command {
         }.bind(this), 100)
         break
       case 'eraseTile':
-        this.list.map.viewPort.centerObject(this.params[0].pos)
+        this.list.map.viewPort.moveToObject(this.params[0].pos)
         setTimeout(function() {
           for(let texture of this.params) {
             this.list.map.removeTileFromHistory(texture)
