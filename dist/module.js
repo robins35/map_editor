@@ -436,9 +436,9 @@ exports.draw = draw;
 exports.init = init;
 
 },{"./asset_manager":1,"./entity":3,"./events":4,"./main_menu":7,"./map_editor":9}],6:[function(require,module,exports){
-"use strict";
+'use strict';
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj["default"] = obj; return newObj; } }
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
 var _game = require('./game');
 
@@ -468,7 +468,6 @@ $(document).ready(function () {
       drawLoop();
     })();
   } else {
-    console.log("Falling back to setInterval, update your browser!");
     setInterval(Game.update, 1000 / FPS);
     setInterval(Game.draw, 1000 / FPS);
   }
@@ -570,11 +569,9 @@ var Command = (function () {
   Command.prototype.reverseCommand = function reverseCommand() {
     switch (this.command) {
       case 'addTile':
-        var that = this;
-        var textures = this.params;
-        this.list.map.viewPort.centerObject(textures[0].pos);
-        setTimeout(function () {
-          for (var _iterator = textures, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+        this.list.map.viewPort.centerObject(this.params[0].pos);
+        setTimeout((function () {
+          for (var _iterator = this.params, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
             var _ref;
 
             if (_isArray) {
@@ -588,31 +585,15 @@ var Command = (function () {
 
             var texture = _ref;
 
-            that.list.map.removeTile(texture);
+            this.list.map.removeTileFromHistory(texture);
           }
-        }, 100);
+        }).bind(this), 100);
         break;
-      case 'load_main_menu':
-        break;
-      case 'main_menu':
-        break;
-      case 'load_map_editor':
-        break;
-      case 'map_editor':
-        break;
-      default:
-        console.error('Trying to undo unknown command: ' + this.command);
-    }
-  };
-
-  Command.prototype.applyCommand = function applyCommand() {
-    switch (this.command) {
-      case 'addTile':
-        var that = this;
-        var textures = this.params;
-        this.list.map.viewPort.centerObject(textures[0].pos);
-        setTimeout(function () {
-          for (var _iterator2 = textures, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+      case 'eraseTile':
+        if (this.params[0] == undefined) debugger;
+        this.list.map.viewPort.centerObject(this.params[0].pos);
+        setTimeout((function () {
+          for (var _iterator2 = this.params, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
             var _ref2;
 
             if (_isArray2) {
@@ -626,9 +607,59 @@ var Command = (function () {
 
             var texture = _ref2;
 
-            that.list.map.addTileFromHistory(texture);
+            if (texture == undefined) debugger;
+            this.list.map.addTileFromHistory(texture);
           }
-        }, 100);
+        }).bind(this), 100);
+        break;
+      default:
+        console.error('Trying to undo unknown command: ' + this.command);
+    }
+  };
+
+  Command.prototype.applyCommand = function applyCommand() {
+    switch (this.command) {
+      case 'addTile':
+        this.list.map.viewPort.centerObject(this.params[0].pos);
+        setTimeout((function () {
+          for (var _iterator3 = this.params, _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
+            var _ref3;
+
+            if (_isArray3) {
+              if (_i3 >= _iterator3.length) break;
+              _ref3 = _iterator3[_i3++];
+            } else {
+              _i3 = _iterator3.next();
+              if (_i3.done) break;
+              _ref3 = _i3.value;
+            }
+
+            var texture = _ref3;
+
+            this.list.map.addTileFromHistory(texture);
+          }
+        }).bind(this), 100);
+        break;
+      case 'eraseTile':
+        this.list.map.viewPort.centerObject(this.params[0].pos);
+        setTimeout((function () {
+          for (var _iterator4 = this.params, _isArray4 = Array.isArray(_iterator4), _i4 = 0, _iterator4 = _isArray4 ? _iterator4 : _iterator4[Symbol.iterator]();;) {
+            var _ref4;
+
+            if (_isArray4) {
+              if (_i4 >= _iterator4.length) break;
+              _ref4 = _iterator4[_i4++];
+            } else {
+              _i4 = _iterator4.next();
+              if (_i4.done) break;
+              _ref4 = _i4.value;
+            }
+
+            var texture = _ref4;
+
+            this.list.map.removeTileFromHistory(texture);
+          }
+        }).bind(this), 100);
         break;
       default:
         console.error('Trying to redo unknown command: ' + this.command);
@@ -731,17 +762,33 @@ var Map = (function () {
     this.commandHistory = new CommandHistory(this);
   }
 
-  Map.prototype.addTile = function addTile(_texture, addToLastCommand) {
+  Map.prototype.calculateAbsolutePosition = function calculateAbsolutePosition(pos) {
     if (this.viewPort) {
-      var x = this.viewPort.pos.x + _texture.pos.x;
-      var y = this.viewPort.pos.y + _texture.pos.y;
+      var x = this.viewPort.pos.x + pos.x;
+      var y = this.viewPort.pos.y + pos.y;
     } else {
-      var x = _texture.pos.x;
-      var y = _texture.pos.y;
+      var x = pos.x;
+      var y = pos.y;
     }
+    return [x, y];
+  };
 
-    var column = Math.trunc(x / _texture.width);
-    var row = Math.trunc(y / _texture.height);
+  Map.prototype.xyToColRow = function xyToColRow(pos) {
+    var column = Math.trunc(pos.x / this.textureSize);
+    var row = Math.trunc(pos.y / this.textureSize);
+    return [column, row];
+  };
+
+  Map.prototype.addTile = function addTile(_texture, addToLastCommand) {
+    var _calculateAbsolutePosition = this.calculateAbsolutePosition(_texture.pos);
+
+    var x = _calculateAbsolutePosition[0];
+    var y = _calculateAbsolutePosition[1];
+
+    var _xyToColRow = this.xyToColRow({ x: x, y: y });
+
+    var column = _xyToColRow[0];
+    var row = _xyToColRow[1];
 
     var texture = new Texture(x, y, _texture.key, _texture.img);
 
@@ -752,18 +799,46 @@ var Map = (function () {
       this.commandHistory.push("addTile", [texture]);
     }
     //this.layout[column][row] = texture.key
+    this.commandHistory.print();
   };
 
   Map.prototype.addTileFromHistory = function addTileFromHistory(texture) {
-    var column = Math.trunc(texture.pos.x / texture.width);
-    var row = Math.trunc(texture.pos.y / texture.height);
+    var _xyToColRow2 = this.xyToColRow({ x: texture.pos.x, y: texture.pos.y });
+
+    var column = _xyToColRow2[0];
+    var row = _xyToColRow2[1];
+
     this.map[column][row] = texture;
+    this.commandHistory.print();
   };
 
-  Map.prototype.removeTile = function removeTile(texture) {
+  Map.prototype.removeTile = function removeTile(relativePos, addToLastCommand) {
+    var _calculateAbsolutePosition2 = this.calculateAbsolutePosition(relativePos);
+
+    var x = _calculateAbsolutePosition2[0];
+    var y = _calculateAbsolutePosition2[1];
+
+    var _xyToColRow3 = this.xyToColRow({ x: x, y: y });
+
+    var column = _xyToColRow3[0];
+    var row = _xyToColRow3[1];
+
+    var texture = this.map[column][row];
+    if (texture === undefined) return;
+    this.map[column][row] = undefined;
+    if (addToLastCommand) {
+      this.commandHistory.merge([texture]);
+    } else {
+      this.commandHistory.push("eraseTile", [texture]);
+    }
+    this.commandHistory.print();
+  };
+
+  Map.prototype.removeTileFromHistory = function removeTileFromHistory(texture) {
     var column = Math.trunc(texture.pos.x / texture.width);
     var row = Math.trunc(texture.pos.y / texture.height);
     this.map[column][row] = undefined;
+    this.commandHistory.print();
   };
 
   Map.prototype.draw = function draw() {
@@ -868,7 +943,9 @@ var TextureMenu = (function (_Entity) {
 
   TextureMenu.prototype.setupMenuProperties = function setupMenuProperties() {
     this.imagePadding = 5;
-    var minimumTextureRowWidth = this.width - 80;
+    var minimumLeftPadding = 80;
+    var minimumRightPadding = 40;
+    var minimumTextureRowWidth = this.width - (minimumLeftPadding + minimumRightPadding);
     this.textureColumnCount = Math.trunc(minimumTextureRowWidth / (this.textureWidth + this.imagePadding));
     var textureRowWidth = this.textureColumnCount * (this.textureWidth + this.imagePadding) - this.imagePadding;
 
@@ -876,7 +953,8 @@ var TextureMenu = (function (_Entity) {
     this.textureRowCount = Math.trunc(minimumTextureRowHeight / (this.textureWidth + this.imagePadding));
     var textureRowHeight = this.textureRowCount * (this.textureWidth + this.imagePadding) - this.imagePadding;
 
-    this.leftRightPadding = (this.width - textureRowWidth) / 2;
+    this.rightPadding = (this.width - textureRowWidth) / 3;
+    this.leftPadding = this.rightPadding * 2;
     this.topBottomPadding = (this.height - textureRowHeight) / 2;
   };
 
@@ -895,10 +973,16 @@ var TextureMenu = (function (_Entity) {
     icon.clickAction = this.nextPage.bind(this);
     if (this.page >= this.totalPages - 1) icon.hidden = true;
     this.icons["right_arrow"] = icon;
+
+    icon = allIcons["eraser"];
+    var eraserPadding = this.rightPadding - this.imagePadding;
+    icon.pos = { x: eraserPadding, y: this.pos.y + this.height / 2 - icon.height / 2 };
+    icon.clickAction = this.setErase.bind(this);
+    this.icons["eraser"] = icon;
   };
 
   TextureMenu.prototype.initTextureObjects = function initTextureObjects() {
-    var x = this.pos.x + this.leftRightPadding;
+    var x = this.pos.x + this.leftPadding;
     var y = this.pos.y + this.topBottomPadding;
     var currentRow = 0;
     var currentColumn = 0;
@@ -927,7 +1011,7 @@ var TextureMenu = (function (_Entity) {
 
       x += texture.width + this.imagePadding;
       if (currentColumn >= this.textureColumnCount) {
-        x = this.pos.x + this.leftRightPadding;
+        x = this.pos.x + this.leftPadding;
         y += texture.height + this.imagePadding;
         currentColumn = 0;
         currentRow++;
@@ -957,6 +1041,11 @@ var TextureMenu = (function (_Entity) {
     if (this.page <= 0) return;
     this.page--;
     this.updateArrowIcons();
+  };
+
+  TextureMenu.prototype.setErase = function setErase() {
+    this.selectedTexture = 'eraser';
+    console.log("Eraser Set");
   };
 
   TextureMenu.prototype.draw = function draw() {
@@ -1152,17 +1241,21 @@ var Grid = (function (_Entity2) {
 
         var _x2 = this.pos.x + columnIntersected * this.size;
         var _y = this.pos.y + rowIntersected * this.size;
-        if (this.texturePreview) {
-          this.texturePreview.pos = { x: _x2, y: _y };
-        } else {
-          this.texturePreview = new _map2.Texture(_x2, _y, this.textureMenu.selectedTexture.key, this.textureMenu.selectedTexture.img);
+
+        if (this.textureMenu.selectedTexture != 'eraser') {
+          if (this.texturePreview) {
+            this.texturePreview.pos = { x: _x2, y: _y };
+          } else {
+            this.texturePreview = new _map2.Texture(_x2, _y, this.textureMenu.selectedTexture.key, this.textureMenu.selectedTexture.img);
+          }
         }
 
         if (Game.events.mouse.rightDown) {
-          if (!this.lastTexturePlacedAt || !Collision.pointsAreEqual(this.texturePreview.pos, this.lastTexturePlacedAt)) {
+          if (!this.lastTexturePlacedAt || !Collision.pointsAreEqual({ x: _x2, y: _y }, this.lastTexturePlacedAt)) {
 
-            this.lastTexturePlacedAt = this.texturePreview.pos;
-            this.map.addTile(this.texturePreview, this.addToLastCommand);
+            this.lastTexturePlacedAt = { x: _x2, y: _y };
+            if (this.textureMenu.selectedTexture == 'eraser') this.map.removeTile({ x: _x2, y: _y }, this.addToLastCommand);else this.map.addTile(this.texturePreview, this.addToLastCommand);
+
             this.addToLastCommand = true;
           }
         } else if (this.lastTexturePlacedAt && !Game.events.mouse.rightDown) {

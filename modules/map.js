@@ -19,22 +19,24 @@ class Command {
   reverseCommand() {
     switch (this.command) {
       case 'addTile':
-        let that = this
-        let textures = this.params
-        this.list.map.viewPort.centerObject(textures[0].pos)
+        this.list.map.viewPort.centerObject(this.params[0].pos)
         setTimeout(function() {
-          for(let texture of textures) {
-            that.list.map.removeTile(texture)
+          for(let texture of this.params) {
+            this.list.map.removeTileFromHistory(texture)
           }
-        }, 100)
+        }.bind(this), 100)
         break
-      case 'load_main_menu':
-        break
-      case 'main_menu':
-        break
-      case 'load_map_editor':
-        break
-      case 'map_editor':
+      case 'eraseTile':
+        if(this.params[0] == undefined)
+          debugger
+        this.list.map.viewPort.centerObject(this.params[0].pos)
+        setTimeout(function() {
+          for(let texture of this.params) {
+            if(texture == undefined)
+              debugger
+            this.list.map.addTileFromHistory(texture)
+          }
+        }.bind(this), 100)
         break
       default:
         console.error(`Trying to undo unknown command: ${this.command}`)
@@ -44,14 +46,20 @@ class Command {
   applyCommand() {
     switch(this.command) {
       case 'addTile':
-        let that = this
-        let textures = this.params
-        this.list.map.viewPort.centerObject(textures[0].pos)
+        this.list.map.viewPort.centerObject(this.params[0].pos)
         setTimeout(function() {
-          for(let texture of textures) {
-            that.list.map.addTileFromHistory(texture)
+          for(let texture of this.params) {
+            this.list.map.addTileFromHistory(texture)
           }
-        }, 100)
+        }.bind(this), 100)
+        break
+      case 'eraseTile':
+        this.list.map.viewPort.centerObject(this.params[0].pos)
+        setTimeout(function() {
+          for(let texture of this.params) {
+            this.list.map.removeTileFromHistory(texture)
+          }
+        }.bind(this), 100)
         break
       default:
         console.error(`Trying to redo unknown command: ${this.command}`)
@@ -159,18 +167,27 @@ export class Map {
     this.commandHistory = new CommandHistory(this)
   }
 
-  addTile(_texture, addToLastCommand) {
+  calculateAbsolutePosition(pos) {
     if(this.viewPort) {
-      var x = this.viewPort.pos.x + _texture.pos.x
-      var y = this.viewPort.pos.y + _texture.pos.y
+      var x = this.viewPort.pos.x + pos.x
+      var y = this.viewPort.pos.y + pos.y
     }
     else {
-      var x = _texture.pos.x
-      var y = _texture.pos.y
+      var x = pos.x
+      var y = pos.y
     }
+    return [x, y]
+  }
 
-    let column = Math.trunc(x / _texture.width)
-    let row = Math.trunc(y / _texture.height)
+  xyToColRow(pos) {
+    let column = Math.trunc(pos.x / this.textureSize)
+    let row = Math.trunc(pos.y / this.textureSize)
+    return [column, row]
+  }
+
+  addTile(_texture, addToLastCommand) {
+    let [x, y] = this.calculateAbsolutePosition(_texture.pos)
+    let [column, row] = this.xyToColRow({x, y})
 
     let texture = new Texture(x, y, _texture.key, _texture.img)
 
@@ -182,18 +199,37 @@ export class Map {
       this.commandHistory.push("addTile", [texture])
     }
     //this.layout[column][row] = texture.key
+    this.commandHistory.print()
   }
 
   addTileFromHistory(texture) {
-    let column = Math.trunc(texture.pos.x / texture.width)
-    let row = Math.trunc(texture.pos.y / texture.height)
+    let [column, row] = this.xyToColRow({x: texture.pos.x, y: texture.pos.y})
     this.map[column][row] = texture
+    this.commandHistory.print()
   }
 
-  removeTile(texture) {
+  removeTile(relativePos, addToLastCommand) {
+    let [x, y] = this.calculateAbsolutePosition(relativePos)
+    let [column, row] = this.xyToColRow({x, y})
+
+    let texture = this.map[column][row]
+    if(texture === undefined)
+      return
+    this.map[column][row] = undefined
+    if(addToLastCommand) {
+      this.commandHistory.merge([texture])
+    }
+    else {
+      this.commandHistory.push("eraseTile", [texture])
+    }
+    this.commandHistory.print()
+  }
+
+  removeTileFromHistory(texture) {
     let column = Math.trunc(texture.pos.x / texture.width)
     let row = Math.trunc(texture.pos.y / texture.height)
     this.map[column][row] = undefined
+    this.commandHistory.print()
   }
 
   draw() {

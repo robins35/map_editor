@@ -32,7 +32,9 @@ class TextureMenu extends Entity {
 
   setupMenuProperties() {
     this.imagePadding = 5
-    let minimumTextureRowWidth = this.width - 80
+    let minimumLeftPadding = 80
+    let minimumRightPadding = 40
+    let minimumTextureRowWidth = this.width - (minimumLeftPadding + minimumRightPadding)
     this.textureColumnCount = Math.trunc(minimumTextureRowWidth / (this.textureWidth + this.imagePadding))
     let textureRowWidth = (this.textureColumnCount * (this.textureWidth + this.imagePadding)) - this.imagePadding
 
@@ -40,7 +42,8 @@ class TextureMenu extends Entity {
     this.textureRowCount = Math.trunc(minimumTextureRowHeight / (this.textureWidth + this.imagePadding))
     let textureRowHeight = (this.textureRowCount * (this.textureWidth + this.imagePadding)) - this.imagePadding
 
-    this.leftRightPadding = (this.width - textureRowWidth) / 2
+    this.rightPadding = (this.width - textureRowWidth) / 3
+    this.leftPadding = this.rightPadding * 2
     this.topBottomPadding = (this.height - textureRowHeight) / 2
   }
 
@@ -59,10 +62,16 @@ class TextureMenu extends Entity {
     icon.clickAction = this.nextPage.bind(this)
     if(this.page >= (this.totalPages - 1)) icon.hidden = true
     this.icons["right_arrow"] = icon
+
+    icon = allIcons["eraser"]
+    let eraserPadding = this.rightPadding - this.imagePadding
+    icon.pos = { x: eraserPadding, y: (this.pos.y + (this.height / 2)) - (icon.height / 2) }
+    icon.clickAction = this.setErase.bind(this)
+    this.icons["eraser"] = icon
   }
 
   initTextureObjects() {
-    let x = this.pos.x + this.leftRightPadding
+    let x = this.pos.x + this.leftPadding
     let y = this.pos.y + this.topBottomPadding
     let currentRow = 0
     let currentColumn = 0
@@ -78,7 +87,7 @@ class TextureMenu extends Entity {
 
       x += texture.width + this.imagePadding
       if(currentColumn >= this.textureColumnCount) {
-        x = this.pos.x + this.leftRightPadding
+        x = this.pos.x + this.leftPadding
         y += texture.height + this.imagePadding
         currentColumn = 0
         currentRow++
@@ -114,6 +123,11 @@ class TextureMenu extends Entity {
     if(this.page <= 0) return
     this.page--
     this.updateArrowIcons()
+  }
+
+  setErase() {
+    this.selectedTexture = 'eraser'
+    console.log("Eraser Set")
   }
 
   draw() {
@@ -257,19 +271,26 @@ class Grid extends Entity {
 
         let x = this.pos.x + (columnIntersected * this.size)
         let y = this.pos.y + (rowIntersected * this.size)
-        if(this.texturePreview) {
-          this.texturePreview.pos = {x, y}
-        }
-        else {
-          this.texturePreview = new Texture(x, y, this.textureMenu.selectedTexture.key, this.textureMenu.selectedTexture.img)
+
+        if(this.textureMenu.selectedTexture != 'eraser') {
+          if(this.texturePreview) {
+            this.texturePreview.pos = {x, y}
+          }
+          else {
+            this.texturePreview = new Texture(x, y, this.textureMenu.selectedTexture.key, this.textureMenu.selectedTexture.img)
+          }
         }
 
         if(Game.events.mouse.rightDown) {
           if(!this.lastTexturePlacedAt ||
-              !Collision.pointsAreEqual(this.texturePreview.pos, this.lastTexturePlacedAt)) {
+              !Collision.pointsAreEqual({x, y}, this.lastTexturePlacedAt)) {
 
-            this.lastTexturePlacedAt = this.texturePreview.pos
-            this.map.addTile(this.texturePreview, this.addToLastCommand)
+            this.lastTexturePlacedAt = { x, y}
+            if(this.textureMenu.selectedTexture == 'eraser')
+              this.map.removeTile({x, y}, this.addToLastCommand)
+            else
+              this.map.addTile(this.texturePreview, this.addToLastCommand)
+
             this.addToLastCommand = true
           }
         }
