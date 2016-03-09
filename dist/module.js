@@ -762,6 +762,19 @@ var Map = (function () {
     this.commandHistory = new CommandHistory(this);
   }
 
+  Map.prototype.save = function save() {
+    this.serialize();
+  };
+
+  Map.prototype.serialize = function serialize() {
+    for (var column = 0; column < this.columns; column++) {
+      for (var row = 0; row < this.rows; row++) {
+        var square = this.map[column][row];
+        if (square) this.layout[column][row] = square.key;
+      }
+    }
+  };
+
   Map.prototype.calculateAbsolutePosition = function calculateAbsolutePosition(pos) {
     if (this.viewPort) {
       var x = this.viewPort.pos.x + pos.x;
@@ -798,7 +811,6 @@ var Map = (function () {
     } else {
       this.commandHistory.push("addTile", [texture]);
     }
-    //this.layout[column][row] = texture.key
     this.commandHistory.print();
   };
 
@@ -912,22 +924,43 @@ var Collision = _interopRequireWildcard(_collision);
 
 var textureSize = 32;
 
-var canvas = undefined;
-var ctx = undefined;
-var grid = undefined;
+// let canvas = undefined
+// let ctx = undefined
+// let grid = undefined
 var viewPort = undefined;
-var textureMenu = undefined;
-var map = undefined;
+// let textureMenu = undefined
+// let sideMenu = undefined
+// let map = undefined
 
-var TextureMenu = (function (_Entity) {
-  _inherits(TextureMenu, _Entity);
+var SideMenu = (function (_Entity) {
+  _inherits(SideMenu, _Entity);
+
+  function SideMenu(textureMenu) {
+    _classCallCheck(this, SideMenu);
+
+    _Entity.call(this, 0, 0, Game.canvas.width / 6, textureMenu.pos.y);
+    this.backgroundColor = '#2a1d16';
+  }
+
+  SideMenu.prototype.draw = function draw() {
+    //debugger
+    this.ctx.beginPath();
+    this.ctx.fillStyle = this.backgroundColor;
+    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+  };
+
+  return SideMenu;
+})(_entity.Entity);
+
+var TextureMenu = (function (_Entity2) {
+  _inherits(TextureMenu, _Entity2);
 
   function TextureMenu(viewPort) {
     _classCallCheck(this, TextureMenu);
 
     var height = Game.canvas.height - viewPort.height;
     var y = viewPort.height;
-    _Entity.call(this, 0, y, Game.canvas.width, height);
+    _Entity2.call(this, 0, y, Game.canvas.width, height);
     this.backgroundColor = '#2a1d16';
     this.textures = Game.AssetManager.imgs["textures"];
     this.selectedTexture = null;
@@ -1151,17 +1184,17 @@ var TextureMenu = (function (_Entity) {
   return TextureMenu;
 })(_entity.Entity);
 
-var Grid = (function (_Entity2) {
-  _inherits(Grid, _Entity2);
+var Grid = (function (_Entity3) {
+  _inherits(Grid, _Entity3);
 
   function Grid(_map, _viewPort, _textureMenu) {
     var size = arguments.length <= 3 || arguments[3] === undefined ? 32 : arguments[3];
 
     _classCallCheck(this, Grid);
 
-    _Entity2.call(this, 0, 0, canvas.width - canvas.width % size, textureMenu.pos.y - textureMenu.pos.y % size);
-    this.drawWidth = canvas.width;
-    this.drawHeight = textureMenu.pos.y;
+    _Entity3.call(this, 0, 0, Game.canvas.width - Game.canvas.width % size, _textureMenu.pos.y - _textureMenu.pos.y % size);
+    this.drawWidth = this.canvas.width;
+    this.drawHeight = _textureMenu.pos.y;
     this.size = size;
     this.color = "#cccccc";
     this.map = _map;
@@ -1176,27 +1209,27 @@ var Grid = (function (_Entity2) {
   }
 
   Grid.prototype.resetDimensions = function resetDimensions() {
-    var xToRight = canvas.width - this.pos.x;
+    var xToRight = this.canvas.width - this.pos.x;
     this.width = xToRight - xToRight % this.size;
     var yToBottom = this.textureMenu.pos.y - this.pos.y;
     this.height = yToBottom - yToBottom % this.size;
   };
 
   Grid.prototype.draw = function draw() {
-    ctx.beginPath();
+    this.ctx.beginPath();
     for (var x = this.pos.x + 0.5; x <= this.drawWidth; x += this.size) {
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, this.drawHeight);
+      this.ctx.moveTo(x, 0);
+      this.ctx.lineTo(x, this.drawHeight);
     }
 
     for (var y = this.pos.y + 0.5; y <= this.drawHeight; y += this.size) {
-      ctx.moveTo(0, y);
-      ctx.lineTo(this.drawWidth, y);
+      this.ctx.moveTo(0, y);
+      this.ctx.lineTo(this.drawWidth, y);
     }
 
-    ctx.strokeStyle = this.color;
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    this.ctx.strokeStyle = this.color;
+    this.ctx.lineWidth = 1;
+    this.ctx.stroke();
 
     if (this.texturePreview && !this.viewPort.positionAtDragStart) {
       this.ctx.save();
@@ -1276,17 +1309,18 @@ var update = function update() {
 };
 
 var init = function init() {
-  ctx = Game.ctx;
-  canvas = Game.canvas;
-  map = new _map2.Map(canvas.width * 2, canvas.height * 2, textureSize);
+  var ctx = Game.ctx;
+  var canvas = Game.canvas;
+  var map = new _map2.Map(canvas.width * 2, canvas.height * 2, textureSize);
 
   var viewPortWidth = canvas.width;
   var viewPortHeight = canvas.height - canvas.height / 5;
 
   viewPort = new _view_port.ViewPort(viewPortWidth, viewPortHeight, map);
-  textureMenu = new TextureMenu(viewPort);
-  grid = new Grid(map, viewPort, textureMenu);
-  Game.uiElements.push(textureMenu);
+  var textureMenu = new TextureMenu(viewPort);
+  var sideMenu = new SideMenu(textureMenu);
+  var grid = new Grid(map, viewPort, textureMenu);
+  Game.uiElements.push([textureMenu, sideMenu]);
   Game.environmentElements.push([map, grid]);
 };
 
@@ -1475,4 +1509,4 @@ var ViewPort = (function (_Entity) {
 
 exports.ViewPort = ViewPort;
 
-},{"./collision":2,"./entity":3}]},{},[6]);
+},{"./collision":2,"./entity":3}]},{},[1,2,3,4,5,6,7,8,9,10,11]);

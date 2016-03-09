@@ -9,9 +9,15 @@ class MapEditor
 
     case "#{request.path}"
     when '/load_images'
-      response.write Dir.glob("public/images/*/*").map{|p| p.gsub('public', '')}.to_json
-      response.finish
-      #binding.remote_pry
+      if request.get?
+        response.write Dir.glob("public/images/*/*").map{|p| p.gsub('public', '')}.to_json
+        response.finish
+        #binding.remote_pry
+      end
+    when '/maps'
+      if request.post?
+        binding.pry
+      end
     else
       Rack::File.new(File.expand_path('public')).call(env)
     end

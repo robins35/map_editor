@@ -5,12 +5,27 @@ import * as Collision from './collision'
 
 const textureSize = 32
 
-let canvas = undefined
-let ctx = undefined
-let grid = undefined
+// let canvas = undefined
+// let ctx = undefined
+// let grid = undefined
 let viewPort = undefined
-let textureMenu = undefined
-let map = undefined
+// let textureMenu = undefined
+// let sideMenu = undefined
+// let map = undefined
+
+class SideMenu extends Entity {
+  constructor(textureMenu) {
+    super(0, 0, Game.canvas.width / 6, textureMenu.pos.y)
+    this.backgroundColor = '#2a1d16'
+  }
+
+  draw() {
+    //debugger
+    this.ctx.beginPath()
+    this.ctx.fillStyle = this.backgroundColor
+    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+  }
+}
 
 class TextureMenu extends Entity {
   constructor(viewPort) {
@@ -186,10 +201,10 @@ class TextureMenu extends Entity {
 
 class Grid extends Entity {
   constructor(_map, _viewPort, _textureMenu, size = 32) {
-    super(0, 0, canvas.width - (canvas.width % size),
-        textureMenu.pos.y - (textureMenu.pos.y % size))
-    this.drawWidth = canvas.width
-    this.drawHeight = textureMenu.pos.y
+    super(0, 0, Game.canvas.width - (Game.canvas.width % size),
+        _textureMenu.pos.y - (_textureMenu.pos.y % size))
+    this.drawWidth = this.canvas.width
+    this.drawHeight = _textureMenu.pos.y
     this.size = size
     this.color = "#cccccc"
     this.map = _map
@@ -204,27 +219,27 @@ class Grid extends Entity {
   }
 
   resetDimensions() {
-    let xToRight = canvas.width - this.pos.x
+    let xToRight = this.canvas.width - this.pos.x
     this.width = xToRight - (xToRight % this.size)
     let yToBottom = this.textureMenu.pos.y - this.pos.y
     this.height = yToBottom - (yToBottom % this.size)
   }
 
   draw() {
-    ctx.beginPath()
+    this.ctx.beginPath()
     for(let x = this.pos.x + 0.5; x <= this.drawWidth; x += this.size) {
-      ctx.moveTo(x, 0)
-      ctx.lineTo(x, this.drawHeight)
+      this.ctx.moveTo(x, 0)
+      this.ctx.lineTo(x, this.drawHeight)
     }
 
     for(let y = this.pos.y + 0.5; y <= this.drawHeight; y += this.size) {
-      ctx.moveTo(0, y)
-      ctx.lineTo(this.drawWidth, y)
+      this.ctx.moveTo(0, y)
+      this.ctx.lineTo(this.drawWidth, y)
     }
 
-    ctx.strokeStyle = this.color
-    ctx.lineWidth = 1
-    ctx.stroke()
+    this.ctx.strokeStyle = this.color
+    this.ctx.lineWidth = 1
+    this.ctx.stroke()
 
     if(this.texturePreview && !this.viewPort.positionAtDragStart) {
       this.ctx.save()
@@ -311,17 +326,18 @@ let update = () => {
 }
 
 let init = () => {
-  ctx = Game.ctx
-  canvas = Game.canvas
-  map = new Map(canvas.width * 2, canvas.height * 2, textureSize)
+  let ctx = Game.ctx
+  let canvas = Game.canvas
+  let map = new Map(canvas.width * 2, canvas.height * 2, textureSize)
 
   let viewPortWidth = canvas.width
   let viewPortHeight = canvas.height - (canvas.height / 5)
 
   viewPort = new ViewPort(viewPortWidth, viewPortHeight, map)
-  textureMenu = new TextureMenu(viewPort)
-  grid = new Grid(map, viewPort, textureMenu)
-  Game.uiElements.push(textureMenu)
+  let textureMenu = new TextureMenu(viewPort)
+  let sideMenu = new SideMenu(textureMenu)
+  let grid = new Grid(map, viewPort, textureMenu)
+  Game.uiElements.push([textureMenu, sideMenu])
   Game.environmentElements.push([map, grid])
 }
 

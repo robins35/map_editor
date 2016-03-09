@@ -167,6 +167,20 @@ export class Map {
     this.commandHistory = new CommandHistory(this)
   }
 
+  save() {
+    this.serialize()
+  }
+
+  serialize() {
+    for(let column = 0; column < this.columns; column++) {
+      for(let row = 0; row < this.rows; row++) {
+        let square = this.map[column][row]
+        if(square)
+          this.layout[column][row] = square.key
+      }
+    }
+  }
+
   calculateAbsolutePosition(pos) {
     if(this.viewPort) {
       var x = this.viewPort.pos.x + pos.x
@@ -198,7 +212,6 @@ export class Map {
     else {
       this.commandHistory.push("addTile", [texture])
     }
-    //this.layout[column][row] = texture.key
     this.commandHistory.print()
   }
 
