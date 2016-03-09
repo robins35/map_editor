@@ -14,16 +14,16 @@ let viewPort = undefined
 // let map = undefined
 
 class SideMenu extends Entity {
-  constructor(textureMenu) {
-    super(0, 0, Game.canvas.width / 6, textureMenu.pos.y)
-    this.backgroundColor = '#2a1d16'
+  constructor(_viewPort) {
+    super(0, 0, Game.canvas.width - _viewPort.width, _viewPort.height)
+    this.backgroundColor = '#dbcdae'
   }
 
   draw() {
     //debugger
-    this.ctx.beginPath()
-    this.ctx.fillStyle = this.backgroundColor
-    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+    // this.ctx.beginPath()
+    // this.ctx.fillStyle = this.backgroundColor
+    // this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
   }
 }
 
@@ -200,16 +200,19 @@ class TextureMenu extends Entity {
 }
 
 class Grid extends Entity {
-  constructor(_map, _viewPort, _textureMenu, size = 32) {
-    super(0, 0, Game.canvas.width - (Game.canvas.width % size),
+  constructor(_map, _viewPort, _textureMenu, _sideMenu, size = 32) {
+    super(_sideMenu.width, 0, Game.canvas.width - _sideMenu.width - (Game.canvas.width % size),
         _textureMenu.pos.y - (_textureMenu.pos.y % size))
-    this.drawWidth = this.canvas.width
+    this.drawWidth = this.canvas.width - _sideMenu.width
     this.drawHeight = _textureMenu.pos.y
+    this.drawX = _sideMenu.width
+    this.drawY = 0
     this.size = size
     this.color = "#cccccc"
     this.map = _map
     this.viewPort = _viewPort
     this.textureMenu = _textureMenu
+    this.sideMenu = _sideMenu
     this.texturePreview = null
     this.lastTexturePlacedAt = null
     this.texturePreviewAlpha = 0.3
@@ -227,14 +230,14 @@ class Grid extends Entity {
 
   draw() {
     this.ctx.beginPath()
-    for(let x = this.pos.x + 0.5; x <= this.drawWidth; x += this.size) {
-      this.ctx.moveTo(x, 0)
+    for(let x = this.pos.x + 0.5; x <= (this.drawWidth + this.drawX); x += this.size) {
+      this.ctx.moveTo(x, this.drawY)
       this.ctx.lineTo(x, this.drawHeight)
     }
 
     for(let y = this.pos.y + 0.5; y <= this.drawHeight; y += this.size) {
-      this.ctx.moveTo(0, y)
-      this.ctx.lineTo(this.drawWidth, y)
+      this.ctx.moveTo(this.drawX, y)
+      this.ctx.lineTo(this.drawWidth + this.drawX, y)
     }
 
     this.ctx.strokeStyle = this.color
@@ -256,7 +259,7 @@ class Grid extends Entity {
     let xOffset = this.viewPort.pos.x % this.size
     let yOffset = this.viewPort.pos.y % this.size
 
-    let x = xOffset ? this.size - xOffset : 0
+    let x = this.sideMenu.width + (xOffset ? this.size - xOffset : 0)
     let y = yOffset ? this.size - yOffset : 0
     this.move(x, y)
     this.resetDimensions()
@@ -330,13 +333,13 @@ let init = () => {
   let canvas = Game.canvas
   let map = new Map(canvas.width * 2, canvas.height * 2, textureSize)
 
-  let viewPortWidth = canvas.width
+  let viewPortWidth = canvas.width - (canvas.width / 6)
   let viewPortHeight = canvas.height - (canvas.height / 5)
 
   viewPort = new ViewPort(viewPortWidth, viewPortHeight, map)
   let textureMenu = new TextureMenu(viewPort)
-  let sideMenu = new SideMenu(textureMenu)
-  let grid = new Grid(map, viewPort, textureMenu)
+  let sideMenu = new SideMenu(viewPort)
+  let grid = new Grid(map, viewPort, textureMenu, sideMenu)
   Game.uiElements.push([textureMenu, sideMenu])
   Game.environmentElements.push([map, grid])
 }

@@ -935,18 +935,18 @@ var viewPort = undefined;
 var SideMenu = (function (_Entity) {
   _inherits(SideMenu, _Entity);
 
-  function SideMenu(textureMenu) {
+  function SideMenu(_viewPort) {
     _classCallCheck(this, SideMenu);
 
-    _Entity.call(this, 0, 0, Game.canvas.width / 6, textureMenu.pos.y);
-    this.backgroundColor = '#2a1d16';
+    _Entity.call(this, 0, 0, Game.canvas.width - _viewPort.width, _viewPort.height);
+    this.backgroundColor = '#dbcdae';
   }
 
   SideMenu.prototype.draw = function draw() {
     //debugger
-    this.ctx.beginPath();
-    this.ctx.fillStyle = this.backgroundColor;
-    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+    // this.ctx.beginPath()
+    // this.ctx.fillStyle = this.backgroundColor
+    // this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
   };
 
   return SideMenu;
@@ -1187,19 +1187,22 @@ var TextureMenu = (function (_Entity2) {
 var Grid = (function (_Entity3) {
   _inherits(Grid, _Entity3);
 
-  function Grid(_map, _viewPort, _textureMenu) {
-    var size = arguments.length <= 3 || arguments[3] === undefined ? 32 : arguments[3];
+  function Grid(_map, _viewPort, _textureMenu, _sideMenu) {
+    var size = arguments.length <= 4 || arguments[4] === undefined ? 32 : arguments[4];
 
     _classCallCheck(this, Grid);
 
-    _Entity3.call(this, 0, 0, Game.canvas.width - Game.canvas.width % size, _textureMenu.pos.y - _textureMenu.pos.y % size);
-    this.drawWidth = this.canvas.width;
+    _Entity3.call(this, _sideMenu.width, 0, Game.canvas.width - _sideMenu.width - Game.canvas.width % size, _textureMenu.pos.y - _textureMenu.pos.y % size);
+    this.drawWidth = this.canvas.width - _sideMenu.width;
     this.drawHeight = _textureMenu.pos.y;
+    this.drawX = _sideMenu.width;
+    this.drawY = 0;
     this.size = size;
     this.color = "#cccccc";
     this.map = _map;
     this.viewPort = _viewPort;
     this.textureMenu = _textureMenu;
+    this.sideMenu = _sideMenu;
     this.texturePreview = null;
     this.lastTexturePlacedAt = null;
     this.texturePreviewAlpha = 0.3;
@@ -1217,14 +1220,14 @@ var Grid = (function (_Entity3) {
 
   Grid.prototype.draw = function draw() {
     this.ctx.beginPath();
-    for (var x = this.pos.x + 0.5; x <= this.drawWidth; x += this.size) {
-      this.ctx.moveTo(x, 0);
+    for (var x = this.pos.x + 0.5; x <= this.drawWidth + this.drawX; x += this.size) {
+      this.ctx.moveTo(x, this.drawY);
       this.ctx.lineTo(x, this.drawHeight);
     }
 
     for (var y = this.pos.y + 0.5; y <= this.drawHeight; y += this.size) {
-      this.ctx.moveTo(0, y);
-      this.ctx.lineTo(this.drawWidth, y);
+      this.ctx.moveTo(this.drawX, y);
+      this.ctx.lineTo(this.drawWidth + this.drawX, y);
     }
 
     this.ctx.strokeStyle = this.color;
@@ -1246,7 +1249,7 @@ var Grid = (function (_Entity3) {
     var xOffset = this.viewPort.pos.x % this.size;
     var yOffset = this.viewPort.pos.y % this.size;
 
-    var x = xOffset ? this.size - xOffset : 0;
+    var x = this.sideMenu.width + (xOffset ? this.size - xOffset : 0);
     var y = yOffset ? this.size - yOffset : 0;
     this.move(x, y);
     this.resetDimensions();
@@ -1313,13 +1316,13 @@ var init = function init() {
   var canvas = Game.canvas;
   var map = new _map2.Map(canvas.width * 2, canvas.height * 2, textureSize);
 
-  var viewPortWidth = canvas.width;
+  var viewPortWidth = canvas.width - canvas.width / 6;
   var viewPortHeight = canvas.height - canvas.height / 5;
 
   viewPort = new _view_port.ViewPort(viewPortWidth, viewPortHeight, map);
   var textureMenu = new TextureMenu(viewPort);
-  var sideMenu = new SideMenu(textureMenu);
-  var grid = new Grid(map, viewPort, textureMenu);
+  var sideMenu = new SideMenu(viewPort);
+  var grid = new Grid(map, viewPort, textureMenu, sideMenu);
   Game.uiElements.push([textureMenu, sideMenu]);
   Game.environmentElements.push([map, grid]);
 };
