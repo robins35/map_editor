@@ -10,7 +10,6 @@ let draw = () => {
   }
 }
 
-
 let init = () => {
   canvas = Game.canvas
   ctx = Game.ctx

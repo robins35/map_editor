@@ -1,28 +1,53 @@
 import { Entity } from './entity'
 import { Map, Texture } from './map'
 import { ViewPort } from './view_port'
+import { UI } from './ui'
 import * as Collision from './collision'
 
 const textureSize = 32
 
-// let canvas = undefined
-// let ctx = undefined
-// let grid = undefined
 let viewPort = undefined
-// let textureMenu = undefined
-// let sideMenu = undefined
-// let map = undefined
 
 class SideMenu extends Entity {
-  constructor(_viewPort) {
+  constructor(map) {
+    let _viewPort = map.viewPort
     super(0, 0, Game.canvas.width - _viewPort.width, _viewPort.height)
+    this.map = map
     this.backgroundColor = '#dbcdae'
+
+    this.buttons = this.setupButtons()
+
+    this.setupButtons()
+  }
+
+  setupButtons() {
+    let buttonsWidth = this.width / 2
+    let buttonsHeight = 30
+    let buttonX = (this.width - buttonsWidth) / 2
+    let buttonY = this.height / 2
+
+    let saveMap = () => {
+      this.map.save()
+    }
+
+    let buttons = [
+      new UI.Button(buttonX, buttonY, buttonsWidth, buttonsHeight, "Save Map", saveMap)
+    ]
+    return buttons
   }
 
   draw() {
     this.ctx.beginPath()
     this.ctx.fillStyle = this.backgroundColor
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+
+    for(let button of this.buttons)
+      button.draw()
+  }
+
+  update() {
+    for(let button of this.buttons)
+      button.update()
   }
 }
 
@@ -337,7 +362,7 @@ let init = () => {
 
   viewPort = new ViewPort(viewPortWidth, viewPortHeight, map)
   let textureMenu = new TextureMenu(viewPort)
-  let sideMenu = new SideMenu(viewPort)
+  let sideMenu = new SideMenu(map)
   let grid = new Grid(map, viewPort, textureMenu, sideMenu)
   Game.uiElements.push([textureMenu, sideMenu])
   Game.environmentElements.push([map, grid])

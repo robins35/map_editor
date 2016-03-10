@@ -88,9 +88,11 @@ exports.imgs = imgs;
 exports.__esModule = true;
 var intersects = function intersects(obj, point) {
   var tolerance = arguments.length <= 2 || arguments[2] === undefined ? 0 : arguments[2];
+  var relative = arguments.length <= 3 || arguments[3] === undefined ? false : arguments[3];
 
-  var xIntersect = point.x + tolerance > obj.pos.x && point.x - tolerance < obj.pos.x + obj.width;
-  var yIntersect = point.y + tolerance > obj.pos.y && point.y - tolerance < obj.pos.y + obj.height;
+  var objectPosition = relative ? obj.relativePos : obj.pos;
+  var xIntersect = point.x + tolerance > objectPosition.x && point.x - tolerance < objectPosition.x + obj.width;
+  var yIntersect = point.y + tolerance > objectPosition.y && point.y - tolerance < objectPosition.y + obj.height;
   return xIntersect && yIntersect;
 };
 
@@ -810,7 +812,6 @@ var Map = (function () {
     } else {
       this.commandHistory.push("addTile", [texture]);
     }
-    this.commandHistory.print();
   };
 
   Map.prototype.addTileFromHistory = function addTileFromHistory(texture) {
@@ -820,7 +821,6 @@ var Map = (function () {
     var row = _xyToColRow2[1];
 
     this.map[column][row] = texture;
-    this.commandHistory.print();
   };
 
   Map.prototype.removeTile = function removeTile(relativePos, addToLastCommand) {
@@ -842,14 +842,12 @@ var Map = (function () {
     } else {
       this.commandHistory.push("eraseTile", [texture]);
     }
-    this.commandHistory.print();
   };
 
   Map.prototype.removeTileFromHistory = function removeTileFromHistory(texture) {
     var column = Math.trunc(texture.pos.x / texture.width);
     var row = Math.trunc(texture.pos.y / texture.height);
     this.map[column][row] = undefined;
-    this.commandHistory.print();
   };
 
   Map.prototype.draw = function draw() {
@@ -918,34 +916,88 @@ var _map2 = require('./map');
 
 var _view_port = require('./view_port');
 
+var _ui = require('./ui');
+
 var _collision = require('./collision');
 
 var Collision = _interopRequireWildcard(_collision);
 
 var textureSize = 32;
 
-// let canvas = undefined
-// let ctx = undefined
-// let grid = undefined
 var viewPort = undefined;
-// let textureMenu = undefined
-// let sideMenu = undefined
-// let map = undefined
 
 var SideMenu = (function (_Entity) {
   _inherits(SideMenu, _Entity);
 
-  function SideMenu(_viewPort) {
+  function SideMenu(map) {
     _classCallCheck(this, SideMenu);
 
+    var _viewPort = map.viewPort;
     _Entity.call(this, 0, 0, Game.canvas.width - _viewPort.width, _viewPort.height);
+    this.map = map;
     this.backgroundColor = '#dbcdae';
+
+    this.buttons = this.setupButtons();
+
+    this.setupButtons();
   }
+
+  SideMenu.prototype.setupButtons = function setupButtons() {
+    var _this = this;
+
+    var buttonsWidth = this.width / 2;
+    var buttonsHeight = 30;
+    var buttonX = (this.width - buttonsWidth) / 2;
+    var buttonY = this.height / 2;
+
+    var saveMap = function saveMap() {
+      _this.map.save();
+    };
+
+    var buttons = [new _ui.UI.Button(buttonX, buttonY, buttonsWidth, buttonsHeight, "Save Map", saveMap)];
+    return buttons;
+  };
 
   SideMenu.prototype.draw = function draw() {
     this.ctx.beginPath();
     this.ctx.fillStyle = this.backgroundColor;
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+
+    for (var _iterator = this.buttons, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+      var _ref;
+
+      if (_isArray) {
+        if (_i >= _iterator.length) break;
+        _ref = _iterator[_i++];
+      } else {
+        _i = _iterator.next();
+        if (_i.done) break;
+        _ref = _i.value;
+      }
+
+      var button = _ref;
+
+      button.draw();
+    }
+  };
+
+  SideMenu.prototype.update = function update() {
+    for (var _iterator2 = this.buttons, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+      var _ref2;
+
+      if (_isArray2) {
+        if (_i2 >= _iterator2.length) break;
+        _ref2 = _iterator2[_i2++];
+      } else {
+        _i2 = _iterator2.next();
+        if (_i2.done) break;
+        _ref2 = _i2.value;
+      }
+
+      var button = _ref2;
+
+      button.update();
+    }
   };
 
   return SideMenu;
@@ -1023,19 +1075,19 @@ var TextureMenu = (function (_Entity2) {
     var page = 0;
     this.textureObjects = [[]];
 
-    for (var _iterator = textureKeys, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-      var _ref;
+    for (var _iterator3 = textureKeys, _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
+      var _ref3;
 
-      if (_isArray) {
-        if (_i >= _iterator.length) break;
-        _ref = _iterator[_i++];
+      if (_isArray3) {
+        if (_i3 >= _iterator3.length) break;
+        _ref3 = _iterator3[_i3++];
       } else {
-        _i = _iterator.next();
-        if (_i.done) break;
-        _ref = _i.value;
+        _i3 = _iterator3.next();
+        if (_i3.done) break;
+        _ref3 = _i3.value;
       }
 
-      var key = _ref;
+      var key = _ref3;
 
       var texture = new _map2.Texture(x, y, key, this.textures[key]);
       this.textureObjects[page].push(texture);
@@ -1085,19 +1137,19 @@ var TextureMenu = (function (_Entity2) {
     this.ctx.fillStyle = this.backgroundColor;
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
 
-    for (var _iterator2 = this.textureObjects[this.page], _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
-      var _ref2;
+    for (var _iterator4 = this.textureObjects[this.page], _isArray4 = Array.isArray(_iterator4), _i4 = 0, _iterator4 = _isArray4 ? _iterator4 : _iterator4[Symbol.iterator]();;) {
+      var _ref4;
 
-      if (_isArray2) {
-        if (_i2 >= _iterator2.length) break;
-        _ref2 = _iterator2[_i2++];
+      if (_isArray4) {
+        if (_i4 >= _iterator4.length) break;
+        _ref4 = _iterator4[_i4++];
       } else {
-        _i2 = _iterator2.next();
-        if (_i2.done) break;
-        _ref2 = _i2.value;
+        _i4 = _iterator4.next();
+        if (_i4.done) break;
+        _ref4 = _i4.value;
       }
 
-      var texture = _ref2;
+      var texture = _ref4;
 
       this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height);
       if (this.selectedTexture && this.selectedTexture.id == texture.id) {
@@ -1112,19 +1164,19 @@ var TextureMenu = (function (_Entity2) {
       }
     }
 
-    for (var _iterator3 = Object.keys(this.icons), _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
-      var _ref3;
+    for (var _iterator5 = Object.keys(this.icons), _isArray5 = Array.isArray(_iterator5), _i5 = 0, _iterator5 = _isArray5 ? _iterator5 : _iterator5[Symbol.iterator]();;) {
+      var _ref5;
 
-      if (_isArray3) {
-        if (_i3 >= _iterator3.length) break;
-        _ref3 = _iterator3[_i3++];
+      if (_isArray5) {
+        if (_i5 >= _iterator5.length) break;
+        _ref5 = _iterator5[_i5++];
       } else {
-        _i3 = _iterator3.next();
-        if (_i3.done) break;
-        _ref3 = _i3.value;
+        _i5 = _iterator5.next();
+        if (_i5.done) break;
+        _ref5 = _i5.value;
       }
 
-      var iconKey = _ref3;
+      var iconKey = _ref5;
 
       var icon = this.icons[iconKey];
       if (!icon.hidden) this.ctx.drawImage(icon, icon.pos.x, icon.pos.y, icon.width, icon.height);
@@ -1133,19 +1185,19 @@ var TextureMenu = (function (_Entity2) {
 
   TextureMenu.prototype.update = function update() {
     if (Collision.intersects(this, Game.events.mouse)) {
-      for (var _iterator4 = this.textureObjects[this.page], _isArray4 = Array.isArray(_iterator4), _i4 = 0, _iterator4 = _isArray4 ? _iterator4 : _iterator4[Symbol.iterator]();;) {
-        var _ref4;
+      for (var _iterator6 = this.textureObjects[this.page], _isArray6 = Array.isArray(_iterator6), _i6 = 0, _iterator6 = _isArray6 ? _iterator6 : _iterator6[Symbol.iterator]();;) {
+        var _ref6;
 
-        if (_isArray4) {
-          if (_i4 >= _iterator4.length) break;
-          _ref4 = _iterator4[_i4++];
+        if (_isArray6) {
+          if (_i6 >= _iterator6.length) break;
+          _ref6 = _iterator6[_i6++];
         } else {
-          _i4 = _iterator4.next();
-          if (_i4.done) break;
-          _ref4 = _i4.value;
+          _i6 = _iterator6.next();
+          if (_i6.done) break;
+          _ref6 = _i6.value;
         }
 
-        var texture = _ref4;
+        var texture = _ref6;
 
         if (Collision.intersects(texture, Game.events.mouse)) {
           texture.hovering = true;
@@ -1159,19 +1211,19 @@ var TextureMenu = (function (_Entity2) {
 
       if (Game.events.mouse.clicked) {
         Game.events.mouse.clicked = false;
-        for (var _iterator5 = Object.keys(this.icons), _isArray5 = Array.isArray(_iterator5), _i5 = 0, _iterator5 = _isArray5 ? _iterator5 : _iterator5[Symbol.iterator]();;) {
-          var _ref5;
+        for (var _iterator7 = Object.keys(this.icons), _isArray7 = Array.isArray(_iterator7), _i7 = 0, _iterator7 = _isArray7 ? _iterator7 : _iterator7[Symbol.iterator]();;) {
+          var _ref7;
 
-          if (_isArray5) {
-            if (_i5 >= _iterator5.length) break;
-            _ref5 = _iterator5[_i5++];
+          if (_isArray7) {
+            if (_i7 >= _iterator7.length) break;
+            _ref7 = _iterator7[_i7++];
           } else {
-            _i5 = _iterator5.next();
-            if (_i5.done) break;
-            _ref5 = _i5.value;
+            _i7 = _iterator7.next();
+            if (_i7.done) break;
+            _ref7 = _i7.value;
           }
 
-          var iconKey = _ref5;
+          var iconKey = _ref7;
 
           var icon = this.icons[iconKey];
           if (!icon.hidden && Collision.intersects(icon, Game.events.mouse)) icon.clickAction();
@@ -1320,7 +1372,7 @@ var init = function init() {
 
   viewPort = new _view_port.ViewPort(viewPortWidth, viewPortHeight, map);
   var textureMenu = new TextureMenu(viewPort);
-  var sideMenu = new SideMenu(viewPort);
+  var sideMenu = new SideMenu(map);
   var grid = new Grid(map, viewPort, textureMenu, sideMenu);
   Game.uiElements.push([textureMenu, sideMenu]);
   Game.environmentElements.push([map, grid]);
@@ -1329,7 +1381,7 @@ var init = function init() {
 exports.init = init;
 exports.update = update;
 
-},{"./collision":2,"./entity":3,"./map":8,"./view_port":11}],10:[function(require,module,exports){
+},{"./collision":2,"./entity":3,"./map":8,"./ui":10,"./view_port":11}],10:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1454,6 +1506,10 @@ var ViewPort = (function (_Entity) {
     _classCallCheck(this, ViewPort);
 
     _Entity.call(this, 0, 0, width, height);
+    this.relativePos = {
+      x: Game.canvas.width - width,
+      y: 0
+    };
     this.speed = 2;
     this.positionAtDragStart = null;
     this.map = map;
@@ -1487,8 +1543,8 @@ var ViewPort = (function (_Entity) {
     if (Game.events.keysDown[40]) this.safeMove(this.pos.x, this.pos.y + this.speed);
 
     if (Game.state == 'map_editor' && Game.events.mouse.dragging) {
-      var dragStartPositionOnMap = Collision.vectorSum(this.pos, Game.events.mouse.dragStart);
-      if (Collision.intersects(this, dragStartPositionOnMap)) {
+      var dragStartPositionOnMap = Game.events.mouse.dragStart;
+      if (Collision.intersects(this, dragStartPositionOnMap, 0, true)) {
         if (this.positionAtDragStart === null) {
           this.positionAtDragStart = Object.assign({}, this.pos);
           $(Game.canvas).css({ 'cursor': 'move' });

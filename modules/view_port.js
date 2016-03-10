@@ -4,6 +4,10 @@ import * as Collision from './collision'
 export class ViewPort extends Entity {
   constructor(width, height, map) {
     super(0, 0, width, height)
+    this.relativePos = {
+      x: Game.canvas.width - width,
+      y: 0
+    }
     this.speed = 2
     this.positionAtDragStart = null
     this.map = map
@@ -41,8 +45,8 @@ export class ViewPort extends Entity {
       this.safeMove(this.pos.x, this.pos.y + this.speed)
 
     if(Game.state == 'map_editor' && Game.events.mouse.dragging) {
-      let dragStartPositionOnMap = Collision.vectorSum(this.pos, Game.events.mouse.dragStart)
-      if(Collision.intersects(this, dragStartPositionOnMap)) {
+      let dragStartPositionOnMap = Game.events.mouse.dragStart
+      if(Collision.intersects(this, dragStartPositionOnMap, 0, true)) {
         if(this.positionAtDragStart === null) {
           this.positionAtDragStart = Object.assign({}, this.pos)
           $(Game.canvas).css({'cursor' : 'move'})

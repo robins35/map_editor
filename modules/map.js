@@ -209,13 +209,11 @@ export class Map {
     else {
       this.commandHistory.push("addTile", [texture])
     }
-    this.commandHistory.print()
   }
 
   addTileFromHistory(texture) {
     let [column, row] = this.xyToColRow({x: texture.pos.x, y: texture.pos.y})
     this.map[column][row] = texture
-    this.commandHistory.print()
   }
 
   removeTile(relativePos, addToLastCommand) {
@@ -232,14 +230,12 @@ export class Map {
     else {
       this.commandHistory.push("eraseTile", [texture])
     }
-    this.commandHistory.print()
   }
 
   removeTileFromHistory(texture) {
     let column = Math.trunc(texture.pos.x / texture.width)
     let row = Math.trunc(texture.pos.y / texture.height)
     this.map[column][row] = undefined
-    this.commandHistory.print()
   }
 
   draw() {
