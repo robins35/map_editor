@@ -27,13 +27,9 @@ class Command {
         }.bind(this), 100)
         break
       case 'eraseTile':
-        if(this.params[0] == undefined)
-          debugger
         this.list.map.viewPort.moveToObject(this.params[0].pos)
         setTimeout(function() {
           for(let texture of this.params) {
-            if(texture == undefined)
-              debugger
             this.list.map.addTileFromHistory(texture)
           }
         }.bind(this), 100)
@@ -183,7 +179,8 @@ export class Map {
 
   calculateAbsolutePosition(pos) {
     if(this.viewPort) {
-      var x = this.viewPort.pos.x + pos.x
+      let sideMenuWidth = Game.canvas.width - this.viewPort.width
+      var x = this.viewPort.pos.x + (pos.x - sideMenuWidth)
       var y = this.viewPort.pos.y + pos.y
     }
     else {
@@ -268,8 +265,10 @@ export class Map {
 
         let absolutePosition = { x: (column * this.textureSize), y: (row * this.textureSize) }
         let pos = Collision.vectorDifference(absolutePosition, this.viewPort.pos)
+        let relativePosition = Collision.vectorSum(pos, { x: Game.canvas.width - this.viewPort.width, y: 0 })
 
-        Game.ctx.drawImage(texture.img, pos.x, pos.y, texture.width, texture.height)
+        Game.ctx.drawImage(texture.img, relativePosition.x, relativePosition.y,
+            texture.width, texture.height)
       }
     }
   }

@@ -20,10 +20,9 @@ class SideMenu extends Entity {
   }
 
   draw() {
-    //debugger
-    // this.ctx.beginPath()
-    // this.ctx.fillStyle = this.backgroundColor
-    // this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+    this.ctx.beginPath()
+    this.ctx.fillStyle = this.backgroundColor
+    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
   }
 }
 

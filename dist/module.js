@@ -590,7 +590,6 @@ var Command = (function () {
         }).bind(this), 100);
         break;
       case 'eraseTile':
-        if (this.params[0] == undefined) debugger;
         this.list.map.viewPort.moveToObject(this.params[0].pos);
         setTimeout((function () {
           for (var _iterator2 = this.params, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
@@ -607,7 +606,6 @@ var Command = (function () {
 
             var texture = _ref2;
 
-            if (texture == undefined) debugger;
             this.list.map.addTileFromHistory(texture);
           }
         }).bind(this), 100);
@@ -777,7 +775,8 @@ var Map = (function () {
 
   Map.prototype.calculateAbsolutePosition = function calculateAbsolutePosition(pos) {
     if (this.viewPort) {
-      var x = this.viewPort.pos.x + pos.x;
+      var sideMenuWidth = Game.canvas.width - this.viewPort.width;
+      var x = this.viewPort.pos.x + (pos.x - sideMenuWidth);
       var y = this.viewPort.pos.y + pos.y;
     } else {
       var x = pos.x;
@@ -874,8 +873,9 @@ var Map = (function () {
 
         var absolutePosition = { x: column * this.textureSize, y: row * this.textureSize };
         var pos = Collision.vectorDifference(absolutePosition, this.viewPort.pos);
+        var relativePosition = Collision.vectorSum(pos, { x: Game.canvas.width - this.viewPort.width, y: 0 });
 
-        Game.ctx.drawImage(texture.img, pos.x, pos.y, texture.width, texture.height);
+        Game.ctx.drawImage(texture.img, relativePosition.x, relativePosition.y, texture.width, texture.height);
       }
     }
   };
@@ -943,10 +943,9 @@ var SideMenu = (function (_Entity) {
   }
 
   SideMenu.prototype.draw = function draw() {
-    //debugger
-    // this.ctx.beginPath()
-    // this.ctx.fillStyle = this.backgroundColor
-    // this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+    this.ctx.beginPath();
+    this.ctx.fillStyle = this.backgroundColor;
+    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
   };
 
   return SideMenu;
