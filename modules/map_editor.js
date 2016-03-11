@@ -166,7 +166,6 @@ class TextureMenu extends Entity {
 
   setErase() {
     this.selectedTexture = 'eraser'
-    console.log("Eraser Set")
   }
 
   draw() {
@@ -289,7 +288,6 @@ class Grid extends Entity {
     this.resetDimensions()
 
     if(!this.undoing && (Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
-      console.log("Calling UNDO on map history")
       this.undoing = true
       this.map.commandHistory.undo()
     }
@@ -298,7 +296,6 @@ class Grid extends Entity {
     }
 
     if(!this.redoing && (Game.events.controlKeysDown[82] || Game.events.controlKeysDown[89])) {
-      console.log("Calling REDO on map history")
       this.redoing = true
       this.map.commandHistory.redo()
     }
@@ -327,13 +324,17 @@ class Grid extends Entity {
           if(!this.lastTexturePlacedAt ||
               !Collision.pointsAreEqual({x, y}, this.lastTexturePlacedAt)) {
 
-            this.lastTexturePlacedAt = { x, y}
-            if(this.textureMenu.selectedTexture == 'eraser')
-              this.map.removeTile({x, y}, this.addToLastCommand)
-            else
+            this.lastTexturePlacedAt = {x, y}
+            if(this.textureMenu.selectedTexture == 'eraser') {
+              if(this.map.removeTile({x, y}, this.addToLastCommand)) {
+                this.addToLastCommand = true
+              }
+            }
+            else {
               this.map.addTile(this.texturePreview, this.addToLastCommand)
+              this.addToLastCommand = true
+            }
 
-            this.addToLastCommand = true
           }
         }
         else if(this.lastTexturePlacedAt && !Game.events.mouse.rightDown) {

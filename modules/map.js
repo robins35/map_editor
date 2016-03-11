@@ -203,7 +203,7 @@ export class Map {
     let texture = new Texture(x, y, _texture.key, _texture.img)
 
     this.map[column][row] = texture
-    if(addToLastCommand) {
+    if(addToLastCommand && this.commandHistory.current.command == 'addTile') {
       this.commandHistory.merge([texture])
     }
     else {
@@ -222,14 +222,15 @@ export class Map {
 
     let texture = this.map[column][row]
     if(texture === undefined)
-      return
+      return false
     this.map[column][row] = undefined
-    if(addToLastCommand) {
+    if(addToLastCommand && this.commandHistory.current.command == 'eraseTile') {
       this.commandHistory.merge([texture])
     }
     else {
       this.commandHistory.push("eraseTile", [texture])
     }
+    return true
   }
 
   removeTileFromHistory(texture) {

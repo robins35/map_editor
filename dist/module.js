@@ -807,7 +807,7 @@ var Map = (function () {
     var texture = new Texture(x, y, _texture.key, _texture.img);
 
     this.map[column][row] = texture;
-    if (addToLastCommand) {
+    if (addToLastCommand && this.commandHistory.current.command == 'addTile') {
       this.commandHistory.merge([texture]);
     } else {
       this.commandHistory.push("addTile", [texture]);
@@ -835,13 +835,14 @@ var Map = (function () {
     var row = _xyToColRow3[1];
 
     var texture = this.map[column][row];
-    if (texture === undefined) return;
+    if (texture === undefined) return false;
     this.map[column][row] = undefined;
-    if (addToLastCommand) {
+    if (addToLastCommand && this.commandHistory.current.command == 'eraseTile') {
       this.commandHistory.merge([texture]);
     } else {
       this.commandHistory.push("eraseTile", [texture]);
     }
+    return true;
   };
 
   Map.prototype.removeTileFromHistory = function removeTileFromHistory(texture) {
@@ -1129,7 +1130,6 @@ var TextureMenu = (function (_Entity2) {
 
   TextureMenu.prototype.setErase = function setErase() {
     this.selectedTexture = 'eraser';
-    console.log("Eraser Set");
   };
 
   TextureMenu.prototype.draw = function draw() {
@@ -1306,7 +1306,6 @@ var Grid = (function (_Entity3) {
     this.resetDimensions();
 
     if (!this.undoing && (Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
-      console.log("Calling UNDO on map history");
       this.undoing = true;
       this.map.commandHistory.undo();
     } else if (this.undoing && !(Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
@@ -1314,7 +1313,6 @@ var Grid = (function (_Entity3) {
     }
 
     if (!this.redoing && (Game.events.controlKeysDown[82] || Game.events.controlKeysDown[89])) {
-      console.log("Calling REDO on map history");
       this.redoing = true;
       this.map.commandHistory.redo();
     } else if (this.redoing && !(Game.events.controlKeysDown[82] || Game.events.controlKeysDown[89])) {
@@ -1341,9 +1339,14 @@ var Grid = (function (_Entity3) {
           if (!this.lastTexturePlacedAt || !Collision.pointsAreEqual({ x: _x2, y: _y }, this.lastTexturePlacedAt)) {
 
             this.lastTexturePlacedAt = { x: _x2, y: _y };
-            if (this.textureMenu.selectedTexture == 'eraser') this.map.removeTile({ x: _x2, y: _y }, this.addToLastCommand);else this.map.addTile(this.texturePreview, this.addToLastCommand);
-
-            this.addToLastCommand = true;
+            if (this.textureMenu.selectedTexture == 'eraser') {
+              if (this.map.removeTile({ x: _x2, y: _y }, this.addToLastCommand)) {
+                this.addToLastCommand = true;
+              }
+            } else {
+              this.map.addTile(this.texturePreview, this.addToLastCommand);
+              this.addToLastCommand = true;
+            }
           }
         } else if (this.lastTexturePlacedAt && !Game.events.mouse.rightDown) {
           this.lastTexturePlacedAt = null;
