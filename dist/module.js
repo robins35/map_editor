@@ -386,6 +386,9 @@ var update = function update() {
       });
       break;
     case 'load_main_menu':
+      sprites.clear();
+      environmentElements.clear();
+      uiElements.clear();
       exports.state = state = 'main_menu';
       MainMenu.init();
       break;
@@ -518,6 +521,8 @@ var init = function init() {
   var buttonColumnY = canvas.height / 2;
 
   var loadMapEditor = function loadMapEditor() {
+    Game.sprites.clear();
+    Game.environmentElements.clear();
     Game.uiElements.clear();
     Game.setState('load_map_editor');
   };
@@ -948,14 +953,20 @@ var SideMenu = (function (_Entity) {
 
     var buttonsWidth = this.width / 2;
     var buttonsHeight = 30;
-    var buttonX = (this.width - buttonsWidth) / 2;
-    var buttonY = this.height / 2;
+    var buttonsColumnX = (this.width - buttonsWidth) / 2;
+    var buttonY = function buttonY(nthButton) {
+      return _this.height / 2 + nthButton * 40;
+    };
 
     var saveMap = function saveMap() {
       _this.map.save();
     };
 
-    var buttons = [new _ui.UI.Button(buttonX, buttonY, buttonsWidth, buttonsHeight, "Save Map", saveMap)];
+    var loadMainMenu = function loadMainMenu() {
+      Game.setState("load_main_menu");
+    };
+
+    var buttons = [new _ui.UI.Button(buttonsColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Save Map", saveMap), new _ui.UI.Button(buttonsColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Main Menu", loadMainMenu)];
     return buttons;
   };
 
@@ -1370,7 +1381,7 @@ var init = function init() {
   var canvas = Game.canvas;
   var map = new _map2.Map(canvas.width * 2, canvas.height * 2, textureSize);
 
-  var viewPortWidth = canvas.width - canvas.width / 6;
+  var viewPortWidth = canvas.width - canvas.width / 5;
   var viewPortHeight = canvas.height - canvas.height / 5;
 
   viewPort = new _view_port.ViewPort(viewPortWidth, viewPortHeight, map);

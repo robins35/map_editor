@@ -23,15 +23,20 @@ class SideMenu extends Entity {
   setupButtons() {
     let buttonsWidth = this.width / 2
     let buttonsHeight = 30
-    let buttonX = (this.width - buttonsWidth) / 2
-    let buttonY = this.height / 2
+    let buttonsColumnX = (this.width - buttonsWidth) / 2
+    let buttonY = (nthButton) => ((this.height / 2) + (nthButton * (40)))
 
     let saveMap = () => {
       this.map.save()
     }
 
+    let loadMainMenu = () => {
+      Game.setState("load_main_menu")
+    }
+
     let buttons = [
-      new UI.Button(buttonX, buttonY, buttonsWidth, buttonsHeight, "Save Map", saveMap)
+      new UI.Button(buttonsColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Save Map", saveMap),
+      new UI.Button(buttonsColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Main Menu", loadMainMenu)
     ]
     return buttons
   }
@@ -358,7 +363,7 @@ let init = () => {
   let canvas = Game.canvas
   let map = new Map(canvas.width * 2, canvas.height * 2, textureSize)
 
-  let viewPortWidth = canvas.width - (canvas.width / 6)
+  let viewPortWidth = canvas.width - (canvas.width / 5)
   let viewPortHeight = canvas.height - (canvas.height / 5)
 
   viewPort = new ViewPort(viewPortWidth, viewPortHeight, map)
