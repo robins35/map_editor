@@ -1408,14 +1408,23 @@ var Button = (function (_Entity) {
     this.text = text;
     this.clickAction = clickAction;
     this.clicked = false;
-    this.hovered = false;
     this.backgroundColor = "#cc6600";
+    this.hoveredBackgroundColor = "#da8e42";
+    this.clickedBackgroundColor = "#bb4a00";
     this.textColor = "#ffffff";
+    Button.hoveredButtons = {};
+    Button.clickedButtons = {};
   }
 
   Button.prototype.draw = function draw() {
     this.ctx.beginPath();
-    this.ctx.fillStyle = this.backgroundColor;
+    if (Button.hoveredButtons[this.id]) {
+      if (Button.clickedButtons[this.id]) this.ctx.fillStyle = this.clickedBackgroundColor;else this.ctx.fillStyle = this.hoveredBackgroundColor;
+      $(this.canvas).css({ 'cursor': 'pointer' });
+    } else {
+      this.ctx.fillStyle = this.backgroundColor;
+      if (Object.keys(Button.hoveredButtons).length <= 0) $(this.canvas).css({ 'cursor': 'default' });
+    }
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
 
     var fontSize = 24;
@@ -1433,14 +1442,16 @@ var Button = (function (_Entity) {
 
   Button.prototype.update = function update() {
     if (Collision.intersects(this, Game.events.mouse)) {
-      this.hovered = true;
+      Button.hoveredButtons[this.id] = true;
       if (Game.events.mouse.clicked) {
-        this.clicked = true;
+        Button.clickedButtons[this.id] = true;
         Game.events.mouse.clicked = false;
-      } else if (this.clicked && !Game.events.mouse.down) {
-        this.clicked = false;
+      } else if (Button.clickedButtons[this.id] && !Game.events.mouse.down) {
+        delete Button.clickedButtons[this.id];
         this.clickAction();
       }
+    } else if (Button.hoveredButtons[this.id]) {
+      delete Button.hoveredButtons[this.id];
     }
   };
 
