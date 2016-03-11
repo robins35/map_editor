@@ -21,8 +21,6 @@ let init = () => {
   let buttonColumnY = (canvas.height / 2)
 
   let loadMapEditor = () => {
-    Game.sprites.clear()
-    Game.environmentElements.clear()
     Game.uiElements.clear()
     Game.setState('load_map_editor')
   }
@@ -35,6 +33,11 @@ let init = () => {
     new UI.Button(buttonColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Map Editor", loadMapEditor),
     new UI.Button(buttonColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Settings", loadSettings)
   ]
+
+  Game.sprites.clear()
+  Game.environmentElements.clear()
+  Game.uiElements.clear()
+
   Game.uiElements.push(buttons)
 }
 

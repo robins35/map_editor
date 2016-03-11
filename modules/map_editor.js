@@ -24,7 +24,7 @@ class SideMenu extends Entity {
     let buttonsWidth = this.width / 2
     let buttonsHeight = 30
     let buttonsColumnX = (this.width - buttonsWidth) / 2
-    let buttonY = (nthButton) => ((this.height / 2) + (nthButton * (40)))
+    let buttonY = (nthButton) => ((this.height - (this.height / 3)) + (nthButton * (40)))
 
     let saveMap = () => {
       this.map.save()

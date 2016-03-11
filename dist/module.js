@@ -386,9 +386,6 @@ var update = function update() {
       });
       break;
     case 'load_main_menu':
-      sprites.clear();
-      environmentElements.clear();
-      uiElements.clear();
       exports.state = state = 'main_menu';
       MainMenu.init();
       break;
@@ -521,8 +518,6 @@ var init = function init() {
   var buttonColumnY = canvas.height / 2;
 
   var loadMapEditor = function loadMapEditor() {
-    Game.sprites.clear();
-    Game.environmentElements.clear();
     Game.uiElements.clear();
     Game.setState('load_map_editor');
   };
@@ -532,6 +527,11 @@ var init = function init() {
   };
 
   exports.buttons = buttons = [new _ui.UI.Button(buttonColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Map Editor", loadMapEditor), new _ui.UI.Button(buttonColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Settings", loadSettings)];
+
+  Game.sprites.clear();
+  Game.environmentElements.clear();
+  Game.uiElements.clear();
+
   Game.uiElements.push(buttons);
 };
 
@@ -955,7 +955,7 @@ var SideMenu = (function (_Entity) {
     var buttonsHeight = 30;
     var buttonsColumnX = (this.width - buttonsWidth) / 2;
     var buttonY = function buttonY(nthButton) {
-      return _this.height / 2 + nthButton * 40;
+      return _this.height - _this.height / 3 + nthButton * 40;
     };
 
     var saveMap = function saveMap() {
