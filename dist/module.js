@@ -82,7 +82,7 @@ exports.imgs = imgs;
 //     return snds[name];
 // }
 
-},{"./ui":10}],2:[function(require,module,exports){
+},{"./ui":11}],2:[function(require,module,exports){
 "use strict";
 
 exports.__esModule = true;
@@ -110,6 +110,26 @@ var vectorDifference = function vectorDifference(vector1, vector2) {
   };
 };
 
+var vectorProduct = function vectorProduct(constant, vector) {
+  var newVector = {};
+  for (var _iterator = Object.keys(vector), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+    var _ref;
+
+    if (_isArray) {
+      if (_i >= _iterator.length) break;
+      _ref = _iterator[_i++];
+    } else {
+      _i = _iterator.next();
+      if (_i.done) break;
+      _ref = _i.value;
+    }
+
+    var key = _ref;
+
+    newVector[key] = vector[key] * constant;
+  }return newVector;
+};
+
 var pointsAreEqual = function pointsAreEqual(point1, point2) {
   return point1.x == point2.x && point1.y == point2.y;
 };
@@ -117,6 +137,7 @@ var pointsAreEqual = function pointsAreEqual(point1, point2) {
 exports.intersects = intersects;
 exports.vectorSum = vectorSum;
 exports.vectorDifference = vectorDifference;
+exports.vectorProduct = vectorProduct;
 exports.pointsAreEqual = pointsAreEqual;
 
 },{}],3:[function(require,module,exports){
@@ -539,7 +560,7 @@ exports.buttons = buttons;
 exports.init = init;
 exports.draw = draw;
 
-},{"./ui":10}],8:[function(require,module,exports){
+},{"./ui":11}],8:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -859,14 +880,14 @@ var Map = (function () {
   Map.prototype.draw = function draw() {
     if (this.viewPort) {
       var startColumn = Math.trunc(this.viewPort.pos.x / this.textureSize);
-      var endColumn = startColumn + Math.trunc(this.viewPort.width / this.textureSize);
+      var endColumn = startColumn + Math.trunc(this.viewPort.width / this.textureSize) - 1;
       var startRow = Math.trunc(this.viewPort.pos.y / this.textureSize);
-      var endRow = startRow + Math.trunc(this.viewPort.height / this.textureSize);
+      var endRow = startRow + Math.trunc(this.viewPort.height / this.textureSize) - 1;
     } else {
       var startColumn = 0;
-      var endColumn = startColumn + Math.trunc(Game.canvas.width / this.textureSize);
+      var endColumn = startColumn + Math.trunc(Game.canvas.width / this.textureSize) - 1;
       var startRow = 0;
-      var endRow = startRow + Math.trunc(Game.canvas.height / this.textureSize);
+      var endRow = startRow + Math.trunc(Game.canvas.height / this.textureSize) - 1;
     }
 
     for (var column = startColumn; column <= endColumn; column++) {
@@ -923,6 +944,8 @@ var _map2 = require('./map');
 var _view_port = require('./view_port');
 
 var _ui = require('./ui');
+
+var _mini_map = require('./mini_map');
 
 var _collision = require('./collision');
 
@@ -1387,15 +1410,93 @@ var init = function init() {
   viewPort = new _view_port.ViewPort(viewPortWidth, viewPortHeight, map);
   var textureMenu = new TextureMenu(viewPort);
   var sideMenu = new SideMenu(map);
+  var miniMap = new _mini_map.MiniMap(map, sideMenu, viewPort);
   var grid = new Grid(map, viewPort, textureMenu, sideMenu);
-  Game.uiElements.push([textureMenu, sideMenu]);
+
+  Game.uiElements.push([textureMenu, sideMenu, miniMap]);
   Game.environmentElements.push([map, grid]);
 };
 
 exports.init = init;
 exports.update = update;
 
-},{"./collision":2,"./entity":3,"./map":8,"./ui":10,"./view_port":11}],10:[function(require,module,exports){
+},{"./collision":2,"./entity":3,"./map":8,"./mini_map":10,"./ui":11,"./view_port":12}],10:[function(require,module,exports){
+'use strict';
+
+exports.__esModule = true;
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _entity = require('./entity');
+
+var _collision = require('./collision');
+
+var Collision = _interopRequireWildcard(_collision);
+
+var MiniMap = (function (_Entity) {
+  _inherits(MiniMap, _Entity);
+
+  function MiniMap(map, container, viewPort) {
+    _classCallCheck(this, MiniMap);
+
+    var width = container.width;
+    var height = map.height / map.width * width;
+    _Entity.call(this, 0, 0, container.width, height);
+    this.scale = width / map.width;
+    this.map = map;
+    this.container = container;
+    this.viewPort = viewPort;
+    this.miniViewPort = this.initMiniViewPort();
+    this.backgroundColor = "#222222";
+    this.canvas = Game.canvas;
+    this.ctx = Game.ctx;
+  }
+
+  MiniMap.prototype.initMiniViewPort = function initMiniViewPort() {
+    var viewPortDimensions = {
+      width: this.viewPort.width,
+      height: this.viewPort.height
+    };
+    var dimensions = Collision.vectorProduct(this.scale, viewPortDimensions);
+    var position = Collision.vectorProduct(this.scale, this.viewPort.pos);
+
+    return {
+      width: dimensions.width,
+      height: dimensions.height,
+      pos: position,
+      color: "#ffffff"
+    };
+  };
+
+  MiniMap.prototype.updateMiniViewPort = function updateMiniViewPort() {
+    var position = Collision.vectorProduct(this.scale, this.viewPort.pos);
+    this.miniViewPort.pos = position;
+  };
+
+  MiniMap.prototype.draw = function draw() {
+    this.ctx.fillStyle = this.backgroundColor;
+    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+
+    console.log('Drawing rect at x: ' + this.miniViewPort.pos.x + ', y: ' + this.miniViewPort.pos.y + '. Width: ' + this.miniViewPort.width + ', Height: ' + this.miniViewPort.height);
+    this.ctx.strokeStyle = this.miniViewPort.color;
+    this.ctx.lineWidth = 3;
+    this.ctx.strokeRect(this.miniViewPort.pos.x, this.miniViewPort.pos.y, this.miniViewPort.width, this.miniViewPort.height);
+  };
+
+  MiniMap.prototype.update = function update() {
+    this.updateMiniViewPort();
+  };
+
+  return MiniMap;
+})(_entity.Entity);
+
+exports.MiniMap = MiniMap;
+
+},{"./collision":2,"./entity":3}],11:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1507,7 +1608,7 @@ var UI = { Button: Button, ProgressBar: ProgressBar };
 
 exports.UI = UI;
 
-},{"./collision":2,"./entity":3}],11:[function(require,module,exports){
+},{"./collision":2,"./entity":3}],12:[function(require,module,exports){
 'use strict';
 
 exports.__esModule = true;
@@ -1592,4 +1693,4 @@ var ViewPort = (function (_Entity) {
 
 exports.ViewPort = ViewPort;
 
-},{"./collision":2,"./entity":3}]},{},[1,2,3,4,5,6,7,8,9,10,11]);
+},{"./collision":2,"./entity":3}]},{},[1,2,3,4,5,6,7,8,9,10,11,12]);

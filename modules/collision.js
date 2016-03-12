@@ -19,8 +19,16 @@ let vectorDifference = (vector1, vector2) => {
   }
 }
 
+let vectorProduct = (constant, vector) => {
+  let newVector = {}
+  for(let key of Object.keys(vector))
+    newVector[key] = vector[key] * constant
+
+  return newVector
+}
+
 let pointsAreEqual = (point1, point2) => {
   return point1.x == point2.x && point1.y == point2.y
 }
 
-export { intersects, vectorSum, vectorDifference, pointsAreEqual }
+export { intersects, vectorSum, vectorDifference, vectorProduct, pointsAreEqual }

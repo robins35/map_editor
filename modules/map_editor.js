@@ -2,6 +2,7 @@ import { Entity } from './entity'
 import { Map, Texture } from './map'
 import { ViewPort } from './view_port'
 import { UI } from './ui'
+import { MiniMap } from './mini_map'
 import * as Collision from './collision'
 
 const textureSize = 32
@@ -369,8 +370,10 @@ let init = () => {
   viewPort = new ViewPort(viewPortWidth, viewPortHeight, map)
   let textureMenu = new TextureMenu(viewPort)
   let sideMenu = new SideMenu(map)
+  let miniMap = new MiniMap(map, sideMenu, viewPort)
   let grid = new Grid(map, viewPort, textureMenu, sideMenu)
-  Game.uiElements.push([textureMenu, sideMenu])
+
+  Game.uiElements.push([textureMenu, sideMenu, miniMap])
   Game.environmentElements.push([map, grid])
 }
 
