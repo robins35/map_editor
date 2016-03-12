@@ -1499,10 +1499,6 @@ var MiniMap = (function (_Entity) {
     this.ctx.fillStyle = this.backgroundColor;
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
 
-    this.ctx.strokeStyle = this.miniViewPort.color;
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeRect(this.miniViewPort.pos.x, this.miniViewPort.pos.y, this.miniViewPort.width, this.miniViewPort.height);
-
     var startColumn = 0;
     var startRow = 0;
     var endColumn = Math.trunc(this.map.width % this.map.textureSize);
@@ -1542,6 +1538,10 @@ var MiniMap = (function (_Entity) {
         this.ctx.drawImage(texture.img, textureDetails.pos.x, textureDetails.pos.y, textureDetails.width, textureDetails.height);
       }
     }
+
+    this.ctx.strokeStyle = this.miniViewPort.color;
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(this.miniViewPort.pos.x, this.miniViewPort.pos.y, this.miniViewPort.width, this.miniViewPort.height);
   };
 
   MiniMap.prototype.update = function update() {

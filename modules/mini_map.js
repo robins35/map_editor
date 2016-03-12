@@ -57,11 +57,6 @@ export class MiniMap extends Entity {
     this.ctx.fillStyle = this.backgroundColor
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
 
-    this.ctx.strokeStyle = this.miniViewPort.color
-    this.ctx.lineWidth = 1
-    this.ctx.strokeRect(this.miniViewPort.pos.x, this.miniViewPort.pos.y,
-        this.miniViewPort.width, this.miniViewPort.height)
-
     let startColumn = 0
     let startRow = 0
     let endColumn = Math.trunc(this.map.width % this.map.textureSize)
@@ -76,6 +71,11 @@ export class MiniMap extends Entity {
         this.ctx.drawImage(texture.img, textureDetails.pos.x, textureDetails.pos.y, textureDetails.width, textureDetails.height)
       }
     }
+
+    this.ctx.strokeStyle = this.miniViewPort.color
+    this.ctx.lineWidth = 1
+    this.ctx.strokeRect(this.miniViewPort.pos.x, this.miniViewPort.pos.y,
+        this.miniViewPort.width, this.miniViewPort.height)
   }
 
   update() {
