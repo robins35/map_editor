@@ -7,6 +7,7 @@ export class MiniMap extends Entity {
     let height = (map.height / map.width) * width
     super(0, 0, container.width, height)
     this.scale = width / map.width
+    this.inverseScale = 1 / this.scale
     this.map = map
     this.container = container
     this.viewPort = viewPort
@@ -33,6 +34,13 @@ export class MiniMap extends Entity {
   }
 
   updateMiniViewPort() {
+    if(Collision.intersects(this, Game.events.mouse)) {
+      if(Game.events.mouse.down) {
+        let x = (Game.events.mouse.x - (this.miniViewPort.width / 2)) * this.inverseScale
+        let y = (Game.events.mouse.y - (this.miniViewPort.height / 2)) * this.inverseScale
+        this.viewPort.safeMove(x, y)
+      }
+    }
     let position = Collision.vectorProduct(this.scale, this.viewPort.pos)
     this.miniViewPort.pos = position
   }

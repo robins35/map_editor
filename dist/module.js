@@ -1449,6 +1449,7 @@ var MiniMap = (function (_Entity) {
     var height = map.height / map.width * width;
     _Entity.call(this, 0, 0, container.width, height);
     this.scale = width / map.width;
+    this.inverseScale = 1 / this.scale;
     this.map = map;
     this.container = container;
     this.viewPort = viewPort;
@@ -1475,6 +1476,13 @@ var MiniMap = (function (_Entity) {
   };
 
   MiniMap.prototype.updateMiniViewPort = function updateMiniViewPort() {
+    if (Collision.intersects(this, Game.events.mouse)) {
+      if (Game.events.mouse.down) {
+        var x = (Game.events.mouse.x - this.miniViewPort.width / 2) * this.inverseScale;
+        var y = (Game.events.mouse.y - this.miniViewPort.height / 2) * this.inverseScale;
+        this.viewPort.safeMove(x, y);
+      }
+    }
     var position = Collision.vectorProduct(this.scale, this.viewPort.pos);
     this.miniViewPort.pos = position;
   };
