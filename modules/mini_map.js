@@ -41,9 +41,8 @@ export class MiniMap extends Entity {
     this.ctx.fillStyle = this.backgroundColor
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
 
-    console.log(`Drawing rect at x: ${this.miniViewPort.pos.x}, y: ${this.miniViewPort.pos.y}. Width: ${this.miniViewPort.width}, Height: ${this.miniViewPort.height}`)
     this.ctx.strokeStyle = this.miniViewPort.color
-    this.ctx.lineWidth = 3
+    this.ctx.lineWidth = 1
     this.ctx.strokeRect(this.miniViewPort.pos.x, this.miniViewPort.pos.y,
         this.miniViewPort.width, this.miniViewPort.height)
   }

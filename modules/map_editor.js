@@ -22,7 +22,7 @@ class SideMenu extends Entity {
   }
 
   setupButtons() {
-    let buttonsWidth = this.width / 2
+    let buttonsWidth = this.width - (this.width / 3)
     let buttonsHeight = 30
     let buttonsColumnX = (this.width - buttonsWidth) / 2
     let buttonY = (nthButton) => ((this.height - (this.height / 3)) + (nthButton * (40)))

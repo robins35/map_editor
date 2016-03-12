@@ -242,19 +242,22 @@ export class Map {
   draw() {
     if(this.viewPort) {
       var startColumn = Math.trunc(this.viewPort.pos.x / this.textureSize)
-      var endColumn = startColumn + Math.trunc(this.viewPort.width / this.textureSize) - 1
+      var endColumn = startColumn + Math.trunc(this.viewPort.width / this.textureSize)
       var startRow = Math.trunc(this.viewPort.pos.y / this.textureSize)
-      var endRow = startRow + Math.trunc(this.viewPort.height / this.textureSize) - 1
+      var endRow = startRow + Math.trunc(this.viewPort.height / this.textureSize)
     }
     else {
       var startColumn = 0
-      var endColumn = startColumn + Math.trunc(Game.canvas.width / this.textureSize) - 1
+      var endColumn = startColumn + Math.trunc(Game.canvas.width / this.textureSize)
       var startRow = 0
-      var endRow = startRow + Math.trunc(Game.canvas.height / this.textureSize) - 1
+      var endRow = startRow + Math.trunc(Game.canvas.height / this.textureSize)
     }
 
     for(let column = startColumn; column <= endColumn; column++) {
       for(let row = startRow; row <= endRow; row++) {
+        if(!this.map[column] || !this.map[column][row])
+          continue
+
         let texture = this.map[column][row]
 
         if(texture === undefined)

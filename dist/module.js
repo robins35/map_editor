@@ -880,18 +880,20 @@ var Map = (function () {
   Map.prototype.draw = function draw() {
     if (this.viewPort) {
       var startColumn = Math.trunc(this.viewPort.pos.x / this.textureSize);
-      var endColumn = startColumn + Math.trunc(this.viewPort.width / this.textureSize) - 1;
+      var endColumn = startColumn + Math.trunc(this.viewPort.width / this.textureSize);
       var startRow = Math.trunc(this.viewPort.pos.y / this.textureSize);
-      var endRow = startRow + Math.trunc(this.viewPort.height / this.textureSize) - 1;
+      var endRow = startRow + Math.trunc(this.viewPort.height / this.textureSize);
     } else {
       var startColumn = 0;
-      var endColumn = startColumn + Math.trunc(Game.canvas.width / this.textureSize) - 1;
+      var endColumn = startColumn + Math.trunc(Game.canvas.width / this.textureSize);
       var startRow = 0;
-      var endRow = startRow + Math.trunc(Game.canvas.height / this.textureSize) - 1;
+      var endRow = startRow + Math.trunc(Game.canvas.height / this.textureSize);
     }
 
     for (var column = startColumn; column <= endColumn; column++) {
       for (var row = startRow; row <= endRow; row++) {
+        if (!this.map[column] || !this.map[column][row]) continue;
+
         var texture = this.map[column][row];
 
         if (texture === undefined) continue;
@@ -974,7 +976,7 @@ var SideMenu = (function (_Entity) {
   SideMenu.prototype.setupButtons = function setupButtons() {
     var _this = this;
 
-    var buttonsWidth = this.width / 2;
+    var buttonsWidth = this.width - this.width / 3;
     var buttonsHeight = 30;
     var buttonsColumnX = (this.width - buttonsWidth) / 2;
     var buttonY = function buttonY(nthButton) {
@@ -1481,9 +1483,8 @@ var MiniMap = (function (_Entity) {
     this.ctx.fillStyle = this.backgroundColor;
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
 
-    console.log('Drawing rect at x: ' + this.miniViewPort.pos.x + ', y: ' + this.miniViewPort.pos.y + '. Width: ' + this.miniViewPort.width + ', Height: ' + this.miniViewPort.height);
     this.ctx.strokeStyle = this.miniViewPort.color;
-    this.ctx.lineWidth = 3;
+    this.ctx.lineWidth = 1;
     this.ctx.strokeRect(this.miniViewPort.pos.x, this.miniViewPort.pos.y, this.miniViewPort.width, this.miniViewPort.height);
   };
 
