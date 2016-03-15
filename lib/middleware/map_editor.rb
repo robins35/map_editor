@@ -12,11 +12,24 @@ class MapEditor
       if request.get?
         response.write Dir.glob("public/images/*/*").map{|p| p.gsub('public', '')}.to_json
         response.finish
-        #binding.remote_pry
       end
     when '/maps'
       if request.post?
-        binding.pry
+        layout = JSON.parse(request.params["layout"])
+
+        map_dir = "public/maps/"
+        last_map = Dir.glob("#{map_dir}*").sort.last
+        map_name = last_map.nil? ? "#{map_dir}map0" : "#{map_dir}map#{last_map[-1].to_i + 1}"
+
+        column_lengths = []
+        File.open(map_name, 'w') do |file|
+          layout.each do |column|
+            column_lengths << column.length
+            file.write "#{column.join(',')}\n"
+          end
+        end
+
+        response.finish
       end
     else
       Rack::File.new(File.expand_path('public')).call(env)

@@ -165,6 +165,18 @@ export class Map {
 
   save() {
     this.serialize()
+
+    $.ajax({
+      method: "POST",
+      url: '/maps',
+      data: { layout: JSON.stringify(this.layout)},
+      error: (error) => {
+        console.log(`ERROR: response text: ${error.responseText}, status: ${error.status}`)
+      },
+      success: (data) => {
+        console.log("SUCCESSFULLY SAVED MAP")
+      }
+    });
   }
 
   serialize() {
@@ -173,6 +185,8 @@ export class Map {
         let square = this.map[column][row]
         if(square)
           this.layout[column][row] = square.key
+        else
+          this.layout[column][row] = null
       }
     }
   }

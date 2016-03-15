@@ -790,13 +790,25 @@ var Map = (function () {
 
   Map.prototype.save = function save() {
     this.serialize();
+
+    $.ajax({
+      method: "POST",
+      url: '/maps',
+      data: { layout: JSON.stringify(this.layout) },
+      error: function error(_error) {
+        console.log('ERROR: response text: ' + _error.responseText + ', status: ' + _error.status);
+      },
+      success: function success(data) {
+        console.log("SUCCESSFULLY SAVED MAP");
+      }
+    });
   };
 
   Map.prototype.serialize = function serialize() {
     for (var column = 0; column < this.columns; column++) {
       for (var row = 0; row < this.rows; row++) {
         var square = this.map[column][row];
-        if (square) this.layout[column][row] = square.key;
+        if (square) this.layout[column][row] = square.key;else this.layout[column][row] = null;
       }
     }
   };
