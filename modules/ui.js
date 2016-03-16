@@ -88,6 +88,65 @@ class ProgressBar extends Entity {
   }
 }
 
+class UIElement extends Entity {
+  constructor(properties) {
+    let entityProps = UIElement.calculateDimensionAndPosition(properties)
+    super(entityProps.x, entityProps.y, entityProps.width, entityProps.height)
+    this.parent = entityProps.parent
+  }
+
+  static calculateDimensionAndPosition(properties) {
+    let parent = properties["parent"] || Game.canvas
+    let margin = properties["margin"] || 0
+    let leftMargin = properties["leftMargin"] || 0
+    let rightMargin = properties["rightMargin"] || 0
+    let topMargin = properties["topMargin"] || 0
+    let bottomMargin = properties["bottomMargin"] || 0
+
+    let x, y, height, width
+
+    if(typeof properties["width"] == "string") {
+      let widthPercent = properties["width"].slice(0, -1)
+      width = parent.width * parseInt(widthPercent)
+    }
+    else {
+      width = properties["width"]
+    }
+
+    if(typeof properties["height"] == "string") {
+      let heightPercent = properties["height"].slice(0, -1)
+      height = parent.height * parseInt(heightPercent)
+    }
+    else {
+      height = properties["height"]
+    }
+
+    switch (properties["alignment"]) {
+      case "center":
+        x = parent.pos.x + ((parent.width / 2) - (width / 2))
+        break
+      case "right":
+        x = (parent.pos.x + parent.width - width) - (rightMargin || margin)
+        break
+      default:
+        x = parent.pos.x + (leftMargin || margin)
+    }
+
+    switch (properties["verticalAlignment"]) {
+      case "middle":
+        y = parent.pos.y + ((parent.height / 2) - (height / 2))
+        break
+      case "bottom":
+        y = (parent.pos.y + parent.height - height) - (topMargin || margin)
+        break
+      default:
+        y = parent.pos.y + (topMargin || margin)
+    }
+
+    return { x, y, width, height, parent }
+  }
+}
+
 let UI = { Button, ProgressBar }
 
 export { UI }

@@ -441,6 +441,8 @@ var setState = function setState(_state) {
 
 var init = function init() {
   exports.canvas = canvas = document.getElementById("map_editor");
+  canvas.pos.x = 0;
+  canvas.pos.y = 0;
   exports.ctx = ctx = canvas.getContext("2d");
   events.init(canvas);
 };
@@ -1671,6 +1673,72 @@ var ProgressBar = (function (_Entity2) {
   };
 
   return ProgressBar;
+})(_entity.Entity);
+
+var UIElement = (function (_Entity3) {
+  _inherits(UIElement, _Entity3);
+
+  function UIElement(properties) {
+    _classCallCheck(this, UIElement);
+
+    var entityProps = UIElement.calculateDimensionAndPosition(properties);
+    _Entity3.call(this, entityProps.x, entityProps.y, entityProps.width, entityProps.height);
+    this.parent = entityProps.parent;
+  }
+
+  UIElement.calculateDimensionAndPosition = function calculateDimensionAndPosition(properties) {
+    var parent = properties["parent"] || Game.canvas;
+    var margin = properties["margin"] || 0;
+    var leftMargin = properties["leftMargin"] || 0;
+    var rightMargin = properties["rightMargin"] || 0;
+    var topMargin = properties["topMargin"] || 0;
+    var bottomMargin = properties["bottomMargin"] || 0;
+
+    var x = undefined,
+        y = undefined,
+        height = undefined,
+        width = undefined;
+
+    if (typeof properties["width"] == "string") {
+      var widthPercent = properties["width"].slice(0, -1);
+      width = parent.width * parseInt(widthPercent);
+    } else {
+      width = properties["width"];
+    }
+
+    if (typeof properties["height"] == "string") {
+      var heightPercent = properties["height"].slice(0, -1);
+      height = parent.height * parseInt(heightPercent);
+    } else {
+      height = properties["height"];
+    }
+
+    switch (properties["alignment"]) {
+      case "center":
+        x = parent.pos.x + (parent.width / 2 - width / 2);
+        break;
+      case "right":
+        x = parent.pos.x + parent.width - width - (rightMargin || margin);
+        break;
+      default:
+        x = parent.pos.x + (leftMargin || margin);
+    }
+
+    switch (properties["verticalAlignment"]) {
+      case "middle":
+        y = parent.pos.y + (parent.height / 2 - height / 2);
+        break;
+      case "bottom":
+        y = parent.pos.y + parent.height - height - (topMargin || margin);
+        break;
+      default:
+        y = parent.pos.y + (topMargin || margin);
+    }
+
+    return { x: x, y: y, width: width, height: height, parent: parent };
+  };
+
+  return UIElement;
 })(_entity.Entity);
 
 var UI = { Button: Button, ProgressBar: ProgressBar };
