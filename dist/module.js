@@ -30,7 +30,16 @@ var loadImagePaths = function loadImagePaths(downloadCallback) {
 };
 
 var loadImages = function loadImages(downloadCallback) {
-    var progressBar = new _ui.UI.ProgressBar(imgPaths.length);
+    var progressBar = new _ui.UI.ProgressBar({
+        width: "50%",
+        height: 20,
+        alignment: "center",
+        verticalAlignment: "middle",
+        total: imgPaths.length,
+        backgroundColor: "#ffffff",
+        color: "#ffffff",
+        borderWidth: 2
+    });
     Game.uiElements.push(progressBar);
 
     if (imgPaths.length == 0) downloadCallback();
@@ -441,8 +450,7 @@ var setState = function setState(_state) {
 
 var init = function init() {
   exports.canvas = canvas = document.getElementById("map_editor");
-  canvas.pos.x = 0;
-  canvas.pos.y = 0;
+  canvas.pos = { x: 0, y: 0 };
   exports.ctx = ctx = canvas.getContext("2d");
   events.init(canvas);
 };
@@ -1644,46 +1652,19 @@ var Button = (function (_Entity) {
   return Button;
 })(_entity.Entity);
 
-var ProgressBar = (function (_Entity2) {
-  _inherits(ProgressBar, _Entity2);
-
-  function ProgressBar(total) {
-    _classCallCheck(this, ProgressBar);
-
-    _Entity2.call(this, 200, 200, 300, 20);
-    this.total = total;
-    this.progress = 0;
-    this.color = "#ffffff";
-  }
-
-  ProgressBar.prototype.draw = function draw() {
-    this.ctx.beginPath();
-    this.ctx.rect(this.pos.x, this.pos.y, this.width, this.height);
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeStyle = this.color;
-    this.ctx.stroke();
-
-    this.ctx.beginPath();
-    this.ctx.fillStyle = this.color;
-    this.ctx.fillRect(this.pos.x, this.pos.y, this.calculateWidth(), this.height);
-  };
-
-  ProgressBar.prototype.calculateWidth = function calculateWidth() {
-    return this.width * (this.progress / this.total);
-  };
-
-  return ProgressBar;
-})(_entity.Entity);
-
-var UIElement = (function (_Entity3) {
-  _inherits(UIElement, _Entity3);
+var UIElement = (function (_Entity2) {
+  _inherits(UIElement, _Entity2);
 
   function UIElement(properties) {
     _classCallCheck(this, UIElement);
 
     var entityProps = UIElement.calculateDimensionAndPosition(properties);
-    _Entity3.call(this, entityProps.x, entityProps.y, entityProps.width, entityProps.height);
+    _Entity2.call(this, entityProps.x, entityProps.y, entityProps.width, entityProps.height);
     this.parent = entityProps.parent;
+    this.children = properties["children"];
+    this.backgroundColor = properties["backgroundColor"] || '#2a1d16';
+    this.borderWidth = properties["borderWidth"] || 0;
+    this.visible = properties["visible"] || true;
   }
 
   UIElement.calculateDimensionAndPosition = function calculateDimensionAndPosition(properties) {
@@ -1701,7 +1682,7 @@ var UIElement = (function (_Entity3) {
 
     if (typeof properties["width"] == "string") {
       var widthPercent = properties["width"].slice(0, -1);
-      width = parent.width * parseInt(widthPercent);
+      width = parent.width * (parseInt(widthPercent) / 100);
     } else {
       width = properties["width"];
     }
@@ -1738,8 +1719,94 @@ var UIElement = (function (_Entity3) {
     return { x: x, y: y, width: width, height: height, parent: parent };
   };
 
+  UIElement.prototype.show = function show() {
+    this.visible = true;
+  };
+
+  UIElement.prototype.hide = function hide() {
+    this.visible = false;
+  };
+
+  UIElement.prototype.toggle = function toggle() {
+    this.visible = !this.visible;
+  };
+
+  UIElement.prototype.draw = function draw() {
+    if (this.visible) {
+      this.ctx.fillStyle = this.backgroundColor;
+      this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+
+      for (var _iterator = this.children, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+        var _ref;
+
+        if (_isArray) {
+          if (_i >= _iterator.length) break;
+          _ref = _iterator[_i++];
+        } else {
+          _i = _iterator.next();
+          if (_i.done) break;
+          _ref = _i.value;
+        }
+
+        var child = _ref;
+
+        child.draw();
+      }
+    }
+  };
+
+  UIElement.prototype.update = function update() {
+    for (var _iterator2 = this.children, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+      var _ref2;
+
+      if (_isArray2) {
+        if (_i2 >= _iterator2.length) break;
+        _ref2 = _iterator2[_i2++];
+      } else {
+        _i2 = _iterator2.next();
+        if (_i2.done) break;
+        _ref2 = _i2.value;
+      }
+
+      var child = _ref2;
+
+      child.update();
+    }
+  };
+
   return UIElement;
 })(_entity.Entity);
+
+var ProgressBar = (function (_UIElement) {
+  _inherits(ProgressBar, _UIElement);
+
+  function ProgressBar(properties) {
+    _classCallCheck(this, ProgressBar);
+
+    _UIElement.call(this, properties);
+    this.total = properties["total"];
+    this.progress = 0;
+    this.color = properties["color"];
+  }
+
+  ProgressBar.prototype.draw = function draw() {
+    this.ctx.beginPath();
+    this.ctx.rect(this.pos.x, this.pos.y, this.width, this.height);
+    this.ctx.lineWidth = this.borderWidth;
+    this.ctx.strokeStyle = this.color;
+    this.ctx.stroke();
+
+    this.ctx.beginPath();
+    this.ctx.fillStyle = this.color;
+    this.ctx.fillRect(this.pos.x, this.pos.y, this.calculateWidth(), this.height);
+  };
+
+  ProgressBar.prototype.calculateWidth = function calculateWidth() {
+    return this.width * (this.progress / this.total);
+  };
+
+  return ProgressBar;
+})(UIElement);
 
 var UI = { Button: Button, ProgressBar: ProgressBar };
 

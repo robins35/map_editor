@@ -63,36 +63,15 @@ class Button extends Entity {
   }
 }
 
-class ProgressBar extends Entity {
-  constructor (total) {
-    super(200, 200, 300, 20)
-    this.total = total
-    this.progress = 0
-    this.color = "#ffffff"
-  }
-
-  draw () {
-    this.ctx.beginPath()
-    this.ctx.rect(this.pos.x, this.pos.y, this.width, this.height)
-    this.ctx.lineWidth = 2
-    this.ctx.strokeStyle = this.color
-    this.ctx.stroke()
-
-    this.ctx.beginPath()
-    this.ctx.fillStyle = this.color
-    this.ctx.fillRect(this.pos.x, this.pos.y, this.calculateWidth(), this.height)
-  }
-
-  calculateWidth() {
-    return this.width * (this.progress / this.total)
-  }
-}
-
 class UIElement extends Entity {
   constructor(properties) {
     let entityProps = UIElement.calculateDimensionAndPosition(properties)
     super(entityProps.x, entityProps.y, entityProps.width, entityProps.height)
     this.parent = entityProps.parent
+    this.children = properties["children"]
+    this.backgroundColor = properties["backgroundColor"] || '#2a1d16'
+    this.borderWidth = properties["borderWidth"] || 0
+    this.visible = properties["visible"] || true
   }
 
   static calculateDimensionAndPosition(properties) {
@@ -107,7 +86,7 @@ class UIElement extends Entity {
 
     if(typeof properties["width"] == "string") {
       let widthPercent = properties["width"].slice(0, -1)
-      width = parent.width * parseInt(widthPercent)
+      width = parent.width * (parseInt(widthPercent) / 100)
     }
     else {
       width = properties["width"]
@@ -144,6 +123,60 @@ class UIElement extends Entity {
     }
 
     return { x, y, width, height, parent }
+  }
+
+  show() {
+    this.visible = true
+  }
+
+  hide() {
+    this.visible = false
+  }
+
+  toggle() {
+    this.visible = !this.visible
+  }
+
+  draw() {
+    if(this.visible) {
+      this.ctx.fillStyle = this.backgroundColor
+      this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+
+      for(let child of this.children) {
+        child.draw()
+      }
+    }
+  }
+
+  update() {
+    for(let child of this.children) {
+      child.update()
+    }
+  }
+}
+
+class ProgressBar extends UIElement {
+  constructor (properties) {
+    super(properties)
+    this.total = properties["total"]
+    this.progress = 0
+    this.color = properties["color"]
+  }
+
+  draw () {
+    this.ctx.beginPath()
+    this.ctx.rect(this.pos.x, this.pos.y, this.width, this.height)
+    this.ctx.lineWidth = this.borderWidth
+    this.ctx.strokeStyle = this.color
+    this.ctx.stroke()
+
+    this.ctx.beginPath()
+    this.ctx.fillStyle = this.color
+    this.ctx.fillRect(this.pos.x, this.pos.y, this.calculateWidth(), this.height)
+  }
+
+  calculateWidth() {
+    return this.width * (this.progress / this.total)
   }
 }
 

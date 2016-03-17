@@ -25,7 +25,16 @@ var loadImagePaths = (downloadCallback) => {
 }
 
 var loadImages = function(downloadCallback) {
-    var progressBar = new UI.ProgressBar(imgPaths.length)
+    var progressBar = new UI.ProgressBar({
+      width: "50%",
+      height: 20,
+      alignment: "center",
+      verticalAlignment: "middle",
+      total: imgPaths.length,
+      backgroundColor: "#ffffff",
+      color: "#ffffff",
+      borderWidth: 2
+    })
     Game.uiElements.push(progressBar)
 
     if (imgPaths.length == 0) downloadCallback();

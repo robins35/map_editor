@@ -60,8 +60,7 @@ let setState = (_state) => {
 
 let init = () => {
   canvas = document.getElementById("map_editor")
-  canvas.pos.x = 0
-  canvas.pos.y = 0
+  canvas.pos = { x: 0, y: 0 }
   ctx = canvas.getContext("2d")
   events.init(canvas)
 }
