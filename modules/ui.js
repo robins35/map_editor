@@ -7,20 +7,33 @@ class UIElement extends Entity {
     super(entityProps.x, entityProps.y, entityProps.width, entityProps.height)
     this.parent = entityProps.parent
     this.color = properties["color"] || "#ffffff"
-    this.backgroundColor = properties["backgroundColor"] || '#2a1d16'
+    this.backgroundColor = properties["backgroundColor"]
     this.borderWidth = properties["borderWidth"] || 0
     this.visible = properties["visible"] || true
 
     this.children = []
     let lastChild = null
-    for(childKey of Object.keys(properties["children"])) {
-      let childProperties = properties["children"][1]
-      childProperties["parent"] = this
-      childProperties["previousSibling"] = lastChild
-      let child = new properties["children"][0](childProperties)
-      this.children.push(child)
-      lastChild = child
+    if(properties["children"]) {
+      for(let childKey of Object.keys(properties["children"])) {
+        let childProperties = properties["children"][childKey][1]
+        childProperties["parent"] = this
+        childProperties["previousSibling"] = lastChild
+        let child = new properties["children"][childKey][0](childProperties)
+        this.children.push(child)
+        lastChild = child
+      }
     }
+  }
+
+  static pixelDimension(value, parentValue) {
+    if(typeof value == "string") {
+      let valuePercent = value.slice(0, -1)
+      value = parentValue * (parseInt(valuePercent) / 100)
+    }
+    else if (value === undefined) {
+      value = parentValue
+    }
+    return value
   }
 
   static calculateDimensionAndPosition(properties) {
@@ -35,27 +48,8 @@ class UIElement extends Entity {
 
     let x, y, height, width
 
-    if(typeof properties["width"] == "string") {
-      let widthPercent = properties["width"].slice(0, -1)
-      width = parent.width * (parseInt(widthPercent) / 100)
-    }
-    else if (typeof properties["width"] == "number") {
-      width = properties["width"]
-    }
-    else {
-      width = parent.width
-    }
-
-    if(typeof properties["height"] == "string") {
-      let heightPercent = properties["height"].slice(0, -1)
-      height = parent.height * parseInt(heightPercent)
-    }
-    else if (typeof properties["height"] == "number") {
-      height = properties["height"]
-    }
-    else {
-      height = parent.height
-    }
+    width = UIElement.pixelDimension(properties["width"], parent.width)
+    height = UIElement.pixelDimension(properties["height"], parent.height)
 
     switch (properties["alignment"]) {
       case "center":
@@ -65,7 +59,12 @@ class UIElement extends Entity {
         x = (parent.pos.x + parent.width - width) - (rightMargin || margin)
         break
       default:
-        x = parent.pos.x + (leftMargin || margin)
+        if(display == 'block' || !previousSibling) {
+          x = parent.pos.x + leftMargin
+        }
+        else {
+          x = previousSibling.pos.x + previousSibling.width + leftMargin
+        }
     }
 
     switch (properties["verticalAlignment"]) {
@@ -76,7 +75,12 @@ class UIElement extends Entity {
         y = (parent.pos.y + parent.height - height) - (topMargin || margin)
         break
       default:
-        y = parent.pos.y + (topMargin || margin)
+        if(display == 'block' && previousSibling) {
+          y = previousSibling.pos.y + previousSibling.height + topMargin
+        }
+        else {
+          y = parent.pos.y + topMargin
+        }
     }
 
     return { x, y, width, height, parent }
@@ -96,8 +100,10 @@ class UIElement extends Entity {
 
   draw() {
     if(this.visible) {
-      this.ctx.fillStyle = this.backgroundColor
-      this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+      if(this.backgroundColor) {
+        this.ctx.fillStyle = this.backgroundColor
+        this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+      }
 
       for(let child of this.children) {
         child.draw()
@@ -114,22 +120,34 @@ class UIElement extends Entity {
 
 class Grid extends UIElement {
   constructor (properties) {
-    super(properties)
+    properties["children"] = []
+    let height = UIElement.pixelDimension(properties["height"],
+        (properties["parent"]|| Game.canvas).height)
+    let rowHeight = properties["rowHeight"] || parseInt(height / properties["rows"].length)
 
-    let rowIndex = 0
+    let width = UIElement.pixelDimension(properties["width"],
+        (properties["parent"]|| Game.canvas).width)
+    let columnWidth = parseInt(width / properties["rows"][0].length)
 
-    for(let row of this.children) {
-      row.pos.x = this.pos.x
-      row.pos.y = this.pos.y + (row.height * i)
-      rowIndex++
+    let rowMargin = properties["rowMargin"] || 0
+    let columnMargin = properties["columnMargin"] || 0
 
+    for(let row of properties["rows"]) {
       let columnIndex = 0
       for(let column of row) {
-        column.pos.x = this
-        row.pos.y = this.pos.y + (row.height * i)
+        if(columnIndex < (row.length - 1)) {
+          column[1]['display'] = 'inline'
+        }
+        column[1]["height"] = rowHeight
+        column[1]["width"] = columnWidth
+        column[1]["topMargin"] = rowMargin
+        column[1]["bottomMargin"] = rowMargin
+        column[1]["margin"] = columnMargin
+        properties["children"].push(column)
         columnIndex++
       }
     }
+    super(properties)
   }
 }
 
@@ -157,14 +175,18 @@ class ProgressBar extends UIElement {
   }
 }
 
-class Button extends Entity {
+class Button extends UIElement {
   constructor(properties) {
     super(properties)
     this.text = properties["text"]
     this.clickAction = properties["clickAction"]
     this.clicked = false
+    this.backgroundColor = properties["backgroundColor"] || "#cc6600"
     this.hoveredBackgroundColor = properties["hoveredBackgroundColor"] || "#da8e42"
     this.clickedBackgroundColor = properties["clickedBackgroundColor"] || "#bb4a00"
+    this.fontSize = properties["fontSize"] || 24
+    this.font = this.fontSize + "px " + (properties["font"] || 'amatic-bold')
+    this.textMargin = properties["textMargin"] || 3
     Button.hoveredButtons = {}
     Button.clickedButtons = {}
   }
@@ -185,15 +207,13 @@ class Button extends Entity {
     }
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
 
-    let fontSize = 24
     this.ctx.fillStyle = this.color
-    this.ctx.font = fontSize + "px amatic-bold"
+    this.ctx.font = this.font
     this.ctx.textBaseline = "top"
 
-    let textMargin = 3
     let textSize = this.ctx.measureText(this.text)
     let textX = this.pos.x + (this.width / 2) - (textSize.width / 2)
-    let textY = this.pos.y + (this.height / 2) - (fontSize / 2) - textMargin
+    let textY = this.pos.y + (this.height / 2) - (this.fontSize / 2) - this.textMargin
 
     this.ctx.fillText(this.text, textX, textY)
   }
@@ -216,6 +236,6 @@ class Button extends Entity {
   }
 }
 
-let UI = { Button, ProgressBar }
+let UI = { Button, ProgressBar, Grid }
 
 export { UI }

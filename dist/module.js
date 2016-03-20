@@ -540,14 +540,6 @@ var init = function init() {
   canvas = Game.canvas;
   ctx = Game.ctx;
 
-  var buttonY = function buttonY(nthButton) {
-    return canvas.height / 2 + nthButton * 40;
-  };
-  var buttonsWidth = canvas.width / 5;
-  var buttonColumnX = 20;
-  var buttonsHeight = 30;
-  var buttonColumnY = canvas.height / 2;
-
   var loadMapEditor = function loadMapEditor() {
     Game.uiElements.clear();
     Game.setState('load_map_editor');
@@ -557,13 +549,21 @@ var init = function init() {
     console.log("Stubbing settings load action");
   };
 
-  exports.buttons = buttons = [new _ui.UI.Button(buttonColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Map Editor", loadMapEditor), new _ui.UI.Button(buttonColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Settings", loadSettings)];
+  var buttonGrid = new _ui.UI.Grid({
+    width: "20%",
+    height: "50%",
+    rowHeight: 30,
+    margin: 30,
+    rowMargin: 10,
+    verticalAlignment: "bottom",
+    rows: [[[_ui.UI.Button, { text: "Map Editor", clickAction: loadMapEditor }]], [[_ui.UI.Button, { text: "Settings", clickAction: loadSettings }]]]
+  });
 
   Game.sprites.clear();
   Game.environmentElements.clear();
   Game.uiElements.clear();
 
-  Game.uiElements.push(buttons);
+  Game.uiElements.push(buttonGrid);
 };
 
 exports.buttons = buttons;
@@ -1592,107 +1592,74 @@ var _collision = require('./collision');
 
 var Collision = _interopRequireWildcard(_collision);
 
-var Button = (function (_Entity) {
-  _inherits(Button, _Entity);
-
-  function Button(x, y, width, height, text, clickAction) {
-    _classCallCheck(this, Button);
-
-    _Entity.call(this, x, y, width, height);
-    this.text = text;
-    this.clickAction = clickAction;
-    this.clicked = false;
-    this.backgroundColor = "#cc6600";
-    this.hoveredBackgroundColor = "#da8e42";
-    this.clickedBackgroundColor = "#bb4a00";
-    this.textColor = "#ffffff";
-    Button.hoveredButtons = {};
-    Button.clickedButtons = {};
-  }
-
-  Button.prototype.draw = function draw() {
-    this.ctx.beginPath();
-    if (Button.hoveredButtons[this.id]) {
-      if (Button.clickedButtons[this.id]) this.ctx.fillStyle = this.clickedBackgroundColor;else this.ctx.fillStyle = this.hoveredBackgroundColor;
-      $(this.canvas).css({ 'cursor': 'pointer' });
-    } else {
-      this.ctx.fillStyle = this.backgroundColor;
-      if (Object.keys(Button.hoveredButtons).length <= 0) $(this.canvas).css({ 'cursor': 'default' });
-    }
-    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-
-    var fontSize = 24;
-    this.ctx.fillStyle = this.textColor;
-    this.ctx.font = fontSize + "px amatic-bold";
-    this.ctx.textBaseline = "top";
-
-    var textMargin = 3;
-    var textSize = this.ctx.measureText(this.text);
-    var textX = this.pos.x + this.width / 2 - textSize.width / 2;
-    var textY = this.pos.y + this.height / 2 - fontSize / 2 - textMargin;
-
-    this.ctx.fillText(this.text, textX, textY);
-  };
-
-  Button.prototype.update = function update() {
-    if (Collision.intersects(this, Game.events.mouse)) {
-      Button.hoveredButtons[this.id] = true;
-      if (Game.events.mouse.clicked) {
-        Button.clickedButtons[this.id] = true;
-        Game.events.mouse.clicked = false;
-      } else if (Button.clickedButtons[this.id] && !Game.events.mouse.down) {
-        delete Button.clickedButtons[this.id];
-        this.clickAction();
-      }
-    } else if (Button.hoveredButtons[this.id]) {
-      delete Button.hoveredButtons[this.id];
-    }
-  };
-
-  return Button;
-})(_entity.Entity);
-
-var UIElement = (function (_Entity2) {
-  _inherits(UIElement, _Entity2);
+var UIElement = (function (_Entity) {
+  _inherits(UIElement, _Entity);
 
   function UIElement(properties) {
     _classCallCheck(this, UIElement);
 
     var entityProps = UIElement.calculateDimensionAndPosition(properties);
-    _Entity2.call(this, entityProps.x, entityProps.y, entityProps.width, entityProps.height);
+    _Entity.call(this, entityProps.x, entityProps.y, entityProps.width, entityProps.height);
     this.parent = entityProps.parent;
-    this.children = properties["children"];
-    this.backgroundColor = properties["backgroundColor"] || '#2a1d16';
+    this.color = properties["color"] || "#ffffff";
+    this.backgroundColor = properties["backgroundColor"];
     this.borderWidth = properties["borderWidth"] || 0;
     this.visible = properties["visible"] || true;
+
+    this.children = [];
+    var lastChild = null;
+    if (properties["children"]) {
+      for (var _iterator = Object.keys(properties["children"]), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+        var _ref;
+
+        if (_isArray) {
+          if (_i >= _iterator.length) break;
+          _ref = _iterator[_i++];
+        } else {
+          _i = _iterator.next();
+          if (_i.done) break;
+          _ref = _i.value;
+        }
+
+        var childKey = _ref;
+
+        var childProperties = properties["children"][childKey][1];
+        childProperties["parent"] = this;
+        childProperties["previousSibling"] = lastChild;
+        var child = new properties["children"][childKey][0](childProperties);
+        this.children.push(child);
+        lastChild = child;
+      }
+    }
   }
+
+  UIElement.pixelDimension = function pixelDimension(value, parentValue) {
+    if (typeof value == "string") {
+      var valuePercent = value.slice(0, -1);
+      value = parentValue * (parseInt(valuePercent) / 100);
+    } else if (value === undefined) {
+      value = parentValue;
+    }
+    return value;
+  };
 
   UIElement.calculateDimensionAndPosition = function calculateDimensionAndPosition(properties) {
     var parent = properties["parent"] || Game.canvas;
     var margin = properties["margin"] || 0;
-    var leftMargin = properties["leftMargin"] || 0;
-    var rightMargin = properties["rightMargin"] || 0;
-    var topMargin = properties["topMargin"] || 0;
-    var bottomMargin = properties["bottomMargin"] || 0;
+    var leftMargin = properties["leftMargin"] || margin;
+    var rightMargin = properties["rightMargin"] || margin;
+    var topMargin = properties["topMargin"] || margin;
+    var bottomMargin = properties["bottomMargin"] || margin;
+    var display = properties["display"] || "block";
+    var previousSibling = properties["previousSibling"];
 
     var x = undefined,
         y = undefined,
         height = undefined,
         width = undefined;
 
-    if (typeof properties["width"] == "string") {
-      var widthPercent = properties["width"].slice(0, -1);
-      width = parent.width * (parseInt(widthPercent) / 100);
-    } else {
-      width = properties["width"];
-    }
-
-    if (typeof properties["height"] == "string") {
-      var heightPercent = properties["height"].slice(0, -1);
-      height = parent.height * parseInt(heightPercent);
-    } else {
-      height = properties["height"];
-    }
+    width = UIElement.pixelDimension(properties["width"], parent.width);
+    height = UIElement.pixelDimension(properties["height"], parent.height);
 
     switch (properties["alignment"]) {
       case "center":
@@ -1702,7 +1669,11 @@ var UIElement = (function (_Entity2) {
         x = parent.pos.x + parent.width - width - (rightMargin || margin);
         break;
       default:
-        x = parent.pos.x + (leftMargin || margin);
+        if (display == 'block' || !previousSibling) {
+          x = parent.pos.x + leftMargin;
+        } else {
+          x = previousSibling.pos.x + previousSibling.width + leftMargin;
+        }
     }
 
     switch (properties["verticalAlignment"]) {
@@ -1713,7 +1684,11 @@ var UIElement = (function (_Entity2) {
         y = parent.pos.y + parent.height - height - (topMargin || margin);
         break;
       default:
-        y = parent.pos.y + (topMargin || margin);
+        if (display == 'block' && previousSibling) {
+          y = previousSibling.pos.y + previousSibling.height + topMargin;
+        } else {
+          y = parent.pos.y + topMargin;
+        }
     }
 
     return { x: x, y: y, width: width, height: height, parent: parent };
@@ -1733,22 +1708,24 @@ var UIElement = (function (_Entity2) {
 
   UIElement.prototype.draw = function draw() {
     if (this.visible) {
-      this.ctx.fillStyle = this.backgroundColor;
-      this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+      if (this.backgroundColor) {
+        this.ctx.fillStyle = this.backgroundColor;
+        this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+      }
 
-      for (var _iterator = this.children, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-        var _ref;
+      for (var _iterator2 = this.children, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+        var _ref2;
 
-        if (_isArray) {
-          if (_i >= _iterator.length) break;
-          _ref = _iterator[_i++];
+        if (_isArray2) {
+          if (_i2 >= _iterator2.length) break;
+          _ref2 = _iterator2[_i2++];
         } else {
-          _i = _iterator.next();
-          if (_i.done) break;
-          _ref = _i.value;
+          _i2 = _iterator2.next();
+          if (_i2.done) break;
+          _ref2 = _i2.value;
         }
 
-        var child = _ref;
+        var child = _ref2;
 
         child.draw();
       }
@@ -1756,19 +1733,19 @@ var UIElement = (function (_Entity2) {
   };
 
   UIElement.prototype.update = function update() {
-    for (var _iterator2 = this.children, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
-      var _ref2;
+    for (var _iterator3 = this.children, _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
+      var _ref3;
 
-      if (_isArray2) {
-        if (_i2 >= _iterator2.length) break;
-        _ref2 = _iterator2[_i2++];
+      if (_isArray3) {
+        if (_i3 >= _iterator3.length) break;
+        _ref3 = _iterator3[_i3++];
       } else {
-        _i2 = _iterator2.next();
-        if (_i2.done) break;
-        _ref2 = _i2.value;
+        _i3 = _iterator3.next();
+        if (_i3.done) break;
+        _ref3 = _i3.value;
       }
 
-      var child = _ref2;
+      var child = _ref3;
 
       child.update();
     }
@@ -1777,16 +1754,78 @@ var UIElement = (function (_Entity2) {
   return UIElement;
 })(_entity.Entity);
 
-var ProgressBar = (function (_UIElement) {
-  _inherits(ProgressBar, _UIElement);
+var Grid = (function (_UIElement) {
+  _inherits(Grid, _UIElement);
+
+  function Grid(properties) {
+    _classCallCheck(this, Grid);
+
+    properties["children"] = [];
+    var height = UIElement.pixelDimension(properties["height"], (properties["parent"] || Game.canvas).height);
+    var rowHeight = properties["rowHeight"] || parseInt(height / properties["rows"].length);
+
+    var width = UIElement.pixelDimension(properties["width"], (properties["parent"] || Game.canvas).width);
+    var columnWidth = parseInt(width / properties["rows"][0].length);
+
+    var rowMargin = properties["rowMargin"] || 0;
+    var columnMargin = properties["columnMargin"] || 0;
+
+    for (var _iterator4 = properties["rows"], _isArray4 = Array.isArray(_iterator4), _i4 = 0, _iterator4 = _isArray4 ? _iterator4 : _iterator4[Symbol.iterator]();;) {
+      var _ref4;
+
+      if (_isArray4) {
+        if (_i4 >= _iterator4.length) break;
+        _ref4 = _iterator4[_i4++];
+      } else {
+        _i4 = _iterator4.next();
+        if (_i4.done) break;
+        _ref4 = _i4.value;
+      }
+
+      var row = _ref4;
+
+      var columnIndex = 0;
+      for (var _iterator5 = row, _isArray5 = Array.isArray(_iterator5), _i5 = 0, _iterator5 = _isArray5 ? _iterator5 : _iterator5[Symbol.iterator]();;) {
+        var _ref5;
+
+        if (_isArray5) {
+          if (_i5 >= _iterator5.length) break;
+          _ref5 = _iterator5[_i5++];
+        } else {
+          _i5 = _iterator5.next();
+          if (_i5.done) break;
+          _ref5 = _i5.value;
+        }
+
+        var column = _ref5;
+
+        if (columnIndex < row.length - 1) {
+          column[1]['display'] = 'inline';
+        }
+        column[1]["height"] = rowHeight;
+        column[1]["width"] = columnWidth;
+        column[1]["topMargin"] = rowMargin;
+        column[1]["bottomMargin"] = rowMargin;
+        column[1]["margin"] = columnMargin;
+        properties["children"].push(column);
+        columnIndex++;
+      }
+    }
+    _UIElement.call(this, properties);
+  }
+
+  return Grid;
+})(UIElement);
+
+var ProgressBar = (function (_UIElement2) {
+  _inherits(ProgressBar, _UIElement2);
 
   function ProgressBar(properties) {
     _classCallCheck(this, ProgressBar);
 
-    _UIElement.call(this, properties);
+    _UIElement2.call(this, properties);
     this.total = properties["total"];
     this.progress = 0;
-    this.color = properties["color"];
   }
 
   ProgressBar.prototype.draw = function draw() {
@@ -1808,7 +1847,67 @@ var ProgressBar = (function (_UIElement) {
   return ProgressBar;
 })(UIElement);
 
-var UI = { Button: Button, ProgressBar: ProgressBar };
+var Button = (function (_UIElement3) {
+  _inherits(Button, _UIElement3);
+
+  function Button(properties) {
+    _classCallCheck(this, Button);
+
+    _UIElement3.call(this, properties);
+    this.text = properties["text"];
+    this.clickAction = properties["clickAction"];
+    this.clicked = false;
+    this.backgroundColor = properties["backgroundColor"] || "#cc6600";
+    this.hoveredBackgroundColor = properties["hoveredBackgroundColor"] || "#da8e42";
+    this.clickedBackgroundColor = properties["clickedBackgroundColor"] || "#bb4a00";
+    this.fontSize = properties["fontSize"] || 24;
+    this.font = this.fontSize + "px " + (properties["font"] || 'amatic-bold');
+    this.textMargin = properties["textMargin"] || 3;
+    Button.hoveredButtons = {};
+    Button.clickedButtons = {};
+  }
+
+  Button.prototype.draw = function draw() {
+    this.ctx.beginPath();
+    if (Button.hoveredButtons[this.id]) {
+      if (Button.clickedButtons[this.id]) this.ctx.fillStyle = this.clickedBackgroundColor;else this.ctx.fillStyle = this.hoveredBackgroundColor;
+      $(this.canvas).css({ 'cursor': 'pointer' });
+    } else {
+      this.ctx.fillStyle = this.backgroundColor;
+      if (Object.keys(Button.hoveredButtons).length <= 0) $(this.canvas).css({ 'cursor': 'default' });
+    }
+    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+
+    this.ctx.fillStyle = this.color;
+    this.ctx.font = this.font;
+    this.ctx.textBaseline = "top";
+
+    var textSize = this.ctx.measureText(this.text);
+    var textX = this.pos.x + this.width / 2 - textSize.width / 2;
+    var textY = this.pos.y + this.height / 2 - this.fontSize / 2 - this.textMargin;
+
+    this.ctx.fillText(this.text, textX, textY);
+  };
+
+  Button.prototype.update = function update() {
+    if (Collision.intersects(this, Game.events.mouse)) {
+      Button.hoveredButtons[this.id] = true;
+      if (Game.events.mouse.clicked) {
+        Button.clickedButtons[this.id] = true;
+        Game.events.mouse.clicked = false;
+      } else if (Button.clickedButtons[this.id] && !Game.events.mouse.down) {
+        delete Button.clickedButtons[this.id];
+        this.clickAction();
+      }
+    } else if (Button.hoveredButtons[this.id]) {
+      delete Button.hoveredButtons[this.id];
+    }
+  };
+
+  return Button;
+})(UIElement);
+
+var UI = { Button: Button, ProgressBar: ProgressBar, Grid: Grid };
 
 exports.UI = UI;
 
