@@ -28,13 +28,10 @@ class SideMenu extends UI.UIElement {
   }
 }
 
-class TextureMenu extends Entity {
-  constructor(viewPort) {
-    let height = Game.canvas.height - viewPort.height
-    let y = viewPort.height
-    super(0, y, Game.canvas.width, height)
-    this.backgroundColor = '#2a1d16'
-    this.textures = Game.AssetManager.imgs["textures"]
+class TextureMenu extends UI.UIElement {
+  constructor(properties) {
+    super(properties)
+    this.textures = properties['textures']
     this.selectedTexture = null
     this.textureWidth = this.textures[Object.keys(this.textures)[0]].width
     this.setupMenuProperties()
@@ -339,7 +336,14 @@ let init = () => {
   let viewPortHeight = canvas.height - (canvas.height / 5)
 
   viewPort = new ViewPort(viewPortWidth, viewPortHeight, map)
-  let textureMenu = new TextureMenu(viewPort)
+  let textureMenu = new TextureMenu({
+    height: Game.canvas.height - viewPort.height,
+    verticalAlignment: "bottom",
+    backgroundColor: '#2a1d16',
+    textures: Game.AssetManager.imgs["textures"]
+
+  })
+
 
   let sideMenu = new SideMenu({
     map: map,

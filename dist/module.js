@@ -1003,17 +1003,14 @@ var SideMenu = (function (_UI$UIElement) {
   return SideMenu;
 })(_ui.UI.UIElement);
 
-var TextureMenu = (function (_Entity) {
-  _inherits(TextureMenu, _Entity);
+var TextureMenu = (function (_UI$UIElement2) {
+  _inherits(TextureMenu, _UI$UIElement2);
 
-  function TextureMenu(viewPort) {
+  function TextureMenu(properties) {
     _classCallCheck(this, TextureMenu);
 
-    var height = Game.canvas.height - viewPort.height;
-    var y = viewPort.height;
-    _Entity.call(this, 0, y, Game.canvas.width, height);
-    this.backgroundColor = '#2a1d16';
-    this.textures = Game.AssetManager.imgs["textures"];
+    _UI$UIElement2.call(this, properties);
+    this.textures = properties['textures'];
     this.selectedTexture = null;
     this.textureWidth = this.textures[Object.keys(this.textures)[0]].width;
     this.setupMenuProperties();
@@ -1232,17 +1229,17 @@ var TextureMenu = (function (_Entity) {
   };
 
   return TextureMenu;
-})(_entity.Entity);
+})(_ui.UI.UIElement);
 
-var Grid = (function (_Entity2) {
-  _inherits(Grid, _Entity2);
+var Grid = (function (_Entity) {
+  _inherits(Grid, _Entity);
 
   function Grid(_map, _viewPort, _textureMenu, _sideMenu) {
     var size = arguments.length <= 4 || arguments[4] === undefined ? 32 : arguments[4];
 
     _classCallCheck(this, Grid);
 
-    _Entity2.call(this, _sideMenu.width, 0, Game.canvas.width - _sideMenu.width - Game.canvas.width % size, _textureMenu.pos.y - _textureMenu.pos.y % size);
+    _Entity.call(this, _sideMenu.width, 0, Game.canvas.width - _sideMenu.width - Game.canvas.width % size, _textureMenu.pos.y - _textureMenu.pos.y % size);
     this.drawWidth = this.canvas.width - _sideMenu.width;
     this.drawHeight = _textureMenu.pos.y;
     this.drawX = _sideMenu.width;
@@ -1373,7 +1370,13 @@ var init = function init() {
   var viewPortHeight = canvas.height - canvas.height / 5;
 
   viewPort = new _view_port.ViewPort(viewPortWidth, viewPortHeight, map);
-  var textureMenu = new TextureMenu(viewPort);
+  var textureMenu = new TextureMenu({
+    height: Game.canvas.height - viewPort.height,
+    verticalAlignment: "bottom",
+    backgroundColor: '#2a1d16',
+    textures: Game.AssetManager.imgs["textures"]
+
+  });
 
   var sideMenu = new SideMenu({
     map: map,
