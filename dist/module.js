@@ -979,98 +979,39 @@ var textureSize = 32;
 
 var viewPort = undefined;
 
-var SideMenu = (function (_Entity) {
-  _inherits(SideMenu, _Entity);
+var SideMenu = (function (_UI$UIElement) {
+  _inherits(SideMenu, _UI$UIElement);
 
-  function SideMenu(map) {
+  function SideMenu(properties) {
     _classCallCheck(this, SideMenu);
 
-    var _viewPort = map.viewPort;
-    _Entity.call(this, 0, 0, Game.canvas.width - _viewPort.width, _viewPort.height);
-    this.map = map;
-    this.backgroundColor = '#dbcdae';
+    _UI$UIElement.call(this, properties);
 
-    this.buttons = this.setupButtons();
-
-    this.setupButtons();
+    this.map = properties["map"];
   }
 
-  SideMenu.prototype.setupButtons = function setupButtons() {
-    var _this = this;
-
-    var buttonsWidth = this.width - this.width / 3;
-    var buttonsHeight = 30;
-    var buttonsColumnX = (this.width - buttonsWidth) / 2;
-    var buttonY = function buttonY(nthButton) {
-      return _this.height - _this.height / 3 + nthButton * 40;
-    };
-
-    var saveMap = function saveMap() {
-      _this.map.save();
-    };
-
-    var loadMainMenu = function loadMainMenu() {
-      Game.setState("load_main_menu");
-    };
-
-    var buttons = [new _ui.UI.Button(buttonsColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Save Map", saveMap), new _ui.UI.Button(buttonsColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Main Menu", loadMainMenu)];
-    return buttons;
+  SideMenu.saveMap = function saveMap() {
+    var target = this;
+    while (target.map === undefined) target = target.parent;
+    target.map.save();
   };
 
-  SideMenu.prototype.draw = function draw() {
-    this.ctx.beginPath();
-    this.ctx.fillStyle = this.backgroundColor;
-    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-
-    for (var _iterator = this.buttons, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-      var _ref;
-
-      if (_isArray) {
-        if (_i >= _iterator.length) break;
-        _ref = _iterator[_i++];
-      } else {
-        _i = _iterator.next();
-        if (_i.done) break;
-        _ref = _i.value;
-      }
-
-      var button = _ref;
-
-      button.draw();
-    }
-  };
-
-  SideMenu.prototype.update = function update() {
-    for (var _iterator2 = this.buttons, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
-      var _ref2;
-
-      if (_isArray2) {
-        if (_i2 >= _iterator2.length) break;
-        _ref2 = _iterator2[_i2++];
-      } else {
-        _i2 = _iterator2.next();
-        if (_i2.done) break;
-        _ref2 = _i2.value;
-      }
-
-      var button = _ref2;
-
-      button.update();
-    }
+  SideMenu.loadMainMenu = function loadMainMenu() {
+    Game.setState("load_main_menu");
   };
 
   return SideMenu;
-})(_entity.Entity);
+})(_ui.UI.UIElement);
 
-var TextureMenu = (function (_Entity2) {
-  _inherits(TextureMenu, _Entity2);
+var TextureMenu = (function (_Entity) {
+  _inherits(TextureMenu, _Entity);
 
   function TextureMenu(viewPort) {
     _classCallCheck(this, TextureMenu);
 
     var height = Game.canvas.height - viewPort.height;
     var y = viewPort.height;
-    _Entity2.call(this, 0, y, Game.canvas.width, height);
+    _Entity.call(this, 0, y, Game.canvas.width, height);
     this.backgroundColor = '#2a1d16';
     this.textures = Game.AssetManager.imgs["textures"];
     this.selectedTexture = null;
@@ -1134,19 +1075,19 @@ var TextureMenu = (function (_Entity2) {
     var page = 0;
     this.textureObjects = [[]];
 
-    for (var _iterator3 = textureKeys, _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
-      var _ref3;
+    for (var _iterator = textureKeys, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+      var _ref;
 
-      if (_isArray3) {
-        if (_i3 >= _iterator3.length) break;
-        _ref3 = _iterator3[_i3++];
+      if (_isArray) {
+        if (_i >= _iterator.length) break;
+        _ref = _iterator[_i++];
       } else {
-        _i3 = _iterator3.next();
-        if (_i3.done) break;
-        _ref3 = _i3.value;
+        _i = _iterator.next();
+        if (_i.done) break;
+        _ref = _i.value;
       }
 
-      var key = _ref3;
+      var key = _ref;
 
       var texture = new _map2.Texture(x, y, key, this.textures[key]);
       this.textureObjects[page].push(texture);
@@ -1195,19 +1136,19 @@ var TextureMenu = (function (_Entity2) {
     this.ctx.fillStyle = this.backgroundColor;
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height);
 
-    for (var _iterator4 = this.textureObjects[this.page], _isArray4 = Array.isArray(_iterator4), _i4 = 0, _iterator4 = _isArray4 ? _iterator4 : _iterator4[Symbol.iterator]();;) {
-      var _ref4;
+    for (var _iterator2 = this.textureObjects[this.page], _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+      var _ref2;
 
-      if (_isArray4) {
-        if (_i4 >= _iterator4.length) break;
-        _ref4 = _iterator4[_i4++];
+      if (_isArray2) {
+        if (_i2 >= _iterator2.length) break;
+        _ref2 = _iterator2[_i2++];
       } else {
-        _i4 = _iterator4.next();
-        if (_i4.done) break;
-        _ref4 = _i4.value;
+        _i2 = _iterator2.next();
+        if (_i2.done) break;
+        _ref2 = _i2.value;
       }
 
-      var texture = _ref4;
+      var texture = _ref2;
 
       this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height);
       if (this.selectedTexture && this.selectedTexture.id == texture.id) {
@@ -1222,19 +1163,19 @@ var TextureMenu = (function (_Entity2) {
       }
     }
 
-    for (var _iterator5 = Object.keys(this.icons), _isArray5 = Array.isArray(_iterator5), _i5 = 0, _iterator5 = _isArray5 ? _iterator5 : _iterator5[Symbol.iterator]();;) {
-      var _ref5;
+    for (var _iterator3 = Object.keys(this.icons), _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
+      var _ref3;
 
-      if (_isArray5) {
-        if (_i5 >= _iterator5.length) break;
-        _ref5 = _iterator5[_i5++];
+      if (_isArray3) {
+        if (_i3 >= _iterator3.length) break;
+        _ref3 = _iterator3[_i3++];
       } else {
-        _i5 = _iterator5.next();
-        if (_i5.done) break;
-        _ref5 = _i5.value;
+        _i3 = _iterator3.next();
+        if (_i3.done) break;
+        _ref3 = _i3.value;
       }
 
-      var iconKey = _ref5;
+      var iconKey = _ref3;
 
       var icon = this.icons[iconKey];
       if (!icon.hidden) this.ctx.drawImage(icon, icon.pos.x, icon.pos.y, icon.width, icon.height);
@@ -1243,19 +1184,19 @@ var TextureMenu = (function (_Entity2) {
 
   TextureMenu.prototype.update = function update() {
     if (Collision.intersects(this, Game.events.mouse)) {
-      for (var _iterator6 = this.textureObjects[this.page], _isArray6 = Array.isArray(_iterator6), _i6 = 0, _iterator6 = _isArray6 ? _iterator6 : _iterator6[Symbol.iterator]();;) {
-        var _ref6;
+      for (var _iterator4 = this.textureObjects[this.page], _isArray4 = Array.isArray(_iterator4), _i4 = 0, _iterator4 = _isArray4 ? _iterator4 : _iterator4[Symbol.iterator]();;) {
+        var _ref4;
 
-        if (_isArray6) {
-          if (_i6 >= _iterator6.length) break;
-          _ref6 = _iterator6[_i6++];
+        if (_isArray4) {
+          if (_i4 >= _iterator4.length) break;
+          _ref4 = _iterator4[_i4++];
         } else {
-          _i6 = _iterator6.next();
-          if (_i6.done) break;
-          _ref6 = _i6.value;
+          _i4 = _iterator4.next();
+          if (_i4.done) break;
+          _ref4 = _i4.value;
         }
 
-        var texture = _ref6;
+        var texture = _ref4;
 
         if (Collision.intersects(texture, Game.events.mouse)) {
           texture.hovering = true;
@@ -1269,19 +1210,19 @@ var TextureMenu = (function (_Entity2) {
 
       if (Game.events.mouse.clicked) {
         Game.events.mouse.clicked = false;
-        for (var _iterator7 = Object.keys(this.icons), _isArray7 = Array.isArray(_iterator7), _i7 = 0, _iterator7 = _isArray7 ? _iterator7 : _iterator7[Symbol.iterator]();;) {
-          var _ref7;
+        for (var _iterator5 = Object.keys(this.icons), _isArray5 = Array.isArray(_iterator5), _i5 = 0, _iterator5 = _isArray5 ? _iterator5 : _iterator5[Symbol.iterator]();;) {
+          var _ref5;
 
-          if (_isArray7) {
-            if (_i7 >= _iterator7.length) break;
-            _ref7 = _iterator7[_i7++];
+          if (_isArray5) {
+            if (_i5 >= _iterator5.length) break;
+            _ref5 = _iterator5[_i5++];
           } else {
-            _i7 = _iterator7.next();
-            if (_i7.done) break;
-            _ref7 = _i7.value;
+            _i5 = _iterator5.next();
+            if (_i5.done) break;
+            _ref5 = _i5.value;
           }
 
-          var iconKey = _ref7;
+          var iconKey = _ref5;
 
           var icon = this.icons[iconKey];
           if (!icon.hidden && Collision.intersects(icon, Game.events.mouse)) icon.clickAction();
@@ -1293,15 +1234,15 @@ var TextureMenu = (function (_Entity2) {
   return TextureMenu;
 })(_entity.Entity);
 
-var Grid = (function (_Entity3) {
-  _inherits(Grid, _Entity3);
+var Grid = (function (_Entity2) {
+  _inherits(Grid, _Entity2);
 
   function Grid(_map, _viewPort, _textureMenu, _sideMenu) {
     var size = arguments.length <= 4 || arguments[4] === undefined ? 32 : arguments[4];
 
     _classCallCheck(this, Grid);
 
-    _Entity3.call(this, _sideMenu.width, 0, Game.canvas.width - _sideMenu.width - Game.canvas.width % size, _textureMenu.pos.y - _textureMenu.pos.y % size);
+    _Entity2.call(this, _sideMenu.width, 0, Game.canvas.width - _sideMenu.width - Game.canvas.width % size, _textureMenu.pos.y - _textureMenu.pos.y % size);
     this.drawWidth = this.canvas.width - _sideMenu.width;
     this.drawHeight = _textureMenu.pos.y;
     this.drawX = _sideMenu.width;
@@ -1433,7 +1374,25 @@ var init = function init() {
 
   viewPort = new _view_port.ViewPort(viewPortWidth, viewPortHeight, map);
   var textureMenu = new TextureMenu(viewPort);
-  var sideMenu = new SideMenu(map);
+
+  var sideMenu = new SideMenu({
+    map: map,
+    backgroundColor: '#dbcdae',
+    width: Game.canvas.width - viewPort.width,
+    height: viewPort.height,
+    alignment: "left",
+    verticalAlignment: "top",
+    children: [[_ui.UI.Grid, {
+      height: "30%",
+      width: "80%",
+      rowHeight: 30,
+      rowMargin: 10,
+      alignment: "center",
+      verticalAlignment: "bottom",
+      rows: [[[_ui.UI.Button, { text: "Save Map", clickAction: SideMenu.saveMap }]], [[_ui.UI.Button, { text: "Main Menu", clickAction: SideMenu.loadMainMenu }]]]
+    }]]
+  });
+
   var miniMap = new _mini_map.MiniMap(map, sideMenu, viewPort);
   var grid = new Grid(map, viewPort, textureMenu, sideMenu);
 
@@ -1652,6 +1611,7 @@ var UIElement = (function (_Entity) {
     var bottomMargin = properties["bottomMargin"] || margin;
     var display = properties["display"] || "block";
     var previousSibling = properties["previousSibling"];
+    var position = properties["position"];
 
     var x = undefined,
         y = undefined,
@@ -1661,34 +1621,39 @@ var UIElement = (function (_Entity) {
     width = UIElement.pixelDimension(properties["width"], parent.width);
     height = UIElement.pixelDimension(properties["height"], parent.height);
 
-    switch (properties["alignment"]) {
-      case "center":
-        x = parent.pos.x + (parent.width / 2 - width / 2);
-        break;
-      case "right":
-        x = parent.pos.x + parent.width - width - (rightMargin || margin);
-        break;
-      default:
-        if (display == 'block' || !previousSibling) {
-          x = parent.pos.x + leftMargin;
-        } else {
-          x = previousSibling.pos.x + previousSibling.width + leftMargin;
-        }
-    }
+    if (position) {
+      x = position.x;
+      y = position.y;
+    } else {
+      switch (properties["alignment"]) {
+        case "center":
+          x = parent.pos.x + (parent.width / 2 - width / 2);
+          break;
+        case "right":
+          x = parent.pos.x + parent.width - width - (rightMargin || margin);
+          break;
+        default:
+          if (display == 'block' || !previousSibling) {
+            x = parent.pos.x + leftMargin;
+          } else {
+            x = previousSibling.pos.x + previousSibling.width + leftMargin;
+          }
+      }
 
-    switch (properties["verticalAlignment"]) {
-      case "middle":
-        y = parent.pos.y + (parent.height / 2 - height / 2);
-        break;
-      case "bottom":
-        y = parent.pos.y + parent.height - height - (topMargin || margin);
-        break;
-      default:
-        if (display == 'block' && previousSibling) {
-          y = previousSibling.pos.y + previousSibling.height + topMargin;
-        } else {
-          y = parent.pos.y + topMargin;
-        }
+      switch (properties["verticalAlignment"]) {
+        case "middle":
+          y = parent.pos.y + (parent.height / 2 - height / 2);
+          break;
+        case "bottom":
+          y = parent.pos.y + parent.height - height - (topMargin || margin);
+          break;
+        default:
+          if (display == 'block' && previousSibling) {
+            y = previousSibling.pos.y + previousSibling.height + topMargin;
+          } else {
+            y = parent.pos.y + topMargin;
+          }
+      }
     }
 
     return { x: x, y: y, width: width, height: height, parent: parent };
@@ -1907,7 +1872,7 @@ var Button = (function (_UIElement3) {
   return Button;
 })(UIElement);
 
-var UI = { Button: Button, ProgressBar: ProgressBar, Grid: Grid };
+var UI = { UIElement: UIElement, Button: Button, ProgressBar: ProgressBar, Grid: Grid };
 
 exports.UI = UI;
 

@@ -45,42 +45,49 @@ class UIElement extends Entity {
     let bottomMargin = properties["bottomMargin"] || margin
     let display = properties["display"] || "block"
     let previousSibling = properties["previousSibling"]
+    let position = properties["position"]
 
     let x, y, height, width
 
     width = UIElement.pixelDimension(properties["width"], parent.width)
     height = UIElement.pixelDimension(properties["height"], parent.height)
 
-    switch (properties["alignment"]) {
-      case "center":
-        x = parent.pos.x + ((parent.width / 2) - (width / 2))
-        break
-      case "right":
-        x = (parent.pos.x + parent.width - width) - (rightMargin || margin)
-        break
-      default:
-        if(display == 'block' || !previousSibling) {
-          x = parent.pos.x + leftMargin
-        }
-        else {
-          x = previousSibling.pos.x + previousSibling.width + leftMargin
-        }
+    if(position) {
+      x = position.x
+      y = position.y
     }
+    else {
+      switch (properties["alignment"]) {
+        case "center":
+          x = parent.pos.x + ((parent.width / 2) - (width / 2))
+          break
+        case "right":
+          x = (parent.pos.x + parent.width - width) - (rightMargin || margin)
+          break
+        default:
+          if(display == 'block' || !previousSibling) {
+            x = parent.pos.x + leftMargin
+          }
+          else {
+            x = previousSibling.pos.x + previousSibling.width + leftMargin
+          }
+      }
 
-    switch (properties["verticalAlignment"]) {
-      case "middle":
-        y = parent.pos.y + ((parent.height / 2) - (height / 2))
-        break
-      case "bottom":
-        y = (parent.pos.y + parent.height - height) - (topMargin || margin)
-        break
-      default:
-        if(display == 'block' && previousSibling) {
-          y = previousSibling.pos.y + previousSibling.height + topMargin
-        }
-        else {
-          y = parent.pos.y + topMargin
-        }
+      switch (properties["verticalAlignment"]) {
+        case "middle":
+          y = parent.pos.y + ((parent.height / 2) - (height / 2))
+          break
+        case "bottom":
+          y = (parent.pos.y + parent.height - height) - (topMargin || margin)
+          break
+        default:
+          if(display == 'block' && previousSibling) {
+            y = previousSibling.pos.y + previousSibling.height + topMargin
+          }
+          else {
+            y = parent.pos.y + topMargin
+          }
+      }
     }
 
     return { x, y, width, height, parent }
@@ -236,6 +243,6 @@ class Button extends UIElement {
   }
 }
 
-let UI = { Button, ProgressBar, Grid }
+let UI = { UIElement, Button, ProgressBar, Grid }
 
 export { UI }

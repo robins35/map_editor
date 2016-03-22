@@ -9,51 +9,22 @@ const textureSize = 32
 
 let viewPort = undefined
 
-class SideMenu extends Entity {
-  constructor(map) {
-    let _viewPort = map.viewPort
-    super(0, 0, Game.canvas.width - _viewPort.width, _viewPort.height)
-    this.map = map
-    this.backgroundColor = '#dbcdae'
+class SideMenu extends UI.UIElement {
+  constructor(properties) {
+    super(properties)
 
-    this.buttons = this.setupButtons()
-
-    this.setupButtons()
+    this.map = properties["map"]
   }
 
-  setupButtons() {
-    let buttonsWidth = this.width - (this.width / 3)
-    let buttonsHeight = 30
-    let buttonsColumnX = (this.width - buttonsWidth) / 2
-    let buttonY = (nthButton) => ((this.height - (this.height / 3)) + (nthButton * (40)))
-
-    let saveMap = () => {
-      this.map.save()
-    }
-
-    let loadMainMenu = () => {
-      Game.setState("load_main_menu")
-    }
-
-    let buttons = [
-      new UI.Button(buttonsColumnX, buttonY(0), buttonsWidth, buttonsHeight, "Save Map", saveMap),
-      new UI.Button(buttonsColumnX, buttonY(1), buttonsWidth, buttonsHeight, "Main Menu", loadMainMenu)
-    ]
-    return buttons
+  static saveMap() {
+    let target = this
+    while(target.map === undefined)
+      target = target.parent
+    target.map.save()
   }
 
-  draw() {
-    this.ctx.beginPath()
-    this.ctx.fillStyle = this.backgroundColor
-    this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
-
-    for(let button of this.buttons)
-      button.draw()
-  }
-
-  update() {
-    for(let button of this.buttons)
-      button.update()
+  static loadMainMenu() {
+    Game.setState("load_main_menu")
   }
 }
 
@@ -369,7 +340,34 @@ let init = () => {
 
   viewPort = new ViewPort(viewPortWidth, viewPortHeight, map)
   let textureMenu = new TextureMenu(viewPort)
-  let sideMenu = new SideMenu(map)
+
+  let sideMenu = new SideMenu({
+    map: map,
+    backgroundColor: '#dbcdae',
+    width: Game.canvas.width - viewPort.width,
+    height: viewPort.height,
+    alignment: "left",
+    verticalAlignment: "top",
+    children: [
+      [UI.Grid, {
+        height: "30%",
+        width: "80%",
+        rowHeight: 30,
+        rowMargin: 10,
+        alignment: "center",
+        verticalAlignment: "bottom",
+        rows: [
+          [
+            [UI.Button, {text: "Save Map", clickAction: SideMenu.saveMap}]
+          ],
+          [
+            [UI.Button, {text: "Main Menu", clickAction: SideMenu.loadMainMenu}]
+          ]
+        ]
+      }]
+    ]
+  })
+
   let miniMap = new MiniMap(map, sideMenu, viewPort)
   let grid = new Grid(map, viewPort, textureMenu, sideMenu)
 
