@@ -14,11 +14,12 @@ class UIElement extends Entity {
     this.children = []
     let lastChild = null
     if(properties["children"]) {
-      for(let childKey of Object.keys(properties["children"])) {
-        let childProperties = properties["children"][childKey][1]
+      for(let childData of properties["children"]) {
+        let childClassName = childData["className"]
+        let childProperties = childData["properties"]
         childProperties["parent"] = this
         childProperties["previousSibling"] = lastChild
-        let child = new properties["children"][childKey][0](childProperties)
+        let child = new childClassName(childProperties)
         this.children.push(child)
         lastChild = child
       }
@@ -151,14 +152,16 @@ class Grid extends UIElement {
       let columnIndex = 0
       for(let column of row) {
         if(columnIndex < (row.length - 1)) {
-          column[1]['display'] = 'inline'
+          column['properties']['display'] = 'inline'
         }
-        column[1]["height"] = rowHeight
-        column[1]["width"] = columnWidth
-        column[1]["topMargin"] = rowMargin
-        column[1]["bottomMargin"] = rowMargin
-        column[1]["margin"] = columnMargin
-        properties["children"].push(column)
+        if(column['properties'] == undefined)
+          console.log(column)
+        column['properties']['height'] = rowHeight
+        column['properties']['width'] = columnWidth
+        column['properties']['topMargin'] = rowMargin
+        column['properties']['bottomMargin'] = rowMargin
+        column['properties']['margin'] = columnMargin
+        properties['children'].push(column)
         columnIndex++
       }
     }

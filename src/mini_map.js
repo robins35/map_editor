@@ -2,14 +2,15 @@ import {Entity} from './entity'
 import * as Collision from './collision'
 
 export class MiniMap extends Entity {
-  constructor(map, container, viewPort) {
-    let width = container.width
+  constructor({map, parent, viewPort}) {
+    debugger
+    let width = parent.width
     let height = (map.height / map.width) * width
-    super(0, 0, container.width, height)
+    super(0, 0, parent.width, height)
     this.scale = width / map.width
     this.inverseScale = 1 / this.scale
     this.map = map
-    this.container = container
+    this.parent = parent
     this.viewPort = viewPort
     this.miniViewPort = this.initMiniViewPort()
     this.backgroundColor = "#222222"

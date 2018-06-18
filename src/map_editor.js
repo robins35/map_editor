@@ -355,25 +355,44 @@ let init = () => {
     alignment: "left",
     verticalAlignment: "top",
     children: [
-      [UI.Grid, {
-        height: "40%",
-        width: "80%",
-        rowHeight: 30,
-        rowMargin: 10,
-        alignment: "center",
-        verticalAlignment: "middle",
-        rows: [
-          [
-            [UI.Button, {text: "Save Map", clickAction: SideMenu.saveMap}]
-          ],
-          [
-            [UI.Button, {text: "Main Menu", clickAction: SideMenu.loadMainMenu}]
-          ],
-          [
-            [UI.Button, {text: "Test Button"}]
+      {
+        className: MiniMap,
+        properties: {
+          map: map,
+          viewPort: viewPort
+        }
+      },
+      {
+        className: UI.Grid,
+        properties: {
+          height: "40%",
+          width: "80%",
+          rowHeight: 30,
+          rowMargin: 10,
+          alignment: "center",
+          verticalAlignment: "middle",
+          rows: [
+            [
+              {
+                className: UI.Button,
+                properties: {text: "Save Map", clickAction: SideMenu.saveMap}
+              }
+            ],
+            [
+              {
+                className: UI.Button,
+                properties: {text: "Main Menu", clickAction: SideMenu.loadMainMenu}
+              }
+            ],
+            [
+              {
+                className: UI.Button,
+                properties: {text: "Test Button"}
+              }
+            ]
           ]
-        ]
-      }]
+        }
+      }
     ]
   })
 

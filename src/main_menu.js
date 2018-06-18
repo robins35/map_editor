@@ -32,10 +32,16 @@ let init = () => {
     verticalAlignment: "bottom",
     rows: [
       [
-        [UI.Button, {text: "Map Editor", clickAction: loadMapEditor}]
+        {
+          className: UI.Button,
+          properties: {text: "Map Editor", clickAction: loadMapEditor}
+        }
       ],
       [
-        [UI.Button, {text: "Settings", clickAction: loadSettings}]
+        {
+          className: UI.Button,
+          properties: {text: "Settings", clickAction: loadSettings}
+        }
       ]
     ]
   })
