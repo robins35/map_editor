@@ -107,6 +107,14 @@ class UIElement extends Entity {
 
   draw() {
     if(this.visible) {
+      if(this.borderWidth) {
+        this.ctx.beginPath()
+        this.ctx.rect(this.pos.x, this.pos.y, this.width, this.height)
+        this.ctx.lineWidth = this.borderWidth
+        this.ctx.strokeStyle = this.color
+        this.ctx.stroke()
+      }
+
       if(this.backgroundColor) {
         this.ctx.fillStyle = this.backgroundColor
         this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)

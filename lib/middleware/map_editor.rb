@@ -18,6 +18,8 @@ class MapEditor
         layout = JSON.parse(request.params["layout"])
 
         map_dir = "public/maps/"
+        Dir.mkdir(map_dir) unless File.exists?(map_dir)
+
         last_map = Dir.glob("#{map_dir}*").sort.last
         map_name = last_map.nil? ? "#{map_dir}map0" : "#{map_dir}map#{last_map[-1].to_i + 1}"
 

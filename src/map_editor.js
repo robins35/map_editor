@@ -348,24 +348,29 @@ let init = () => {
   let sideMenu = new SideMenu({
     map: map,
     backgroundColor: '#dbcdae',
+    color: "#00ff00",
     width: Game.canvas.width - viewPort.width,
     height: viewPort.height,
+    borderWidth: 2,
     alignment: "left",
     verticalAlignment: "top",
     children: [
       [UI.Grid, {
-        height: "30%",
+        height: "40%",
         width: "80%",
         rowHeight: 30,
         rowMargin: 10,
         alignment: "center",
-        verticalAlignment: "bottom",
+        verticalAlignment: "middle",
         rows: [
           [
             [UI.Button, {text: "Save Map", clickAction: SideMenu.saveMap}]
           ],
           [
             [UI.Button, {text: "Main Menu", clickAction: SideMenu.loadMainMenu}]
+          ],
+          [
+            [UI.Button, {text: "Test Button"}]
           ]
         ]
       }]
