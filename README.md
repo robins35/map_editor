@@ -15,8 +15,8 @@ Due to a bug in npm, you may have to install a certain version of ajv to get the
 
 --------------------
 
-> Run: `grunt` to watch code changes, so it will automatically comiple es6 to JS
+To build/bundle es6 to javascript: `npm run build`
 
-npm run build
+or run `npm start` if you want it to watch your files and build with each channge.
 
-Run the rack server with: `rackup config.ru -o 0.0.0.0`
+Run the rack server with (rerun is optional, I use it for dev): `rerun rackup config.ru -o 0.0.0.0`
