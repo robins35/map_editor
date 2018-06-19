@@ -10,27 +10,158 @@ const textureSize = 32
 let viewPort = undefined
 
 class SideMenu extends UI.UIElement {
-  constructor(properties) {
-    super(properties)
+  constructor(map, viewPort) {
+    let properties = {
+      backgroundColor: '#dbcdae',
+      width: Game.canvas.width - viewPort.width,
+      height: viewPort.height,
+      alignment: "left",
+      verticalAlignment: "top",
+      children: [
+        {
+          className: MiniMap,
+          properties: {
+            map: map,
+            viewPort: viewPort
+          }
+        },
+        {
+          className: UI.Grid,
+          properties: {
+            height: "40%",
+            width: "80%",
+            rowHeight: 30,
+            rowMargin: 10,
+            alignment: "center",
+            verticalAlignment: "top",
+            rows: [
+              [
+                {
+                  className: UI.Button,
+                  properties: {text: "Load Map", clickAction: SideMenu.loadMapLoaderMenu}
+                }
+              ],
+              [
+                {
+                  className: UI.Button,
+                  properties: {text: "Save Map", clickAction: SideMenu.saveMap}
+                }
+              ],
+              [
+                {
+                  className: UI.Button,
+                  properties: {text: "Main Menu", clickAction: SideMenu.loadMainMenu}
+                }
+              ],
+            ]
+          }
+        }
+      ]
+    }
 
-    this.map = properties["map"]
+    super(properties)
+    this.name = "UI.SideMenu"
+    this.map = map
   }
 
   static saveMap() {
     let target = this
-    while(target.map === undefined)
+    while(target.map === undefined) {
       target = target.parent
+    }
     target.map.save()
   }
 
   static loadMainMenu() {
     Game.setState("load_main_menu")
   }
+
+  static loadMapLoaderMenu() {
+    let mapLoaderMenu = new MapLoaderMenu()
+  }
+
+  static exitMapLoaderMenu() {
+
+  }
+}
+
+class MapLoaderMenu extends UI.PopupMenu {
+  constructor(properties) {
+    properties["children"] = [
+      {
+        className: UI.HeaderTitle,
+        properties: {
+          alignment: "center",
+          color: "#000000"
+        }
+      },
+      {
+        className: UI.List,
+        properties: {
+          height: "70%",
+          width: "60%",
+          rowHeight: 20,
+          alignment: "center",
+          verticalAlignment: "top",
+          items: []
+        }
+      },
+      {
+        className: UI.Button,
+        properties: {
+          text: "Cancel",
+          margin: 10,
+          alignment: "left",
+          clickAction: SideMenu.exitMapLoaderMenu
+        }
+      },
+      {
+        className: UI.Button,
+        properties: {
+          text: "Load Map",
+          margin: 10,
+          alignment: "right",
+          clickAction: MapLoaderMenu.loadMap
+        }
+      }
+    ]
+
+    super(properties)
+    this.name = "UI.MapLoaderMenu"
+    this.page = 1
+    this.mapData = []
+  }
+
+  getMapsData() {
+    $.ajax({
+      method: "GET",
+      url: '/maps',
+      data: { layout: JSON.stringify(this.layout)},
+      error: (error) => {
+        console.log(`ERROR: response text: ${error.responseText}, status: ${error.status}`)
+      },
+      success: (data) => {
+        // Going to have to work/modify this data either server side or client side
+        mapsUIPreviewData = data
+        this.mapData = mapsUIPreviewData
+        this.updateMapList()
+      }.bind(this)
+    });
+
+    updateMapList() {
+      this.children[1].items = this.mapData
+    }
+  }
+
+  static loadMap() {
+    // de-serialize the map and load it into the map object here
+  }
 }
 
 class TextureMenu extends UI.UIElement {
   constructor(properties) {
     super(properties)
+    this.name = "UI.TextureMenu"
     this.textures = properties['textures']
     this.selectedTexture = null
     this.textureWidth = this.textures[Object.keys(this.textures)[0]].width
@@ -200,6 +331,7 @@ class Grid extends Entity {
   constructor(_map, _viewPort, _textureMenu, _sideMenu, size = 32) {
     super(_sideMenu.width, 0, Game.canvas.width - _sideMenu.width - (Game.canvas.width % size),
         _textureMenu.pos.y - (_textureMenu.pos.y % size))
+    this.name = "Grid"
     this.drawWidth = this.canvas.width - _sideMenu.width
     this.drawHeight = _textureMenu.pos.y
     this.drawX = _sideMenu.width
@@ -344,62 +476,11 @@ let init = () => {
 
   })
 
+  let sideMenu = new SideMenu(map, viewPort)
 
-  let sideMenu = new SideMenu({
-    map: map,
-    backgroundColor: '#dbcdae',
-    color: "#00ff00",
-    width: Game.canvas.width - viewPort.width,
-    height: viewPort.height,
-    borderWidth: 2,
-    alignment: "left",
-    verticalAlignment: "top",
-    children: [
-      {
-        className: MiniMap,
-        properties: {
-          map: map,
-          viewPort: viewPort
-        }
-      },
-      {
-        className: UI.Grid,
-        properties: {
-          height: "40%",
-          width: "80%",
-          rowHeight: 30,
-          rowMargin: 10,
-          alignment: "center",
-          verticalAlignment: "middle",
-          rows: [
-            [
-              {
-                className: UI.Button,
-                properties: {text: "Save Map", clickAction: SideMenu.saveMap}
-              }
-            ],
-            [
-              {
-                className: UI.Button,
-                properties: {text: "Main Menu", clickAction: SideMenu.loadMainMenu}
-              }
-            ],
-            [
-              {
-                className: UI.Button,
-                properties: {text: "Test Button"}
-              }
-            ]
-          ]
-        }
-      }
-    ]
-  })
-
-  let miniMap = new MiniMap(map, sideMenu, viewPort)
   let grid = new Grid(map, viewPort, textureMenu, sideMenu)
 
-  Game.uiElements.push([textureMenu, sideMenu, miniMap])
+  Game.uiElements.push([textureMenu, sideMenu])
   Game.environmentElements.push([map, grid])
 }
 

@@ -4,6 +4,7 @@ import * as Collision from './collision'
 export class ViewPort extends Entity {
   constructor(width, height, map) {
     super(0, 0, width, height)
+    this.name = "ViewPort"
     this.relativePos = {
       x: Game.canvas.width - width,
       y: 0

@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack -p",
-    "start": "cross-env NODE_ENV=development webpack -p",
+    "start": "cross-env NODE_ENV=development webpack -d",
     "test": "jest --watch --runInBand",
     "testdbg": "./node_modules/.bin/node-debug --harmony ./node_modules/jest/bin/jest.js -i"
   },

@@ -11,6 +11,7 @@ let canvas = undefined
 let ctx = undefined
 let events = Events
 let state = 'begin'
+let previousState
 let sprites = new EntityList()
 let uiElements = new EntityList()
 let environmentElements = new EntityList()
@@ -42,6 +43,9 @@ let update = () => {
       uiElements.update()
       environmentElements.update()
       break
+    case 'pause':
+      uiElements.update()
+      break
     default:
       //console.log("No state matches in update loop")
   }
@@ -55,6 +59,7 @@ let draw = () => {
 }
 
 let setState = (_state) => {
+  previousState = state
   state = _state
 }
 

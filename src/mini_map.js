@@ -3,10 +3,10 @@ import * as Collision from './collision'
 
 export class MiniMap extends Entity {
   constructor({map, parent, viewPort}) {
-    debugger
     let width = parent.width
     let height = (map.height / map.width) * width
     super(0, 0, parent.width, height)
+    this.name = "MiniMap"
     this.scale = width / map.width
     this.inverseScale = 1 / this.scale
     this.map = map

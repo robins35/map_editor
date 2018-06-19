@@ -1,6 +1,7 @@
 export class Entity {
   constructor (x, y, width, height) {
     Entity.id = (Entity.id === undefined) ? 1 : Entity.id
+    this.name = "Entity"
     this.id = Entity.id++
     this.pos = { x, y }
     this.width = width

@@ -2,15 +2,23 @@ import { Entity } from './entity'
 import * as Collision from './collision'
 
 class UIElement extends Entity {
+  // If you create a new object that inherits from UIElement, and it has
+  // children, you must add the child info/structure to the properties before
+  // calling super
   constructor(properties) {
     let entityProps = UIElement.calculateDimensionAndPosition(properties)
     super(entityProps.x, entityProps.y, entityProps.width, entityProps.height)
+    this.name = "UIElement"
     this.parent = entityProps.parent
     this.color = properties["color"] || "#ffffff"
     this.backgroundColor = properties["backgroundColor"]
     this.borderWidth = properties["borderWidth"] || 0
     this.visible = properties["visible"] || true
 
+    this.createChildElements(properties)
+  }
+
+  createChildElements(properties) {
     this.children = []
     let lastChild = null
     if(properties["children"]) {
@@ -154,8 +162,6 @@ class Grid extends UIElement {
         if(columnIndex < (row.length - 1)) {
           column['properties']['display'] = 'inline'
         }
-        if(column['properties'] == undefined)
-          console.log(column)
         column['properties']['height'] = rowHeight
         column['properties']['width'] = columnWidth
         column['properties']['topMargin'] = rowMargin
@@ -166,12 +172,63 @@ class Grid extends UIElement {
       }
     }
     super(properties)
+    this.name = "UI.Grid"
+  }
+}
+
+class List extends UIElement {
+  constructor (properties) {
+    let height = UIElement.pixelDimension(properties["height"],
+        (properties["parent"]|| Game.canvas).height)
+    let rowHeight = properties["rowHeight"] || parseInt(height / properties["rows"].length)
+
+    let width = UIElement.pixelDimension(properties["width"],
+        (properties["parent"]|| Game.canvas).width)
+    let columnWidth = parseInt(width / properties["rows"][0].length)
+
+    let rowMargin = properties["rowMargin"] || 0
+    let columnMargin = properties["columnMargin"] || 0
+
+    for(let row of properties["rows"]) {
+      let columnIndex = 0
+      for(let column of row) {
+        if(columnIndex < (row.length - 1)) {
+          column['properties']['display'] = 'inline'
+        }
+        column['properties']['height'] = rowHeight
+        column['properties']['width'] = columnWidth
+        column['properties']['topMargin'] = rowMargin
+        column['properties']['bottomMargin'] = rowMargin
+        column['properties']['margin'] = columnMargin
+        properties['children'].push(column)
+        columnIndex++
+      }
+    }
+    super(properties)
+    this.name = "UI.Grid"
+  }
+
+}
+
+class PopupMenu extends UIElement {
+  constructor(properties) {
+    defaultProperties = {
+      backgroundColor: '#dbcdae',
+      width: Game.canvas.width / 2,
+      height: Game.canvas.height * 0.66
+      alignment: "center",
+      verticalAlignment: "middle"
+    }
+
+    super(Object.assign(defaultProperties, properties))
+    this.name = "UI.PopupMenu"
   }
 }
 
 class ProgressBar extends UIElement {
   constructor (properties) {
     super(properties)
+    this.name = "UI.ProgressBar"
     this.total = properties["total"]
     this.progress = 0
   }
@@ -196,6 +253,7 @@ class ProgressBar extends UIElement {
 class Button extends UIElement {
   constructor(properties) {
     super(properties)
+    this.name = "UI.Button"
     this.text = properties["text"]
     this.clickAction = properties["clickAction"]
     this.clicked = false
