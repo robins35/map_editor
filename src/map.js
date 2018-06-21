@@ -144,8 +144,8 @@ class CommandHistory {
 }
 
 export class Map {
-  constructor(width, height, textureSize) {
-    this.id = "map"
+  constructor(width, height, textureSize, id = null) {
+    this.id = id
     this.width = Math.trunc(width / textureSize) * textureSize
     this.height = Math.trunc(height / textureSize) * textureSize
     this.textureSize = textureSize
@@ -164,17 +164,23 @@ export class Map {
   }
 
   save() {
+    let url = "/maps"
+
+    if(this.id)
+      url += `/${this.id}`
+
     this.serialize()
 
     $.ajax({
       method: "POST",
-      url: '/maps',
+      url: url,
       data: { layout: JSON.stringify(this.layout)},
       error: (error) => {
         console.log(`ERROR: response text: ${error.responseText}, status: ${error.status}`)
       },
       success: (data) => {
-        console.log("SUCCESSFULLY SAVED MAP")
+        this.id = data["map_id"]
+        console.log("Set map id to " + this.id)
       }
     });
   }
