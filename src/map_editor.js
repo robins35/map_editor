@@ -1,7 +1,7 @@
 import { Entity } from './entity'
 import { Map, Texture } from './map'
 import { ViewPort } from './view_port'
-import { UI } from './ui'
+import { UI } from './ui/ui'
 import { MiniMap } from './mini_map'
 import * as Collision from './collision'
 
@@ -10,10 +10,10 @@ const textureSize = 32
 let viewPort = undefined
 
 class SideMenu extends UI.UIElement {
-  constructor(map, viewPort) {
+  constructor(canvas, map, viewPort) {
     let properties = {
       backgroundColor: '#dbcdae',
-      width: Game.canvas.width - viewPort.width,
+      width: canvas.width - viewPort.width,
       height: viewPort.height,
       alignment: "left",
       verticalAlignment: "top",
@@ -38,19 +38,19 @@ class SideMenu extends UI.UIElement {
               [
                 {
                   className: UI.Button,
-                  properties: {text: "Load Map", clickAction: SideMenu.loadMapLoaderMenu}
+                  properties: {text: "Load Map", event_object: Game.events, clickAction: SideMenu.loadMapLoaderMenu}
                 }
               ],
               [
                 {
                   className: UI.Button,
-                  properties: {text: "Save Map", clickAction: SideMenu.saveMap}
+                  properties: {text: "Save Map", event_object: Game.events, clickAction: SideMenu.saveMap}
                 }
               ],
               [
                 {
                   className: UI.Button,
-                  properties: {text: "Main Menu", clickAction: SideMenu.loadMainMenu}
+                  properties: {text: "Main Menu", event_object: Game.events, clickAction: SideMenu.loadMainMenu}
                 }
               ],
             ]
@@ -59,7 +59,7 @@ class SideMenu extends UI.UIElement {
       ]
     }
 
-    super(properties)
+    super(canvas, properties)
     this.name = "UI.SideMenu"
     this.map = map
   }
@@ -77,7 +77,8 @@ class SideMenu extends UI.UIElement {
   }
 
   static loadMapLoaderMenu() {
-    let mapLoaderMenu = new MapLoaderMenu()
+    // second param needs to be the properties
+    let mapLoaderMenu = new MapLoaderMenu(this.canvas, {})
   }
 
   static exitMapLoaderMenu() {
@@ -86,7 +87,7 @@ class SideMenu extends UI.UIElement {
 }
 
 class MapLoaderMenu extends UI.PopupMenu {
-  constructor(properties) {
+  constructor(canvas, properties) {
     properties["children"] = [
       {
         className: UI.HeaderTitle,
@@ -112,6 +113,7 @@ class MapLoaderMenu extends UI.PopupMenu {
           text: "Cancel",
           margin: 10,
           alignment: "left",
+          event_object: Game.events,
           clickAction: SideMenu.exitMapLoaderMenu
         }
       },
@@ -121,12 +123,13 @@ class MapLoaderMenu extends UI.PopupMenu {
           text: "Load Map",
           margin: 10,
           alignment: "right",
+          event_object: Game.events,
           clickAction: MapLoaderMenu.loadMap
         }
       }
     ]
 
-    super(properties)
+    super(canvas, properties)
     this.name = "UI.MapLoaderMenu"
     this.page = 1
     this.mapData = []
@@ -140,17 +143,17 @@ class MapLoaderMenu extends UI.PopupMenu {
       error: (error) => {
         console.log(`ERROR: response text: ${error.responseText}, status: ${error.status}`)
       },
-      success: (data) => {
+      success: ((data) => {
         // Going to have to work/modify this data either server side or client side
         mapsUIPreviewData = data
         this.mapData = mapsUIPreviewData
         this.updateMapList()
-      }.bind(this)
+      }).bind(this)
     });
+  }
 
-    updateMapList() {
-      this.children[1].items = this.mapData
-    }
+  updateMapList() {
+    this.children[1].items = this.mapData
   }
 
   static loadMap() {
@@ -159,8 +162,8 @@ class MapLoaderMenu extends UI.PopupMenu {
 }
 
 class TextureMenu extends UI.UIElement {
-  constructor(properties) {
-    super(properties)
+  constructor(canvas, properties) {
+    super(canvas, properties)
     this.name = "UI.TextureMenu"
     this.textures = properties['textures']
     this.selectedTexture = null
@@ -329,7 +332,7 @@ class TextureMenu extends UI.UIElement {
 
 class Grid extends Entity {
   constructor(_map, _viewPort, _textureMenu, _sideMenu, size = 32) {
-    super(_sideMenu.width, 0, Game.canvas.width - _sideMenu.width - (Game.canvas.width % size),
+    super(_sideMenu.width, 0, properties["canvas"].width - _sideMenu.width - (properties["canvas"].width % size),
         _textureMenu.pos.y - (_textureMenu.pos.y % size))
     this.name = "Grid"
     this.drawWidth = this.canvas.width - _sideMenu.width
@@ -468,7 +471,7 @@ let init = () => {
   let viewPortHeight = canvas.height - (canvas.height / 5)
 
   viewPort = new ViewPort(viewPortWidth, viewPortHeight, map)
-  let textureMenu = new TextureMenu({
+  let textureMenu = new TextureMenu(canvas, {
     height: Game.canvas.height - viewPort.height,
     verticalAlignment: "bottom",
     backgroundColor: '#2a1d16',
@@ -476,7 +479,7 @@ let init = () => {
 
   })
 
-  let sideMenu = new SideMenu(map, viewPort)
+  let sideMenu = new SideMenu(canvas, map, viewPort)
 
   let grid = new Grid(map, viewPort, textureMenu, sideMenu)
 

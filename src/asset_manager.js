@@ -1,4 +1,4 @@
-import { UI } from './ui'
+import { UI } from './ui/ui'
 
 var successCount = 0;
 var errorCount = 0;
@@ -25,7 +25,7 @@ var loadImagePaths = (downloadCallback) => {
 }
 
 var loadImages = function(downloadCallback) {
-    var progressBar = new UI.ProgressBar({
+    var progressBar = new UI.ProgressBar(Game.canvas, {
       width: "50%",
       height: 20,
       alignment: "center",

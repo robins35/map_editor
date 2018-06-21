@@ -1,4 +1,4 @@
-import { UI } from './ui'
+import { UI } from './ui/ui'
 
 let buttons = []
 let canvas = undefined
@@ -23,7 +23,7 @@ let init = () => {
     console.log("Stubbing settings load action")
   }
 
-  let buttonGrid = new UI.Grid({
+  let buttonGrid = new UI.Grid(canvas, {
     width: "20%",
     height: "50%",
     rowHeight: 30,
@@ -34,13 +34,13 @@ let init = () => {
       [
         {
           className: UI.Button,
-          properties: {text: "Map Editor", clickAction: loadMapEditor}
+          properties: {text: "Map Editor", event_object: Game.events, clickAction: loadMapEditor}
         }
       ],
       [
         {
           className: UI.Button,
-          properties: {text: "Settings", clickAction: loadSettings}
+          properties: {text: "Settings", event_object: Game.events, clickAction: loadSettings}
         }
       ]
     ]
