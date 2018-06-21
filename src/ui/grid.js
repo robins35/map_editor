@@ -13,10 +13,10 @@ export default class Grid extends UIElement {
     const width = UIElement.pixelDimension(properties["width"],
         (properties["parent"] || this.canvas).width)
 
-    properties["rowHeight"] = properties["rowHeight"] || parseInt(height / properties["rows"].length)
-    properties["columnWidth"] = parseInt(width / properties["rows"][0].length)
-    properties["rowMargin"] = properties["rowMargin"] || 0
-    properties["columnMargin"] = properties["columnMargin"] || 0
+    this.rowHeight = properties["rowHeight"] || parseInt(height / properties["rows"].length)
+    this.columnWidth = parseInt(width / properties["rows"][0].length)
+    this.rowMargin = properties["rowMargin"] || 0
+    this.columnMargin = properties["columnMargin"] || 0
 
     properties["children"] = []
 

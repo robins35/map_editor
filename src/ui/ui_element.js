@@ -30,7 +30,9 @@ export default class UIElement extends Entity {
         let childProperties = childData["properties"]
         childProperties["parent"] = this
         childProperties["previousSibling"] = lastChild
-        let child = new childClassName(this.canvas, childProperties)
+        let child = childClassName.prototype instanceof UIElement ?
+          new childClassName(this.canvas, childProperties) :
+          new childClassName(childProperties)
         this.children.push(child)
         lastChild = child
       }

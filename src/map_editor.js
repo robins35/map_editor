@@ -332,8 +332,10 @@ class TextureMenu extends UI.UIElement {
 
 class Grid extends Entity {
   constructor(_map, _viewPort, _textureMenu, _sideMenu, size = 32) {
-    super(_sideMenu.width, 0, properties["canvas"].width - _sideMenu.width - (properties["canvas"].width % size),
-        _textureMenu.pos.y - (_textureMenu.pos.y % size))
+    let width = Game.canvas.width - _sideMenu.width - (Game.canvas.width % size)
+    let height = _textureMenu.pos.y - (_textureMenu.pos.y % size)
+    super(_sideMenu.width, 0, width, height)
+
     this.name = "Grid"
     this.drawWidth = this.canvas.width - _sideMenu.width
     this.drawHeight = _textureMenu.pos.y
