@@ -5,7 +5,7 @@ export default class UIElement extends Entity {
   // If you create a new object that inherits from UIElement, and it has
   // children, you must add the child info/structure to the properties before
   // calling super
-  constructor(canvas, properties) {
+  constructor(canvas, properties, skipChildCreation = false) {
     let entityProps = UIElement.calculateDimensionAndPosition(canvas, properties)
     super(entityProps.x, entityProps.y, entityProps.width, entityProps.height)
     this.name = "UIElement"
@@ -16,11 +16,11 @@ export default class UIElement extends Entity {
     this.borderWidth = properties["borderWidth"] || 0
     this.visible = properties["visible"] || true
 
-    this.createChildElements(properties)
+    if(!skipChildCreation)
+      this.createChildElements(properties)
   }
 
   createChildElements(properties) {
-    console.log("UIElement createChildElements")
     this.children = []
     let lastChild = null
 
@@ -28,6 +28,7 @@ export default class UIElement extends Entity {
       for(let childData of properties["children"]) {
         let childClassName = childData["className"]
         let childProperties = childData["properties"]
+        debugger
         childProperties["parent"] = this
         childProperties["previousSibling"] = lastChild
         let child = childClassName.prototype instanceof UIElement ?

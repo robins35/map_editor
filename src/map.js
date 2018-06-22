@@ -1,4 +1,4 @@
-import {Entity} from './entity'
+import Texture from './texture'
 import * as Collision from './collision'
 
 class Command {
@@ -143,7 +143,7 @@ class CommandHistory {
   }
 }
 
-export class Map {
+export default class Map {
   constructor(width, height, textureSize, id = null) {
     this.id = id
     this.width = Math.trunc(width / textureSize) * textureSize
@@ -294,11 +294,3 @@ export class Map {
   }
 }
 
-export class Texture extends Entity {
-  constructor(x, y, key, img) {
-    super(x, y, img.width, img.height)
-    this.name = "Texture"
-    this.key = key
-    this.img = img
-  }
-}

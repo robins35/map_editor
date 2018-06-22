@@ -1,8 +1,8 @@
 import UIElement from './ui_element'
 
 export default class Grid extends UIElement {
-  constructor (canvas, properties) {
-    super(canvas, properties)
+  constructor (canvas, properties, skipChildCreation = false) {
+    super(canvas, properties, skipChildCreation = false)
     this.name = "UI.Grid"
   }
 
@@ -38,7 +38,6 @@ export default class Grid extends UIElement {
   }
 
   createChildElements(properties) {
-    console.log("Grid createChildElements")
     this.buildColumns(properties)
     super.createChildElements(properties)
   }

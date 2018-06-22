@@ -1,7 +1,7 @@
 import {Entity} from './entity'
 import * as Collision from './collision'
 
-export class MiniMap extends Entity {
+export default class MiniMap extends Entity {
   constructor({map, parent, viewPort}) {
     let width = parent.width
     let height = (map.height / map.width) * width
