@@ -14,6 +14,7 @@ export default class UIElement extends Entity {
     this.color = properties["color"] || "#ffffff"
     this.backgroundColor = properties["backgroundColor"]
     this.borderWidth = properties["borderWidth"] || 0
+    this.borderColor = properties["borderColor"] || "#000000"
     this.visible = properties["visible"] || true
 
     if(!skipChildCreation)
@@ -21,23 +22,24 @@ export default class UIElement extends Entity {
   }
 
   createChildElements(properties) {
-    this.children = []
+    let children = []
     let lastChild = null
 
     if(properties["children"]) {
       for(let childData of properties["children"]) {
         let childClassName = childData["className"]
         let childProperties = childData["properties"]
-        debugger
         childProperties["parent"] = this
         childProperties["previousSibling"] = lastChild
         let child = childClassName.prototype instanceof UIElement ?
           new childClassName(this.canvas, childProperties) :
           new childClassName(childProperties)
-        this.children.push(child)
+        children.push(child)
+        lastChild["nextSibling"] = child
         lastChild = child
       }
     }
+    this.children = children
   }
 
   static pixelDimension(value, parentValue) {

@@ -8,9 +8,9 @@ export default class MapLoaderMenu extends UI.PopupMenu {
       {
         className: UI.List,
         properties: {
+          event_object: Game.events,
           height: "70%",
           width: "60%",
-          rowHeight: 20,
           alignment: "center",
           verticalAlignment: "top",
           items: []

@@ -2,7 +2,7 @@ import UIElement from './ui_element'
 
 export default class Grid extends UIElement {
   constructor (canvas, properties, skipChildCreation = false) {
-    super(canvas, properties, skipChildCreation = false)
+    super(canvas, properties, skipChildCreation)
     this.name = "UI.Grid"
   }
 
