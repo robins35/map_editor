@@ -14,6 +14,7 @@ export default class UIElement extends Entity {
     super(entityProps.x, entityProps.y, entityProps.width, entityProps.height)
     this.name = "UIElement"
     this.canvas = canvas
+    this.event_object = properties["event_object"]
     this.parent = entityProps.parent
     this.display = properties["display"]
     this.previousSibling = properties["previousSibling"]

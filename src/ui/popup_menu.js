@@ -9,10 +9,38 @@ export default class PopupMenu extends UIElement {
       height: canvas.height * 0.66,
       alignment: "center",
       verticalAlignment: "middle",
-      paddingTop: properties["headerText"] ? 50 : 0
+    }
+
+    let properties = Object.assign(defaultProperties, properties)
+
+    if(properties["headerText"]) {
+      properties["children"].unshift({
+        className: UI.Text,
+        properties: {
+          text: properties["headerText"],
+          fontSize: 24,
+          textMargin: 20,
+          event_object: properties["event_object"]
+        }
+      })
+      properties << {
+        className: UI.Button,
+        properties: {
+          text: "Cancel",
+          margin: 10,
+          alignment: "left",
+          verticalAlignment: "bottom",
+          display: "inline",
+          event_object: properties["event_object"],
+          clickAction: this.exitMapLoaderMenu
+      }
     }
 
     super(canvas, Object.assign(defaultProperties, properties), skipChildCreation)
+
+    // Bind methods to this object so this is the MapLoaderMenu
+    this.exitMapLoaderMenu = this.exitMapLoaderMenu.bind(this)
+
     this.name = "UI.PopupMenu"
     this.fontSize = properties["fontSize"] || 24
     this.font = this.fontSize + "px " + (properties["font"] || 'amatic-bold')
@@ -36,19 +64,14 @@ export default class PopupMenu extends UIElement {
         this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
       }
 
-      this.ctx.fillStyle = this.color
-      this.ctx.font = this.font
-      this.ctx.textBaseline = "top"
-
-      let textSize = this.ctx.measureText(this.headerText)
-      let textX = this.pos.x + (this.width / 2) - (textSize.width / 2)
-      let textY = this.pos.y + this.textMargin
-
-      this.ctx.fillText(this.text, textX, textY)
-
       for(let child of this.children) {
         child.draw()
       }
     }
+  }
+
+  exitMapLoaderMenu() {
+    // Game.uiElements.remove(this)
+    delete referenceHash[this]
   }
 }

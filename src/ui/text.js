@@ -47,14 +47,16 @@ export default class Text extends UIElement {
   }
 
   update() {
-    if (Collision.intersects(this, this.event_object.mouse)) {
-      if (this.event_object.mouse.clicked) {
-        Text.selectedTexts[this.id] = true
-        this.event_object.mouse.clicked = false
-      }
-      else if (Text.selectedTexts[this.id] && !this.event_object.mouse.down) {
-        delete Text.selectedTexts[this.id]
-        this.clickAction()
+    if(this.selectable) {
+      if (Collision.intersects(this, this.event_object.mouse)) {
+        if (this.event_object.mouse.clicked) {
+          Text.selectedTexts[this.id] = true
+          this.event_object.mouse.clicked = false
+        }
+        else if (Text.selectedTexts[this.id] && !this.event_object.mouse.down) {
+          delete Text.selectedTexts[this.id]
+          this.clickAction()
+        }
       }
     }
   }
