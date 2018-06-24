@@ -1,8 +1,14 @@
 import UIElement from './ui_element'
 import * as Collision from '../collision'
 
+const DEFAULT_TEXT_MARGIN_TOP_BOTTOM = 3
+const DEFAULT_TEXT_MARGIN_LEFT_RIGHT = 10
+const DEFAULT_FONT_SIZE = 24
+
 export default class Button extends UIElement {
   constructor(canvas, properties) {
+    Button.setTextSizeAndWidthHeight(properties)
+
     super(canvas, properties)
     this.name = "UI.Button"
     this.event_object = properties["event_object"]
@@ -12,11 +18,33 @@ export default class Button extends UIElement {
     this.backgroundColor = properties["backgroundColor"] || "#cc6600"
     this.hoveredBackgroundColor = properties["hoveredBackgroundColor"] || "#da8e42"
     this.clickedBackgroundColor = properties["clickedBackgroundColor"] || "#bb4a00"
-    this.fontSize = properties["fontSize"] || 24
+    this.fontSize = properties["fontSize"] || DEFAULT_FONT_SIZE
     this.font = this.fontSize + "px " + (properties["font"] || 'amatic-bold')
-    this.textMargin = properties["textMargin"] || 3
+    this.textSize = properties["textSize"]
+    this.textMarginTopBottom = properties["textMarginTopBottom"] || DEFAULT_TEXT_MARGIN_TOP_BOTTOM
+    this.textMarginLeftRight = properties["textMarginLeftRight"] || DEFAULT_TEXT_MARGIN_LEFT_RIGHT
+
     Button.hoveredButtons = {}
     Button.clickedButtons = {}
+  }
+
+  static setTextSizeAndWidthHeight(properties) {
+    // This is against the rules, I shouldn't be able to reference "Game" in
+    // any of the UI files, since I want it to be a standalone library. I will
+    // have to find a solution for this, like initializing the module with
+    // canvas and ctx properties.
+    let fontSize = properties["fontSize"] || DEFAULT_FONT_SIZE
+    let font = fontSize + "px " + (properties["font"] || 'amatic-bold')
+    Game.ctx.font = font
+    let textMarginLeftRight = properties["textMarginLeftRight"] || DEFAULT_TEXT_MARGIN_LEFT_RIGHT
+    let textMarginTopBottom = properties["textMarginTopBottom"] || DEFAULT_TEXT_MARGIN_TOP_BOTTOM
+
+    properties["textSize"] = Game.ctx.measureText(properties["text"])
+
+    if(properties["width"] == undefined && properties["height"] == undefined) {
+      properties["width"] = properties["textSize"].width + (2 * textMarginLeftRight)
+      properties["height"] = fontSize + (2 * textMarginTopBottom)
+    }
   }
 
   draw () {
@@ -39,9 +67,8 @@ export default class Button extends UIElement {
     this.ctx.font = this.font
     this.ctx.textBaseline = "top"
 
-    let textSize = this.ctx.measureText(this.text)
-    let textX = this.pos.x + (this.width / 2) - (textSize.width / 2)
-    let textY = this.pos.y + (this.height / 2) - (this.fontSize / 2) - this.textMargin
+    let textX = this.pos.x + (this.width / 2) - (this.textSize.width / 2)
+    let textY = this.pos.y + (this.height / 2) - (this.fontSize / 2) - this.textMarginTopBottom
 
     this.ctx.fillText(this.text, textX, textY)
   }

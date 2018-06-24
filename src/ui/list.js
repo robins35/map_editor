@@ -4,6 +4,7 @@ const DEFAULT_ROW_HEIGHT = 20
 
 export default class List extends UIElement {
   constructor(canvas, properties, skipChildCreation = false) {
+    properties["display"] = properties["display"] || "block"
     properties["backgroundColor"] = "#000000"
     properties["color"] = "#00ff00"
     properties["borderWidth"] = 1

@@ -9,7 +9,7 @@ export default class PopupMenu extends UIElement {
       height: canvas.height * 0.66,
       alignment: "center",
       verticalAlignment: "middle",
-      marginTop: properties["headerText"] ? 50 : 0
+      paddingTop: properties["headerText"] ? 50 : 0
     }
 
     super(canvas, Object.assign(defaultProperties, properties), skipChildCreation)

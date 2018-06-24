@@ -4,6 +4,9 @@ export default class MapLoaderMenu extends UI.PopupMenu {
   constructor(properties) {
     super(Game.canvas, properties, true)
 
+    // Bind methods to this object so this is the MapLoaderMenu
+    this.exitMapLoaderMenu = this.exitMapLoaderMenu.bind(this)
+
     properties["children"] = [
       {
         className: UI.List,
@@ -22,6 +25,8 @@ export default class MapLoaderMenu extends UI.PopupMenu {
           text: "Cancel",
           margin: 10,
           alignment: "left",
+          verticalAlignment: "bottom",
+          display: "inline",
           event_object: Game.events,
           clickAction: this.exitMapLoaderMenu
         }
@@ -32,6 +37,8 @@ export default class MapLoaderMenu extends UI.PopupMenu {
           text: "Load Map",
           margin: 10,
           alignment: "right",
+          verticalAlignment: "bottom",
+          display: "inline",
           event_object: Game.events,
           clickAction: MapLoaderMenu.loadMap
         }
@@ -42,6 +49,7 @@ export default class MapLoaderMenu extends UI.PopupMenu {
     this.name = "UI.MapLoaderMenu"
     this.page = 1
     this.mapData = []
+
     Game.uiElements.push(this)
   }
 
@@ -71,6 +79,6 @@ export default class MapLoaderMenu extends UI.PopupMenu {
   }
 
   exitMapLoaderMenu() {
-    delete Game.uiElements[this]
+    Game.uiElements.remove(this)
   }
 }

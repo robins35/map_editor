@@ -55,6 +55,10 @@ export class EntityList {
     }
   }
 
+  remove(entity) {
+    delete this.list[entity.id]
+  }
+
   draw() {
     for(let key of Object.keys(this.list)) {
       this.list[key].draw()
