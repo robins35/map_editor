@@ -72,12 +72,7 @@ export default class SideMenu extends UI.UIElement {
 
   static loadMapLoaderMenu() {
     // second param needs to be the properties
-    let mapLoaderMenu = new MapLoaderMenu({
-      headerText: "Load Map",
-      event_object: Game.events,
-      referenceHash: Game.uiElements.list,
-      width: "40%"
-    })
+    let mapLoaderMenu = new MapLoaderMenu()
   }
 
 }

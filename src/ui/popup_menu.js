@@ -1,4 +1,6 @@
 import UIElement from './ui_element'
+import Button from './button'
+import Text from './text'
 
 export default class PopupMenu extends UIElement {
   constructor(canvas, properties, skipChildCreation = false) {
@@ -11,42 +13,68 @@ export default class PopupMenu extends UIElement {
       verticalAlignment: "middle",
     }
 
-    let properties = Object.assign(defaultProperties, properties)
+    properties = Object.assign(defaultProperties, properties)
 
     if(properties["headerText"]) {
       properties["children"].unshift({
-        className: UI.Text,
+        className: Text,
         properties: {
           text: properties["headerText"],
           fontSize: 24,
-          textMargin: 20,
+          margin: 0,
+          alignment: "center",
           event_object: properties["event_object"]
         }
       })
-      properties << {
-        className: UI.Button,
+    }
+
+    if(!properties["cancelButton"]) {
+      properties["children"].push({
+        className: Button,
         properties: {
-          text: "Cancel",
+          text: properties["cancelButtonText"] || "Cancel",
           margin: 10,
           alignment: "left",
           verticalAlignment: "bottom",
           display: "inline",
           event_object: properties["event_object"],
-          clickAction: this.exitMapLoaderMenu
-      }
+          clickAction: properties["cancelMethod"] || (() => { this.exitPopup() })
+        }
+      })
+    }
+    else {
+      properties["children"].push(properties["cancelButton"])
+    }
+
+    if(!properties["actionButton"]) {
+      properties["children"].push({
+        className: Button,
+        properties: {
+          text: properties["actionButtonText"],
+          margin: 10,
+          alignment: "right",
+          verticalAlignment: "bottom",
+          display: "inline",
+          event_object: properties["event_object"],
+          clickAction: properties["actionButtonMethod"]
+        }
+      })
+    }
+    else {
+      properties["children"].push(properties["actionButton"])
     }
 
     super(canvas, Object.assign(defaultProperties, properties), skipChildCreation)
 
-    // Bind methods to this object so this is the MapLoaderMenu
-    this.exitMapLoaderMenu = this.exitMapLoaderMenu.bind(this)
+    // Bind methods to this object so 'this' refers to the PopupMenu object
+    this.exitPopup = this.exitPopup.bind(this)
 
     this.name = "UI.PopupMenu"
+    this.referenceHash = properties["referenceHash"]
     this.fontSize = properties["fontSize"] || 24
     this.font = this.fontSize + "px " + (properties["font"] || 'amatic-bold')
     this.textMargin = properties["textMargin"] || 3
     this.headerText = properties["headerText"]
-    this.createChildElements(properties)
   }
 
   draw() {
@@ -70,8 +98,8 @@ export default class PopupMenu extends UIElement {
     }
   }
 
-  exitMapLoaderMenu() {
+  exitPopup() {
     // Game.uiElements.remove(this)
-    delete referenceHash[this]
+    delete this.referenceHash[this.id]
   }
 }

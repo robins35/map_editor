@@ -9,6 +9,7 @@ export default class List extends UIElement {
     properties["color"] = "#00ff00"
     properties["borderWidth"] = 1
     super(canvas, properties, skipChildCreation)
+    this.name = "UI.List"
 
     if(this.items != undefined && this.items.length > 0) {
       super.createChildElements(this)

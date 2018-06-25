@@ -1,11 +1,13 @@
 import { UI } from '../../ui/ui'
 
 export default class MapLoaderMenu extends UI.PopupMenu {
-  constructor(properties) {
-    super(Game.canvas, properties, true)
-
-    // Bind methods to this object so this is the MapLoaderMenu
-    this.exitMapLoaderMenu = this.exitMapLoaderMenu.bind(this)
+  constructor(properties = {}) {
+    properties["event_object"] = Game.events
+    properties["referenceHash"] = Game.uiElements.list
+    properties["headerText"] = "Load Map"
+    properties["width"] = "40%"
+    properties["actionButtonText"] = "Load Map"
+    properties["actionButtonMethod"] = MapLoaderMenu.loadMap
 
     properties["children"] = [
       {
@@ -18,34 +20,15 @@ export default class MapLoaderMenu extends UI.PopupMenu {
           verticalAlignment: "top",
           items: []
         }
-      },
-      {
-        className: UI.Button,
-        properties: {
-          text: "Cancel",
-          margin: 10,
-          alignment: "left",
-          verticalAlignment: "bottom",
-          display: "inline",
-          event_object: Game.events,
-          clickAction: this.exitMapLoaderMenu
-        }
-      },
-      {
-        className: UI.Button,
-        properties: {
-          text: "Load Map",
-          margin: 10,
-          alignment: "right",
-          verticalAlignment: "bottom",
-          display: "inline",
-          event_object: Game.events,
-          clickAction: MapLoaderMenu.loadMap
-        }
       }
     ]
 
-    super.createChildElements(properties)
+    super(Game.canvas, properties)
+
+    // Bind methods to this object so this is the MapLoaderMenu
+    this.exitMapLoaderMenu = this.exitMapLoaderMenu.bind(this)
+
+
     this.name = "UI.MapLoaderMenu"
     this.page = 1
     this.mapData = []

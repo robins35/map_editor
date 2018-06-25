@@ -16,7 +16,7 @@ export default class UIElement extends Entity {
     this.canvas = canvas
     this.event_object = properties["event_object"]
     this.parent = entityProps.parent
-    this.display = properties["display"]
+    this.display = properties["display"] || 'block'
     this.previousSibling = properties["previousSibling"]
     this.margin = properties["margin"]
     this.leftMargin = properties["leftMargin"]
