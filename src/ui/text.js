@@ -2,7 +2,7 @@ import UIElement from './ui_element'
 import * as Collision from '../collision'
 
 const DEFAULT_FONT_SIZE = 12
-const DEFAULT_TEXT_MARGIN = 0
+const DEFAULT_MARGIN = 0
 
 export default class Text extends UIElement {
   constructor(canvas, properties) {
@@ -24,7 +24,9 @@ export default class Text extends UIElement {
 
     this.fontSize = properties["fontSize"] || DEFAULT_FONT_SIZE
     this.font = this.fontSize + "px " + (properties["font"] || 'amatic-bold')
-    this.textMargin = properties["textMargin"] || DEFAULT_TEXT_MARGIN
+    this.margin = properties["margin"] || DEFAULT_MARGIN
+    this.textBaseline = properties["textBaseline"] || "hanging"
+    this.textSize = properties["textSize"]
     Text.selectedTexts = {}
   }
 
@@ -36,13 +38,13 @@ export default class Text extends UIElement {
     let fontSize = properties["fontSize"] || DEFAULT_FONT_SIZE
     let font = fontSize + "px " + (properties["font"] || 'amatic-bold')
     Game.ctx.font = font
-    let textMargin= properties["textMargin"] || DEFAULT_TEXT_MARGIN
+    let margin = properties["margin"] || DEFAULT_MARGIN
 
     properties["textSize"] = Game.ctx.measureText(properties["text"])
 
     if(properties["width"] == undefined && properties["height"] == undefined) {
-      properties["width"] = properties["textSize"].width + (2 * textMargin)
-      properties["height"] = fontSize + (2 * textMargin)
+      properties["width"] = properties["textSize"].width + (2 * margin)
+      properties["height"] = fontSize + (2 * margin)
     }
   }
 
@@ -52,23 +54,37 @@ export default class Text extends UIElement {
   }
 
   draw () {
-    this.ctx.beginPath()
-    if(this.selectable) {
-      if(Text.selectedTexts[this.id]) {
-        this.ctx.fillStyle = this.selectedBackgroundColor
-        $(this.canvas).css({'cursor' : 'pointer'})
+    if(this.visible) {
+      this.ctx.beginPath()
+      if(this.selectable) {
+        if(Text.selectedTexts[this.id]) {
+          this.ctx.fillStyle = this.selectedBackgroundColor
+          $(this.canvas).css({'cursor' : 'pointer'})
+        }
+        else {
+          this.ctx.fillStyle = this.backgroundColor
+        }
+        this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
       }
-      else {
-        this.ctx.fillStyle = this.backgroundColor
-      }
-      this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
+
+
+      // if(this.borderWidth) {
+      //   if(this.border) {
+      //     this.ctx.rect(this.pos.x, this.pos.y, this.width, this.height)
+      //   else if(this.
+      //   this.ctx.lineWidth = this.borderWidth
+      //   this.ctx.strokeStyle = this.color
+      //   this.ctx.stroke()
+      // }
+
+      this.ctx.fillStyle = this.color
+      this.ctx.font = this.font
+      this.ctx.textBaseline = this.textBaseline
+      if(this.textBaseline == "middle")
+        this.ctx.fillText(this.text, this.pos.x, this.pos.y + (this.height / 2))
+      else
+        this.ctx.fillText(this.text, this.pos.x, this.pos.y)
     }
-
-
-    this.ctx.fillStyle = this.color
-    this.ctx.font = this.font
-    this.ctx.textBaseline = "top"
-    this.ctx.fillText(this.text, this.pos.x, this.pos.y)
   }
 
   update() {

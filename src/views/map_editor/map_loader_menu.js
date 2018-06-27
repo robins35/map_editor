@@ -7,7 +7,7 @@ export default class MapLoaderMenu extends UI.PopupMenu {
     properties["headerText"] = "Load Map"
     properties["width"] = "40%"
     properties["actionButtonText"] = "Load Map"
-    properties["actionButtonMethod"] = MapLoaderMenu.loadMap
+    properties["actionButtonMethod"] = () => { this.loadMap() }
 
     properties["children"] = [
       {
@@ -25,39 +25,38 @@ export default class MapLoaderMenu extends UI.PopupMenu {
 
     super(Game.canvas, properties)
 
-    // Bind methods to this object so this is the MapLoaderMenu
-    this.exitMapLoaderMenu = this.exitMapLoaderMenu.bind(this)
+    // Bind methods to this object so 'this' is the MapLoaderMenu
+    this.getMapsData = this.getMapsData.bind(this)
 
 
     this.name = "UI.MapLoaderMenu"
     this.page = 1
-    this.mapData = []
+    this.mapNames = []
 
     Game.uiElements.push(this)
+    this.getMapsData()
   }
 
-  getMapsData() {
+  async getMapsData() {
     $.ajax({
       method: "GET",
       url: '/maps',
-      data: { layout: JSON.stringify(this.layout)},
       error: (error) => {
         console.log(`ERROR: response text: ${error.responseText}, status: ${error.status}`)
       },
       success: ((data) => {
         // Going to have to work/modify this data either server side or client side
-        mapsUIPreviewData = data
-        this.mapData = mapsUIPreviewData
+        this.mapNames = data["map_names"]
         this.updateMapList()
       }).bind(this)
     });
   }
 
   updateMapList() {
-    this.children[1].items = this.mapData
+    this.children[1].setListItems(this.mapNames)
   }
 
-  static loadMap() {
+  loadMap() {
     // de-serialize the map and load it into the map object here
   }
 

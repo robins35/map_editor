@@ -26,7 +26,7 @@ export default class UIElement extends Entity {
     this.backgroundColor = properties["backgroundColor"]
     this.borderWidth = properties["borderWidth"] || 0
     this.borderColor = properties["borderColor"] || "#000000"
-    this.visible = properties["visible"] || true
+    this.visible = properties["visible"] == undefined ? true : properties["visible"]
 
     if(!skipChildCreation)
       this.createChildElements(properties)
@@ -113,7 +113,10 @@ export default class UIElement extends Entity {
         default:
           if(previousSibling) {
             if(display == 'block' || previousSibling.display == "block") {
-              y = previousSibling.pos.y + previousSibling.height + topMargin
+              y = previousSibling.pos.y +
+                previousSibling.height +
+                topMargin +
+                (previousSibling.bottomMargin || previousSibling.margin || 0)
             }
             else {
               y = (previousSibling.pos.y - previousSibling.topMargin) + topMargin

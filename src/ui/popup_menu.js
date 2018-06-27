@@ -20,8 +20,8 @@ export default class PopupMenu extends UIElement {
         className: Text,
         properties: {
           text: properties["headerText"],
-          fontSize: 24,
-          margin: 0,
+          fontSize: 32,
+          margin: 6,
           alignment: "center",
           event_object: properties["event_object"]
         }
@@ -71,9 +71,6 @@ export default class PopupMenu extends UIElement {
 
     this.name = "UI.PopupMenu"
     this.referenceHash = properties["referenceHash"]
-    this.fontSize = properties["fontSize"] || 24
-    this.font = this.fontSize + "px " + (properties["font"] || 'amatic-bold')
-    this.textMargin = properties["textMargin"] || 3
     this.headerText = properties["headerText"]
   }
 

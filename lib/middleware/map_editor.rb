@@ -15,13 +15,13 @@ class MapEditor
       end
     # when '/maps'
     when /\/maps\/?(\d+)?/
+      map_dir = "public/maps/"
+      Dir.mkdir(map_dir) unless File.exists?(map_dir)
+
       if request.post?
         layout = JSON.parse(request.params["layout"])
-        map_dir = "public/maps/"
 
         if $1.nil?
-          Dir.mkdir(map_dir) unless File.exists?(map_dir)
-
           last_map = Dir.glob("#{map_dir}*").sort_by { |path| path.scan(/\d+/)[-1].to_i }.last
 
           if last_map.nil?
@@ -52,6 +52,15 @@ class MapEditor
                                       status,
                                       "Content-Type" => "application/json")
         response.finish
+      elsif request.get?
+        map_names = Dir.glob("#{map_dir}*").
+          sort_by { |path| path.scan(/\d+/)[-1].to_i }.
+          map { |path| path.split(File::SEPARATOR).last }
+
+        response_data = { map_names: map_names }.to_json
+        response = Rack::Response.new(response_data,
+                                      200,
+                                      "Content-Type" => "application/json")
       end
     else
       Rack::File.new(File.expand_path('public')).call(env)
