@@ -24,7 +24,8 @@ div.wrapper {
   src: url("fonts/Amatic-Bold.ttf"); }
 @font-face {
   font-family: "glass_tty_vt220medium";
-  src: url("fonts/glass_tty_vt220-webfont.woff2") format("woff2"), url("fonts/glass_tty_vt220-webfont.woff") format("woff");
+  src: url("fonts/glass_tty_vt220-webfont.woff2") format("woff2");
+  src: url("fonts/glass_tty_vt220-webfont.woff") format("woff");
   font-weight: normal;
   font-style: normal; }
 

@@ -21,7 +21,7 @@ export default class PopupMenu extends UIElement {
         properties: {
           text: properties["headerText"],
           fontSize: 32,
-          margin: 6,
+          margin: 3,
           alignment: "center",
           event_object: properties["event_object"]
         }

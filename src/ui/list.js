@@ -8,7 +8,7 @@ const DEFAULT_PADDING = 6
 export default class List extends UIElement {
   constructor(canvas, properties, skipChildCreation = false) {
     properties["display"] = properties["display"] || "block"
-    properties["backgroundColor"] = "#000000"
+    properties["backgroundColor"] = "#333333"
     properties["color"] = "#00ff00"
     properties["borderWidth"] = 1
     super(canvas, properties, skipChildCreation)

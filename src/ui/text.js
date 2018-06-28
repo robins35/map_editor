@@ -17,17 +17,24 @@ export default class Text extends UIElement {
     this.clicked = false
     this.color = properties["color"] || "#000000"
 
-    this.selectedBackgroundColor = properties["selectedBackgroundColor"] ||
-      Text.invertedColor(this.backgroundColor)
-    this.selectedColor = properties["selectedColor"] ||
-      Text.invertedColor(this.color)
+    this.backgroundColor = properties["backgroundColor"] ||
+      (this.selectable ? Text.invertedColor(this.color) : undefined)
+
+    if(this.selectable) {
+      this.selectedBackgroundColor = properties["selectedBackgroundColor"] ||
+        // Text.invertedColor(this.backgroundColor) ||
+        this.color
+      this.selectedColor = properties["selectedColor"] ||
+        // Text.invertedColor(this.color) ||
+        this.backgroundColor
+    }
 
     this.fontSize = properties["fontSize"] || DEFAULT_FONT_SIZE
     this.font = this.fontSize + "px " + (properties["font"] || 'amatic-bold')
     this.margin = properties["margin"] || DEFAULT_MARGIN
     this.textBaseline = properties["textBaseline"] || "hanging"
     this.textSize = properties["textSize"]
-    Text.selectedTexts = {}
+    Text.selectedText = null
   }
 
   static setTextSizeAndWidthHeight(properties) {
@@ -49,19 +56,29 @@ export default class Text extends UIElement {
   }
 
   static invertedColor(color) {
-    // Stubbing for now, this should invert the rgb bits
-    return color
+    let invertedRGB = color.slice(1).match(/.{2}/g).
+      map(hex => {
+        let hexString = (255 - parseInt(hex, 16)).toString(16)
+        if(hexString.length == 1)
+          hexString = "0" + hexString
+        return hexString
+      })
+
+    return `#${invertedRGB.join('')}`
   }
 
   draw () {
     if(this.visible) {
+      let color
       this.ctx.beginPath()
+
       if(this.selectable) {
-        if(Text.selectedTexts[this.id]) {
+        if(Text.selectedText == this.id) {
+          color = this.selectedColor
           this.ctx.fillStyle = this.selectedBackgroundColor
-          $(this.canvas).css({'cursor' : 'pointer'})
         }
         else {
+          color = this.color
           this.ctx.fillStyle = this.backgroundColor
         }
         this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
@@ -77,7 +94,7 @@ export default class Text extends UIElement {
       //   this.ctx.stroke()
       // }
 
-      this.ctx.fillStyle = this.color
+      this.ctx.fillStyle = color
       this.ctx.font = this.font
       this.ctx.textBaseline = this.textBaseline
       if(this.textBaseline == "middle")
@@ -90,13 +107,11 @@ export default class Text extends UIElement {
   update() {
     if(this.selectable) {
       if (Collision.intersects(this, this.event_object.mouse)) {
-        if (this.event_object.mouse.clicked) {
-          Text.selectedTexts[this.id] = true
-          this.event_object.mouse.clicked = false
-        }
-        else if (Text.selectedTexts[this.id] && !this.event_object.mouse.down) {
-          delete Text.selectedTexts[this.id]
+        $(this.canvas).css({'cursor' : 'pointer'})
+        if (this.event_object.mouse.clicked && Text.selectedText != this.id) {
+          Text.selectedText = this.id
           this.clickAction()
+          this.event_object.mouse.clicked = false
         }
       }
     }
