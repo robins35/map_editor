@@ -7,9 +7,10 @@ export default class UIElement extends Entity {
   // calling super
   constructor(canvas, properties, skipChildCreation = false) {
     properties["margin"] = properties["margin"] || 0
-    properties["leftMargin"] = properties["leftMargin"] || properties["margin"]
-    properties["rightMargin"] = properties["rightMargin"] || properties["margin"]
-    properties["topMargin"] = properties["topMargin"] || properties["margin"]
+    properties["marginLeft"] = properties["marginLeft"] || properties["margin"]
+    properties["marginRight"] = properties["marginRight"] || properties["margin"]
+    properties["marginTop"] = properties["marginTop"] || properties["margin"]
+    properties["marginBottom"] = properties["marginBottom"] || properties["margin"]
     let entityProps = UIElement.calculateDimensionAndPosition(canvas, properties)
     super(entityProps.x, entityProps.y, entityProps.width, entityProps.height)
     this.name = "UIElement"
@@ -18,10 +19,10 @@ export default class UIElement extends Entity {
     this.parent = entityProps.parent
     this.display = properties["display"] || 'block'
     this.previousSibling = properties["previousSibling"]
-    this.margin = properties["margin"]
-    this.leftMargin = properties["leftMargin"]
-    this.rightMargin = properties["rightMargin"]
-    this.topMargin = properties["topMargin"]
+    this.marginLeft = entityProps.marginLeft
+    this.marginRight = entityProps.marginRight
+    this.marginTop = entityProps.marginTop
+    this.marginBottom = entityProps.marginBottom
     this.color = properties["color"] || "#ffffff"
     this.backgroundColor = properties["backgroundColor"]
     this.borderWidth = properties["borderWidth"] || 0
@@ -68,19 +69,18 @@ export default class UIElement extends Entity {
 
   static calculateDimensionAndPosition(canvas, properties) {
     const parent = properties["parent"] || canvas
-    const margin = properties["margin"]
-    const leftMargin = properties["leftMargin"]
-    const rightMargin = properties["rightMargin"]
-    const topMargin = properties["topMargin"]
-    const bottomMargin = properties["bottomMargin"]
     const display = properties["display"] || "block"
     const previousSibling = properties["previousSibling"]
     const position = properties["position"]
 
-    let x, y, height, width
+    let x, y, height, width, marginLeft, marginRight, marginTop, marginBottom
 
     width = UIElement.pixelDimension(properties["width"], parent.width)
     height = UIElement.pixelDimension(properties["height"], parent.height)
+    marginLeft = UIElement.pixelDimension(properties["marginLeft"], parent.width)
+    marginRight = UIElement.pixelDimension(properties["marginRight"], parent.width)
+    marginTop = UIElement.pixelDimension(properties["marginTop"], parent.height)
+    marginBottom = UIElement.pixelDimension(properties["marginBottom"], parent.height)
 
     if(position) {
       x = position.x
@@ -92,14 +92,14 @@ export default class UIElement extends Entity {
           x = parent.pos.x + ((parent.width / 2) - (width / 2))
           break
         case "right":
-          x = (parent.pos.x + parent.width - width) - (rightMargin || margin)
+          x = (parent.pos.x + parent.width - width) - (marginRight)
           break
         default:
           if(display == 'block' || !previousSibling || previousSibling.display == 'block') {
-            x = parent.pos.x + leftMargin
+            x = parent.pos.x + marginLeft
           }
           else {
-            x = previousSibling.pos.x + previousSibling.width + leftMargin
+            x = previousSibling.pos.x + previousSibling.width + marginLeft
           }
       }
 
@@ -108,27 +108,36 @@ export default class UIElement extends Entity {
           y = parent.pos.y + ((parent.height / 2) - (height / 2))
           break
         case "bottom":
-          y = (parent.pos.y + parent.height - height) - (topMargin || margin)
+          y = (parent.pos.y + parent.height - height) - (marginTop)
           break
         default:
           if(previousSibling) {
             if(display == 'block' || previousSibling.display == "block") {
               y = previousSibling.pos.y +
                 previousSibling.height +
-                topMargin +
-                (previousSibling.bottomMargin || previousSibling.margin || 0)
+                marginTop +
+                (previousSibling.marginBottom || 0)
             }
             else {
-              y = (previousSibling.pos.y - previousSibling.topMargin) + topMargin
+              y = (previousSibling.pos.y - (previousSibling.marginTop || 0)) + marginTop
             }
           }
           else {
-            y = parent.pos.y + topMargin
+            y = parent.pos.y + marginTop
           }
       }
     }
-
-    return { x, y, width, height, parent }
+    return {
+      x,
+      y,
+      width,
+      height,
+      parent,
+      marginLeft,
+      marginRight,
+      marginTop,
+      marginBottom
+    }
   }
 
   show() {
@@ -165,8 +174,10 @@ export default class UIElement extends Entity {
   }
 
   update() {
-    for(let child of this.children) {
-      child.update()
+    if(this.hasFocus) {
+      for(let child of this.children) {
+        child.update()
+      }
     }
   }
 }

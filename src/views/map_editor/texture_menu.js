@@ -146,25 +146,27 @@ export default class TextureMenu extends UI.UIElement {
   }
 
   update() {
-    if(Collision.intersects(this, Game.events.mouse)) {
-      for(let texture of this.textureObjects[this.page]) {
-        if(Collision.intersects(texture, Game.events.mouse)) {
-          texture.hovering = true
-          if(Game.events.mouse.clicked) {
-            this.selectedTexture = texture
+    if(this.hasFocus) {
+      if(Collision.intersects(this, Game.events.mouse)) {
+        for(let texture of this.textureObjects[this.page]) {
+          if(Collision.intersects(texture, Game.events.mouse)) {
+            texture.hovering = true
+            if(Game.events.mouse.clicked) {
+              this.selectedTexture = texture
+            }
+          }
+          else {
+            texture.hovering = false
           }
         }
-        else {
-          texture.hovering = false
-        }
-      }
 
-      if(Game.events.mouse.clicked) {
-        Game.events.mouse.clicked = false
-        for(let iconKey of Object.keys(this.icons)) {
-          let icon = this.icons[iconKey]
-          if(!icon.hidden && Collision.intersects(icon, Game.events.mouse))
-            icon.clickAction()
+        if(Game.events.mouse.clicked) {
+          Game.events.mouse.clicked = false
+          for(let iconKey of Object.keys(this.icons)) {
+            let icon = this.icons[iconKey]
+            if(!icon.hidden && Collision.intersects(icon, Game.events.mouse))
+              icon.clickAction()
+          }
         }
       }
     }

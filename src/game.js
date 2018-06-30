@@ -38,7 +38,7 @@ let update = () => {
       MapEditor.init()
       break
     case 'map_editor':
-      MapEditor.update()
+      // MapEditor.update()
       sprites.update()
       uiElements.update()
       environmentElements.update()

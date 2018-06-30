@@ -11,6 +11,7 @@ export default class PopupMenu extends UIElement {
       height: canvas.height * 0.66,
       alignment: "center",
       verticalAlignment: "middle",
+      disableFocusOnOtherUI: true
     }
 
     properties = Object.assign(defaultProperties, properties)
@@ -21,7 +22,7 @@ export default class PopupMenu extends UIElement {
         properties: {
           text: properties["headerText"],
           fontSize: 32,
-          margin: 3,
+          margin: 6,
           alignment: "center",
           event_object: properties["event_object"]
         }
@@ -71,7 +72,17 @@ export default class PopupMenu extends UIElement {
 
     this.name = "UI.PopupMenu"
     this.referenceHash = properties["referenceHash"]
+    this.disableFocusHashes = properties["disableFocusHashes"]
+    this.disableFocusOnOtherUI = properties["disableFocusOnOtherUI"]
     this.headerText = properties["headerText"]
+
+    this.referenceHash.push(this)
+    if(this.disableFocusOnOtherUI)
+      this.referenceHash.disableFocusExcept(this.id)
+
+    for(let hash of this.disableFocusHashes) {
+      hash.unFocus()
+    }
   }
 
   draw() {
@@ -96,7 +107,13 @@ export default class PopupMenu extends UIElement {
   }
 
   exitPopup() {
-    // Game.uiElements.remove(this)
-    delete this.referenceHash[this.id]
+    this.referenceHash.remove(this)
+
+    if(this.disableFocusOnOtherUI)
+      this.referenceHash.restoreFocus()
+
+    for(let hash of this.disableFocusHashes) {
+      hash.focus()
+    }
   }
 }

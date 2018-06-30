@@ -50,8 +50,8 @@ export default class Text extends UIElement {
     properties["textSize"] = Game.ctx.measureText(properties["text"])
 
     if(properties["width"] == undefined && properties["height"] == undefined) {
-      properties["width"] = properties["textSize"].width + (2 * margin)
-      properties["height"] = fontSize + (2 * margin)
+      properties["width"] = properties["textSize"].width// + (2 * margin)
+      properties["height"] = fontSize// + (2 * margin)
     }
   }
 
@@ -69,7 +69,7 @@ export default class Text extends UIElement {
 
   draw () {
     if(this.visible) {
-      let color
+      let color = this.color
       this.ctx.beginPath()
 
       if(this.selectable) {
@@ -78,7 +78,6 @@ export default class Text extends UIElement {
           this.ctx.fillStyle = this.selectedBackgroundColor
         }
         else {
-          color = this.color
           this.ctx.fillStyle = this.backgroundColor
         }
         this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
@@ -105,13 +104,15 @@ export default class Text extends UIElement {
   }
 
   update() {
-    if(this.selectable) {
-      if (Collision.intersects(this, this.event_object.mouse)) {
-        $(this.canvas).css({'cursor' : 'pointer'})
-        if (this.event_object.mouse.clicked && Text.selectedText != this.id) {
-          Text.selectedText = this.id
-          this.clickAction()
-          this.event_object.mouse.clicked = false
+    if(this.hasFocus) {
+      if(this.selectable) {
+        if (Collision.intersects(this, this.event_object.mouse)) {
+          $(this.canvas).css({'cursor' : 'pointer'})
+          if (this.event_object.mouse.clicked && Text.selectedText != this.id) {
+            Text.selectedText = this.id
+            this.clickAction()
+            this.event_object.mouse.clicked = false
+          }
         }
       }
     }

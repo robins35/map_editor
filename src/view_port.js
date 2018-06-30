@@ -33,36 +33,38 @@ export class ViewPort extends Entity {
   }
 
   update() {
-    if(Game.events.keysDown[37])
-      this.safeMove(this.pos.x - this.speed, this.pos.y)
+    if(this.hasFocus) {
+      if(Game.events.keysDown[37])
+        this.safeMove(this.pos.x - this.speed, this.pos.y)
 
-    if(Game.events.keysDown[38]) 
-      this.safeMove(this.pos.x, this.pos.y - this.speed)
+      if(Game.events.keysDown[38]) 
+        this.safeMove(this.pos.x, this.pos.y - this.speed)
 
-    if(Game.events.keysDown[39])
-      this.safeMove(this.pos.x + this.speed, this.pos.y)
+      if(Game.events.keysDown[39])
+        this.safeMove(this.pos.x + this.speed, this.pos.y)
 
-    if(Game.events.keysDown[40])
-      this.safeMove(this.pos.x, this.pos.y + this.speed)
+      if(Game.events.keysDown[40])
+        this.safeMove(this.pos.x, this.pos.y + this.speed)
 
-    if(Game.state == 'map_editor' && Game.events.mouse.dragging) {
-      let dragStartPositionOnMap = Game.events.mouse.dragStart
-      if(Collision.intersects(this, dragStartPositionOnMap, 0, true)) {
-        if(this.positionAtDragStart === null) {
-          this.positionAtDragStart = Object.assign({}, this.pos)
-          $(Game.canvas).css({'cursor' : 'move'})
+      if(Game.state == 'map_editor' && Game.events.mouse.dragging) {
+        let dragStartPositionOnMap = Game.events.mouse.dragStart
+        if(Collision.intersects(this, dragStartPositionOnMap, 0, true)) {
+          if(this.positionAtDragStart === null) {
+            this.positionAtDragStart = Object.assign({}, this.pos)
+            $(Game.canvas).css({'cursor' : 'move'})
+          }
+
+          let start = Game.events.mouse.dragStart
+          let end = { x: Game.events.mouse.x, y: Game.events.mouse.y }
+          let moveVector = Collision.vectorDifference(start, end)
+
+          let movePosition = Collision.vectorSum(this.positionAtDragStart, moveVector)
+          this.safeMove(movePosition.x, movePosition.y)
         }
-
-        let start = Game.events.mouse.dragStart
-        let end = { x: Game.events.mouse.x, y: Game.events.mouse.y }
-        let moveVector = Collision.vectorDifference(start, end)
-
-        let movePosition = Collision.vectorSum(this.positionAtDragStart, moveVector)
-        this.safeMove(movePosition.x, movePosition.y)
       }
-    }
-    else {
-      this.positionAtDragStart = null
+      else {
+        this.positionAtDragStart = null
+      }
     }
   }
 }

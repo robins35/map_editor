@@ -74,19 +74,21 @@ export default class Button extends UIElement {
   }
 
   update() {
-    if (Collision.intersects(this, this.event_object.mouse)) {
-      Button.hoveredButtons[this.id] = true
-      if (this.event_object.mouse.clicked) {
-        Button.clickedButtons[this.id] = true
-        this.event_object.mouse.clicked = false
+    if(this.hasFocus) {
+      if (Collision.intersects(this, this.event_object.mouse)) {
+        Button.hoveredButtons[this.id] = true
+        if (this.event_object.mouse.clicked) {
+          Button.clickedButtons[this.id] = true
+          this.event_object.mouse.clicked = false
+        }
+        else if (Button.clickedButtons[this.id] && !this.event_object.mouse.down) {
+          delete Button.clickedButtons[this.id]
+          this.clickAction()
+        }
       }
-      else if (Button.clickedButtons[this.id] && !this.event_object.mouse.down) {
-        delete Button.clickedButtons[this.id]
-        this.clickAction()
+      else if (Button.hoveredButtons[this.id]) {
+        delete Button.hoveredButtons[this.id]
       }
-    }
-    else if (Button.hoveredButtons[this.id]) {
-      delete Button.hoveredButtons[this.id]
     }
   }
 }

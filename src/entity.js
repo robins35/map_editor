@@ -8,6 +8,7 @@ export class Entity {
     this.height = height
     this.canvas = Game.canvas
     this.ctx = Game.ctx
+    this.hasFocus = true
   }
 
   maxX() {
@@ -42,6 +43,7 @@ export class Entity {
 export class EntityList {
   constructor() {
     this.list = {}
+    this.hasFocus = true
   }
 
   push(entity) {
@@ -61,17 +63,45 @@ export class EntityList {
 
   draw() {
     for(let key of Object.keys(this.list)) {
-      this.list[key].draw()
+      if (this.list[key].draw != undefined)
+        this.list[key].draw()
     }
   }
 
   update() {
-    for(let key of Object.keys(this.list)) {
-      if (this.list[key] == undefined) {
-        continue
+    if(this.hasFocus) {
+      for(let key of Object.keys(this.list)) {
+        if (this.list[key] == undefined) {
+          continue
+        }
+        if (this.list[key].update != undefined)
+          this.list[key].update()
       }
-      if (this.list[key].update != undefined)
-        this.list[key].update()
+    }
+  }
+
+  focus() {
+    this.hasFocus = true
+  }
+
+  unFocus() {
+    this.hasFocus = false
+  }
+
+  restoreFocus() {
+    this.focus()
+
+    for(let entityKey in this.list) {
+      this.list[entityKey].hasFocus = true
+    }
+  }
+
+  disableFocusExcept(exceptionId) {
+    for(let key in this.list) {
+      if(key == exceptionId)
+        continue
+
+      this.list[key].hasFocus = false
     }
   }
 

@@ -3,9 +3,12 @@ import { UI } from '../../ui/ui'
 export default class MapLoaderMenu extends UI.PopupMenu {
   constructor(properties = {}) {
     properties["event_object"] = Game.events
-    properties["referenceHash"] = Game.uiElements.list
+    properties["referenceHash"] = Game.uiElements
+    properties["disableFocusHashes"] = [Game.environmentElements, Game.sprites]
     properties["headerText"] = "Load Map"
     properties["width"] = "40%"
+    properties["verticalAlignment"] = "top"
+    properties["marginTop"] = "10%"
     properties["actionButtonText"] = "Load Map"
     properties["actionButtonMethod"] = () => { this.loadMap() }
 
@@ -33,7 +36,6 @@ export default class MapLoaderMenu extends UI.PopupMenu {
     this.page = 1
     this.mapNames = []
 
-    Game.uiElements.push(this)
     this.getMapsData()
   }
 
@@ -58,9 +60,5 @@ export default class MapLoaderMenu extends UI.PopupMenu {
 
   loadMap() {
     // de-serialize the map and load it into the map object here
-  }
-
-  exitMapLoaderMenu() {
-    Game.uiElements.remove(this)
   }
 }

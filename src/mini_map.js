@@ -80,6 +80,8 @@ export default class MiniMap extends Entity {
   }
 
   update() {
-    this.updateMiniViewPort()
+    if(this.hasFocus) {
+      this.updateMiniViewPort()
+    }
   }
 }

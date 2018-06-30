@@ -1,5 +1,6 @@
 import Texture from './texture'
 import * as Collision from './collision'
+import { Entity } from './entity'
 
 class Command {
   constructor(list, previous, next, command, params) {
@@ -91,7 +92,7 @@ class CommandHistory {
         str += " --> "
       current = current.next
     }
-      console.log(str)
+    console.log(str)
   }
 
   push(commandString, params) {
@@ -144,8 +145,12 @@ class CommandHistory {
 }
 
 export default class Map {
-  constructor(width, height, textureSize, id = null) {
-    this.id = id
+  constructor(width, height, textureSize, mapIdentifier = null) {
+    // This could be a very poor way of giving Maps an id, since Maps don't inherit from Entity, but we're using Entity's id system.
+    Entity.id = (Entity.id === undefined) ? 1 : Entity.id
+    this.id = Entity.id++
+    this.mapIdentifier = mapIdentifier
+
     this.width = Math.trunc(width / textureSize) * textureSize
     this.height = Math.trunc(height / textureSize) * textureSize
     this.textureSize = textureSize
@@ -166,8 +171,8 @@ export default class Map {
   save() {
     let url = "/maps"
 
-    if(this.id)
-      url += `/${this.id}`
+    if(this.mapIdentifier)
+      url += `/${this.mapIdentifier}`
 
     this.serialize()
 
@@ -179,8 +184,8 @@ export default class Map {
         console.log(`ERROR: response text: ${error.responseText}, status: ${error.status}`)
       },
       success: (data) => {
-        this.id = data["map_id"]
-        console.log("Set map id to " + this.id)
+        this.mapIdentifier = data["map_id"]
+        console.log("Set map id to " + this.mapIdentifier)
       }
     });
   }

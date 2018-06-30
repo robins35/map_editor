@@ -69,79 +69,81 @@ class Grid extends Entity {
   }
 
   update() {
-    let xOffset = this.viewPort.pos.x % this.size
-    let yOffset = this.viewPort.pos.y % this.size
+    if(this.hasFocus) {
+      let xOffset = this.viewPort.pos.x % this.size
+      let yOffset = this.viewPort.pos.y % this.size
 
-    let x = this.sideMenu.width + (xOffset ? this.size - xOffset : 0)
-    let y = yOffset ? this.size - yOffset : 0
-    this.move(x, y)
-    this.resetDimensions()
+      let x = this.sideMenu.width + (xOffset ? this.size - xOffset : 0)
+      let y = yOffset ? this.size - yOffset : 0
+      this.move(x, y)
+      this.resetDimensions()
 
-    if(!this.undoing && (Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
-      this.undoing = true
-      this.map.commandHistory.undo()
-    }
-    else if(this.undoing && !(Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
-      this.undoing = false
-    }
+      if(!this.undoing && (Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
+        this.undoing = true
+        this.map.commandHistory.undo()
+      }
+      else if(this.undoing && !(Game.events.controlKeysDown[90] || Game.events.keysDown[85])) {
+        this.undoing = false
+      }
 
-    if(!this.redoing && (Game.events.controlKeysDown[82] || Game.events.controlKeysDown[89])) {
-      this.redoing = true
-      this.map.commandHistory.redo()
-    }
-    else if (this.redoing && !(Game.events.controlKeysDown[82] || Game.events.controlKeysDown[89])) {
-      this.redoing = false
-    }
+      if(!this.redoing && (Game.events.controlKeysDown[82] || Game.events.controlKeysDown[89])) {
+        this.redoing = true
+        this.map.commandHistory.redo()
+      }
+      else if (this.redoing && !(Game.events.controlKeysDown[82] || Game.events.controlKeysDown[89])) {
+        this.redoing = false
+      }
 
-    if(this.textureMenu.selectedTexture) {
-      if(Collision.intersects(this, Game.events.mouse)) {
-        let columnIntersected = Math.trunc((Game.events.mouse.x - this.pos.x) / this.size)
-        let rowIntersected = Math.trunc((Game.events.mouse.y - this.pos.y) / this.size)
+      if(this.textureMenu.selectedTexture) {
+        if(Collision.intersects(this, Game.events.mouse)) {
+          let columnIntersected = Math.trunc((Game.events.mouse.x - this.pos.x) / this.size)
+          let rowIntersected = Math.trunc((Game.events.mouse.y - this.pos.y) / this.size)
 
-        let x = this.pos.x + (columnIntersected * this.size)
-        let y = this.pos.y + (rowIntersected * this.size)
+          let x = this.pos.x + (columnIntersected * this.size)
+          let y = this.pos.y + (rowIntersected * this.size)
 
-        if(this.textureMenu.selectedTexture != 'eraser') {
-          if(this.texturePreview) {
-            this.texturePreview.pos = {x, y}
-          }
-          else {
-            this.texturePreview = new Texture(x, y, this.textureMenu.selectedTexture.key, this.textureMenu.selectedTexture.img)
-          }
-        }
-
-        if(Game.events.mouse.rightDown) {
-          if(!this.lastTexturePlacedAt ||
-              !Collision.pointsAreEqual({x, y}, this.lastTexturePlacedAt)) {
-
-            this.lastTexturePlacedAt = {x, y}
-            if(this.textureMenu.selectedTexture == 'eraser') {
-              if(this.map.removeTile({x, y}, this.addToLastCommand)) {
-                this.addToLastCommand = true
-              }
+          if(this.textureMenu.selectedTexture != 'eraser') {
+            if(this.texturePreview) {
+              this.texturePreview.pos = {x, y}
             }
             else {
-              this.map.addTile(this.texturePreview, this.addToLastCommand)
-              this.addToLastCommand = true
+              this.texturePreview = new Texture(x, y, this.textureMenu.selectedTexture.key, this.textureMenu.selectedTexture.img)
             }
+          }
 
+          if(Game.events.mouse.rightDown) {
+            if(!this.lastTexturePlacedAt ||
+                !Collision.pointsAreEqual({x, y}, this.lastTexturePlacedAt)) {
+
+              this.lastTexturePlacedAt = {x, y}
+              if(this.textureMenu.selectedTexture == 'eraser') {
+                if(this.map.removeTile({x, y}, this.addToLastCommand)) {
+                  this.addToLastCommand = true
+                }
+              }
+              else {
+                this.map.addTile(this.texturePreview, this.addToLastCommand)
+                this.addToLastCommand = true
+              }
+
+            }
+          }
+          else if(this.lastTexturePlacedAt && !Game.events.mouse.rightDown) {
+            this.lastTexturePlacedAt = null
+            this.addToLastCommand = false
           }
         }
-        else if(this.lastTexturePlacedAt && !Game.events.mouse.rightDown) {
-          this.lastTexturePlacedAt = null
-          this.addToLastCommand = false
+        else {
+          this.texturePreview = null
         }
-      }
-      else {
-        this.texturePreview = null
       }
     }
   }
 }
 
-let update = () => {
-  viewPort.update()
-}
+// let update = () => {
+//   viewPort.update()
+// }
 
 let init = () => {
   let ctx = Game.ctx
@@ -165,7 +167,7 @@ let init = () => {
   let grid = new Grid(map, viewPort, textureMenu, sideMenu)
 
   Game.uiElements.push([textureMenu, sideMenu])
-  Game.environmentElements.push([map, grid])
+  Game.environmentElements.push([viewPort, map, grid])
 }
 
 export { init, update }

@@ -28,8 +28,8 @@ export default class Grid extends UIElement {
         }
         column['properties']['height'] = this.rowHeight
         column['properties']['width'] = this.columnWidth
-        column['properties']['topMargin'] = this.rowMargin
-        column['properties']['bottomMargin'] = this.rowMargin
+        column['properties']['marginTop'] = this.rowMargin
+        column['properties']['marginBottom'] = this.rowMargin
         column['properties']['margin'] = this.columnMargin
         properties['children'].push(column)
         columnIndex++
