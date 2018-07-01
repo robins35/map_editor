@@ -34,7 +34,6 @@ export default class Text extends UIElement {
     this.margin = properties["margin"] || DEFAULT_MARGIN
     this.textBaseline = properties["textBaseline"] || "hanging"
     this.textSize = properties["textSize"]
-    Text.selectedText = null
   }
 
   static setTextSizeAndWidthHeight(properties) {
@@ -73,7 +72,7 @@ export default class Text extends UIElement {
       this.ctx.beginPath()
 
       if(this.selectable) {
-        if(Text.selectedText == this.id) {
+        if(this.parent.selectedItem && this.parent.selectedItem.id == this.id) {
           color = this.selectedColor
           this.ctx.fillStyle = this.selectedBackgroundColor
         }
@@ -108,8 +107,10 @@ export default class Text extends UIElement {
       if(this.selectable) {
         if (Collision.intersects(this, this.event_object.mouse)) {
           $(this.canvas).css({'cursor' : 'pointer'})
-          if (this.event_object.mouse.clicked && Text.selectedText != this.id) {
-            Text.selectedText = this.id
+          if (this.event_object.mouse.clicked &&
+                (this.parent.selectedItem == undefined ||
+                this.parent.selectedItem.id != this.id)) {
+            this.parent.selectedItem = this
             this.clickAction()
             this.event_object.mouse.clicked = false
           }

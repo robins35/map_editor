@@ -80,7 +80,7 @@ export default class List extends UIElement {
     while(target.constructor.name != "List") {
       target = target.parent
     }
-    target.selectedItem = this
+    target.selectedItem= this
   }
 
   update() {
@@ -89,17 +89,18 @@ export default class List extends UIElement {
   }
 
   setSelectedItem(item) {
-    this.selectedItem = item
-    Text.selectedText = item.id
+      this.selectedItem = item
   }
 
   handleArrowkeyScrolling() {
+    let selectedItem = this.selectedItem
+
     if(this.event_object.keysDown[38]) {
-      if (this.selectedItem && this.selectedItem.previousSibling) {
-        if(this.selectedItem.id == this.currentViewSlice[0].id)
+      if (selectedItem && selectedItem.previousSibling) {
+        if(selectedItem.id == this.currentViewSlice[0].id)
           this.shiftListView(-1)
 
-        this.setSelectedItem(this.selectedItem.previousSibling)
+        this.setSelectedItem(selectedItem.previousSibling)
       }
       else {
         this.setSelectedItem(this.children[0])
@@ -109,12 +110,12 @@ export default class List extends UIElement {
     }
 
     if(this.event_object.keysDown[40]) {
-      if(this.selectedItem) {
-        if (this.selectedItem.nextSibling) {
-          if(this.selectedItem.id == this.currentViewSlice.slice(-1)[0].id)
+      if(selectedItem) {
+        if (selectedItem.nextSibling) {
+          if(selectedItem.id == this.currentViewSlice.slice(-1)[0].id)
             this.shiftListView(1)
 
-          this.setSelectedItem(this.selectedItem.nextSibling)
+          this.setSelectedItem(selectedItem.nextSibling)
         }
       }
       else {
