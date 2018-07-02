@@ -1,19 +1,26 @@
 const path = require('path');
 
 module.exports = {
-  entry: { app: './src/index.js' },
+  entry: [ 'babel-polyfill', './src/index.js' ],
   output: {
     path: path.resolve(__dirname),
-    filename: 'dist/[name]-bundle.js'
+    filename: 'dist/app-bundle.js'
   },
   watch: true,
-  devtool: 'source-map',
+  // devtool: 'source-map',
   module: {
     rules: [
       {
         test: /\.js$/,
-        include: path.resolve(__dirname, 'src'),
-        use: ['babel-loader']
+        exclude: /node_modules/,
+        // include: path.resolve(__dirname, 'src'),
+        use: [{
+          loader: 'babel-loader',
+          options: {
+            sourceMap: true,
+            cacheDirectory: true
+          }
+        }]
       }
     ]
   }
