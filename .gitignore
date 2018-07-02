@@ -8,4 +8,5 @@ notes.txt
 tags
 
 public/maps
-dist/*.js.map
+/* dist/*.js.map */
+dist/*
