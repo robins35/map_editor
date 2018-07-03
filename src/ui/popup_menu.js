@@ -71,6 +71,7 @@ export default class PopupMenu extends UIElement {
     this.exitPopup = this.exitPopup.bind(this)
 
     this.name = "UI.PopupMenu"
+    this.launcherMenu = properties["launcherMenu"]
     this.referenceHash = properties["referenceHash"]
     this.disableFocusHashes = properties["disableFocusHashes"]
     this.disableFocusOnOtherUI = properties["disableFocusOnOtherUI"]

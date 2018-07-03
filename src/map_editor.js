@@ -170,4 +170,4 @@ let init = () => {
   Game.environmentElements.push([viewPort, map, grid])
 }
 
-export { init, update }
+export { init }

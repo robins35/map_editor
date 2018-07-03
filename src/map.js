@@ -145,7 +145,7 @@ class CommandHistory {
 }
 
 export default class Map {
-  constructor(width, height, textureSize, mapIdentifier = null) {
+  constructor(width, height, textureSize, mapIdentifier = null, viewPort = null) {
     // This could be a very poor way of giving Maps an id, since Maps don't inherit from Entity, but we're using Entity's id system.
     Entity.id = (Entity.id === undefined) ? 1 : Entity.id
     this.id = Entity.id++
@@ -156,7 +156,7 @@ export default class Map {
     this.textureSize = textureSize
     this.columns = this.width / textureSize
     this.rows = this.height / textureSize
-    this.viewPort = null
+    this.viewPort = viewPort
 
     this.map = []
     this.layout = []
@@ -200,6 +200,42 @@ export default class Map {
           this.layout[column][row] = null
       }
     }
+  }
+
+  extractFromLayout() {
+    let textures = Game.AssetManager.imgs["textures"]
+
+    for(let [columnIndex, column] of this.layout.entries()) {
+      this.map[columnIndex] = []
+      for(let [rowIndex, cell] of column.entries()) {
+        if(cell) {
+          let x = columnIndex * this.textureSize
+          let y = rowIndex * this.textureSize
+          let texture = new Texture(x,
+                                    y,
+                                    cell,
+                                    textures[cell])
+          this.map[columnIndex][rowIndex] = texture
+        }
+      }
+    }
+  }
+
+  loadNewFromLayout(layout, mapIdentifier) {
+    let canvas = Game.canvas
+    let map = new Map(canvas.width * 2,
+                      canvas.height * 2,
+                      this.textureSize,
+                      mapIdentifier,
+                      this.viewPort)
+
+    map.layout = layout
+    map.extractFromLayout()
+    this.viewPort.map = map
+
+    Game.environmentElements.remove(this)
+    Game.environmentElements.push(map)
+    return map
   }
 
   calculateAbsolutePosition(pos) {

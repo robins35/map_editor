@@ -71,8 +71,15 @@ export default class SideMenu extends UI.UIElement {
   }
 
   static loadMapLoaderMenu() {
-    // second param needs to be the properties
-    let mapLoaderMenu = new MapLoaderMenu()
+    // Loop up parent chain until you get to the SideMenu (which has the map)
+    let target = this
+    while(target.map === undefined) {
+      target = target.parent
+    }
+    let mapLoaderMenu = new MapLoaderMenu({launcherMenu: target, currentMap: target.map})
   }
 
+  changeMiniMapLink(map) {
+    this.children[0].map = map
+  }
 }

@@ -15,10 +15,6 @@ export default class List extends UIElement {
     this.name = "UI.List"
     this.currentStartingIndex = 0
     this.currentViewSlice = this.children.slice(0, this.maxItems)
-
-    // if(this.items != undefined && this.items.length > 0) {
-    //   super.createChildElements(this)
-    // }
   }
 
   createChildElements(properties) {
@@ -43,10 +39,13 @@ export default class List extends UIElement {
     let children = []
 
     for(let [index, item] of this.items.entries()) {
+      let {text, ...data} = item
+
       children.push({
         className: Text,
         properties: {
-          text: item,
+          text: text,
+          data: data,
           event_object: this.event_object,
           clickAction: this.selectItem,
           height: this.rowHeight,

@@ -61,6 +61,14 @@ export class EntityList {
     delete this.list[entity.id]
   }
 
+  fetchFirstOccurenceByName(name) {
+    let elementId = Object.keys(this.list).find(key => (
+      this.list[key].name === name
+    ));
+
+    return this.list[elementId]
+  }
+
   draw() {
     for(let key of Object.keys(this.list)) {
       if (this.list[key].draw != undefined)

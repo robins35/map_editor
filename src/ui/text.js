@@ -12,6 +12,7 @@ export default class Text extends UIElement {
     this.name = "UI.Text"
     this.event_object = properties["event_object"]
     this.text = properties["text"]
+    this.data = properties["data"]
     this.selectable = properties["selectable"] || false
     this.clickAction = properties["clickAction"]
     this.clicked = false

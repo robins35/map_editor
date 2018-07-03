@@ -34,11 +34,18 @@ export default class MapLoaderMenu extends UI.PopupMenu {
 
     this.name = "UI.MapLoaderMenu"
     this.page = 1
-    this.mapNames = []
+    this.mapData = []
+    this.currentMap = properties["currentMap"]
 
     this.getMapsData()
   }
 
+  list() {
+    return this.children[1]
+  }
+
+  // Fetch preview information for all maps, so the user has some info on the
+  // map before loading it.
   async getMapsData() {
     $.ajax({
       method: "GET",
@@ -47,18 +54,41 @@ export default class MapLoaderMenu extends UI.PopupMenu {
         console.log(`ERROR: response text: ${error.responseText}, status: ${error.status}`)
       },
       success: ((data) => {
-        // Going to have to work/modify this data either server side or client side
-        this.mapNames = data["map_names"]
+        this.mapData = data["map_data"]
         this.updateMapList()
       }).bind(this)
     });
   }
 
   updateMapList() {
-    this.children[1].setListItems(this.mapNames)
+    this.children[1].setListItems(this.mapData)
   }
 
   loadMap() {
     // de-serialize the map and load it into the map object here
+    let selectedText = this.list().selectedItem
+    let mapIdentifier = selectedText.data.unique_id
+    let url = `/maps/${mapIdentifier}`
+
+    $.ajax({
+      method: "GET",
+      url: url,
+      error: (error) => {
+        console.log(`ERROR: response text: ${error.responseText}, status: ${error.status}`)
+      },
+      success: ((data) => {
+        // Instantiate map object and load into viewPort
+        let grid = Game.environmentElements.fetchFirstOccurenceByName("Grid")
+        let map = this.currentMap.loadNewFromLayout(data["layout"], mapIdentifier)
+
+        // Update SideMenu and its child Minimap, accessing Sidemenu because it
+        // was the UI element that launched this popup
+        this.launcherMenu.map = map
+        this.launcherMenu.changeMiniMapLink(map)
+        grid.map = map
+
+        this.exitPopup()
+      }).bind(this)
+    })
   }
 }
