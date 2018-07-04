@@ -86,6 +86,7 @@ export default class MapLoaderMenu extends UI.PopupMenu {
         this.launcherMenu.map = map
         this.launcherMenu.changeMiniMapLink(map)
         grid.map = map
+        map.viewPort.pos = { x: 0, y: 0 }
 
         this.exitPopup()
       }).bind(this)
