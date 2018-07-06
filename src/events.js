@@ -95,4 +95,4 @@ let init = (canvas) => {
   });
 }
 
-export { init, mouse, keysDown, controlKeysDown }
+export default { init, mouse, keysDown, controlKeysDown }

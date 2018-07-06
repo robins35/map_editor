@@ -1,4 +1,4 @@
-import { UI } from './ui/ui'
+import UI from 'ui'
 
 var successCount = 0;
 var errorCount = 0;

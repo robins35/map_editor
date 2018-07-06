@@ -1,5 +1,5 @@
-import { UI } from '../../ui/ui'
-import MiniMap from '../../mini_map'
+import UI from 'ui'
+import MiniMap from 'mini_map'
 import MapLoaderMenu from './map_loader_menu'
 
 export default class SideMenu extends UI.UIElement {

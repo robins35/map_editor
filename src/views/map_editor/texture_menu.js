@@ -1,6 +1,6 @@
-import { UI } from '../../ui/ui'
-import Texture from '../../texture'
-import * as Collision from '../../collision'
+import UI from 'ui'
+import Texture from 'texture'
+import * as Collision from 'collision'
 
 export default class TextureMenu extends UI.UIElement {
   constructor(canvas, properties) {

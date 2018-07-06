@@ -1,5 +1,5 @@
 import UIElement from './ui_element'
-import * as Collision from '../collision'
+import * as Collision from 'collision'
 
 const DEFAULT_FONT_SIZE = 12
 const DEFAULT_MARGIN = 0

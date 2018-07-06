@@ -1,8 +1,12 @@
-import { Entity, EntityList } from './entity'
-import * as Events from './events'
-import * as AssetManager from './asset_manager'
-import * as MainMenu from './main_menu'
-import * as MapEditor from './map_editor'
+import { Entity, EntityList } from 'entity'
+import * as AssetManager from 'asset_manager'
+import * as MainMenu from 'main_menu'
+import * as MapEditor from 'map_editor'
+
+// There seems to be a bug in webpack's resolve property. The ./src dir should
+// take precedence over node_modules, however it's loading the npm Events
+// module instead of our custom one, so we must use a relative path.
+import Events from './events'
 
 const States = ['loading', 'ready', 'paused', 'menu']
 
@@ -15,6 +19,7 @@ let previousState
 let sprites = new EntityList()
 let uiElements = new EntityList()
 let environmentElements = new EntityList()
+
 
 let update = () => {
   switch (state) {

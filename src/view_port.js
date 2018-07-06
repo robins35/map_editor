@@ -1,5 +1,5 @@
-import { Entity } from './entity'
-import * as Collision from './collision'
+import { Entity } from 'entity'
+import * as Collision from 'collision'
 
 export class ViewPort extends Entity {
   constructor(width, height, map) {

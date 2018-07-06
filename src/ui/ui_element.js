@@ -1,5 +1,5 @@
-import { Entity } from '../entity'
-import * as Collision from '../collision'
+import { Entity } from 'entity'
+import * as Collision from 'collision'
 
 export default class UIElement extends Entity {
   // If you create a new object that inherits from UIElement, and it has

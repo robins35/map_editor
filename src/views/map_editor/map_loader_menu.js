@@ -1,4 +1,4 @@
-import { UI } from '../../ui/ui'
+import UI from 'ui'
 
 export default class MapLoaderMenu extends UI.PopupMenu {
   constructor(properties = {}) {

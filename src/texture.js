@@ -1,4 +1,4 @@
-import {Entity} from './entity'
+import {Entity} from 'entity'
 
 export default class Texture extends Entity {
   constructor(x, y, key, img) {

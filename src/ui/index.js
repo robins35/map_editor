@@ -8,4 +8,4 @@ import PopupMenu from './popup_menu'
 
 let UI = { UIElement, Button, Text, ProgressBar, Grid, List, PopupMenu}
 
-export { UI }
+export default UI

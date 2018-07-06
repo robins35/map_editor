@@ -1,5 +1,5 @@
 import UIElement from './ui_element'
-import * as Collision from '../collision'
+import * as Collision from 'collision'
 
 const DEFAULT_TEXT_MARGIN_TOP_BOTTOM = 3
 const DEFAULT_TEXT_MARGIN_LEFT_RIGHT = 10

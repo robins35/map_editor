@@ -1,6 +1,6 @@
-import Texture from './texture'
-import * as Collision from './collision'
-import { Entity } from './entity'
+import Texture from 'texture'
+import * as Collision from 'collision'
+import { Entity } from 'entity'
 
 class Command {
   constructor(list, previous, next, command, params) {

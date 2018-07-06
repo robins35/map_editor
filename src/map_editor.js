@@ -1,9 +1,9 @@
-import { Entity } from './entity'
-import Map from './map'
-import Texture from './texture'
-import { ViewPort } from './view_port'
-import { MapEditorUI } from './views/map_editor_ui'
-import * as Collision from './collision'
+import { Entity } from 'entity'
+import Map from 'map'
+import Texture from 'texture'
+import { ViewPort } from 'view_port'
+import MapEditorViews from 'views/map_editor'
+import * as Collision from 'collision'
 
 const textureSize = 32
 
@@ -154,7 +154,7 @@ let init = () => {
   let viewPortHeight = canvas.height - (canvas.height / 5)
 
   viewPort = new ViewPort(viewPortWidth, viewPortHeight, map)
-  let textureMenu = new MapEditorUI.TextureMenu(canvas, {
+  let textureMenu = new MapEditorViews.TextureMenu(canvas, {
     height: Game.canvas.height - viewPort.height,
     verticalAlignment: "bottom",
     backgroundColor: '#2a1d16',
@@ -162,7 +162,7 @@ let init = () => {
 
   })
 
-  let sideMenu = new MapEditorUI.SideMenu(map, viewPort)
+  let sideMenu = new MapEditorViews.SideMenu(map, viewPort)
 
   let grid = new Grid(map, viewPort, textureMenu, sideMenu)
 

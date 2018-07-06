@@ -1,4 +1,4 @@
-import { UI } from './ui/ui'
+import UI from 'ui'
 
 let buttons = []
 let canvas = undefined
