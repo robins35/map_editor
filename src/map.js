@@ -314,6 +314,12 @@ export default class Map {
       var endRow = startRow + Math.trunc(Game.canvas.height / this.textureSize)
     }
 
+    Game.ctx.save()
+    // Game.ctx.translate(view.x, view.y);
+    Game.ctx.translate(this.viewPort.x, this.viewPort.y);
+    Game.ctx.scale(1, 0.5);
+    Game.ctx.rotate(45 * Math.PI /180);
+
     for(let column = startColumn; column <= endColumn; column++) {
       for(let row = startRow; row <= endRow; row++) {
         if(!this.map[column] || !this.map[column][row])
@@ -332,6 +338,7 @@ export default class Map {
             texture.width, texture.height)
       }
     }
+    Game.ctx.restore()
   }
 }
 

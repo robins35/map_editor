@@ -63,6 +63,12 @@ export default class MiniMap extends Entity {
     let endColumn = Math.trunc(this.map.width % this.map.textureSize)
     let endRow = Math.trunc(this.map.height % this.map.textureSize)
 
+    this.ctx.save()
+    // this.ctx.translate(view.x, view.y);
+    this.ctx.translate(this.viewPort.x, this.viewPort.y);
+    this.ctx.scale(1, 0.5);
+    this.ctx.rotate(45 * Math.PI /180);
+
     for(let column of this.map.map) {
       for(let texture of column) {
         if(texture === undefined)
@@ -72,6 +78,8 @@ export default class MiniMap extends Entity {
         this.ctx.drawImage(texture.img, textureDetails.pos.x, textureDetails.pos.y, textureDetails.width, textureDetails.height)
       }
     }
+
+    this.ctx.restore()
 
     this.ctx.strokeStyle = this.miniViewPort.color
     this.ctx.lineWidth = 1

@@ -16,8 +16,16 @@ class Grid extends Entity {
     super(_sideMenu.width, 0, width, height)
 
     this.name = "Grid"
-    this.drawWidth = this.canvas.width - _sideMenu.width
-    this.drawHeight = _textureMenu.pos.y
+
+    let isoWidth = Game.canvas.width
+    let isoHeight = _textureMenu.pos.y
+    let isoDimensions = Math.hypot(isoHeight, isoWidth)
+    this.drawWidth = isoDimensions
+    this.drawHeight = isoDimensions
+
+    // this.drawWidth = this.canvas.width - _sideMenu.width
+    // this.drawHeight = _textureMenu.pos.y
+
     this.drawX = _sideMenu.width
     this.drawY = 0
     this.size = size
@@ -42,15 +50,21 @@ class Grid extends Entity {
   }
 
   draw() {
+    Game.ctx.save()
+    // Game.ctx.translate(view.x, view.y);
+    Game.ctx.translate(this.pos.x, this.pos.y);
+    Game.ctx.scale(1, 0.5);
+    Game.ctx.rotate(45 * Math.PI /180);
+
     this.ctx.beginPath()
-    for(let x = this.pos.x + 0.5; x <= (this.drawWidth + this.drawX); x += this.size) {
-      this.ctx.moveTo(x, this.drawY)
+    for(let x = 0; x <= (this.drawWidth); x += this.size) {
+      this.ctx.moveTo(x, 0)
       this.ctx.lineTo(x, this.drawHeight)
     }
 
     for(let y = this.pos.y + 0.5; y <= this.drawHeight; y += this.size) {
-      this.ctx.moveTo(this.drawX, y)
-      this.ctx.lineTo(this.drawWidth + this.drawX, y)
+      this.ctx.moveTo(0, y)
+      this.ctx.lineTo(this.drawWidth, y)
     }
 
     this.ctx.strokeStyle = this.color
@@ -58,14 +72,15 @@ class Grid extends Entity {
     this.ctx.stroke()
 
     if(this.texturePreview && !this.viewPort.positionAtDragStart) {
-      this.ctx.save()
+      // this.ctx.save()
       this.ctx.globalAlpha = this.texturePreviewAlpha
 
       let texture = this.texturePreview
       this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height)
 
-      this.ctx.restore()
+      // this.ctx.restore()
     }
+    this.ctx.restore()
   }
 
   update() {
