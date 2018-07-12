@@ -9,8 +9,14 @@ class MapEditor
     case "#{request.path}"
     when '/load_images'
       if request.get?
-        response = Rack::Response.new
-        response.write Dir.glob("public/images/*/*").map{|p| p.gsub('public', '')}.to_json
+        response_data = Dir.glob("public/images/*/*").map{|p| p.gsub('public', '')}.to_json
+
+        response = Rack::Response.new(
+          response_data,
+          200,
+          "Content-Type" => "application/json"
+        )
+        # response.write Dir.glob("public/images/*/*").map{|p| p.gsub('public', '')}.to_json
         response.finish
       end
     # when '/maps'
