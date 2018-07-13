@@ -1,5 +1,6 @@
 import { Entity } from 'entity'
 import * as Collision from 'collision'
+import Iso from 'isometric'
 
 export class ViewPort extends Entity {
   constructor(width, height, map) {
@@ -30,6 +31,14 @@ export class ViewPort extends Entity {
 
       this.safeMove(x, y)
     }
+  }
+
+  isoPos() {
+    Iso.cartToIso(this.pos)
+  }
+
+  cartPos() {
+    Iso.isoToCart(this.pos)
   }
 
   update() {

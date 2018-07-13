@@ -314,9 +314,10 @@ export default class Map {
       var endRow = startRow + Math.trunc(Game.canvas.height / this.textureSize)
     }
 
+    let relativeX = Game.canvas.width - this.viewPort.width
     Game.ctx.save()
     // Game.ctx.translate(view.x, view.y);
-    Game.ctx.translate(this.viewPort.x, this.viewPort.y);
+    Game.ctx.translate(relativeX, 0);
     Game.ctx.scale(1, 0.5);
     Game.ctx.rotate(45 * Math.PI /180);
 
@@ -332,7 +333,7 @@ export default class Map {
 
         let absolutePosition = { x: (column * this.textureSize), y: (row * this.textureSize) }
         let pos = Collision.vectorDifference(absolutePosition, this.viewPort.pos)
-        let relativePosition = Collision.vectorSum(pos, { x: Game.canvas.width - this.viewPort.width, y: 0 })
+        let relativePosition = Collision.vectorSum(pos, { x: relativeX, y: 0 })
 
         Game.ctx.drawImage(texture.img, relativePosition.x, relativePosition.y,
             texture.width, texture.height)

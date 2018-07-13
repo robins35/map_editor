@@ -4,6 +4,7 @@ import Texture from 'texture'
 import { ViewPort } from 'view_port'
 import MapEditorViews from 'views/map_editor'
 import * as Collision from 'collision'
+import Iso from 'isometric'
 
 const textureSize = 32
 
@@ -111,8 +112,14 @@ class Grid extends Entity {
 
       if(this.textureMenu.selectedTexture) {
         if(Collision.intersects(this, Game.events.mouse)) {
-          let columnIntersected = Math.trunc((Game.events.mouse.x - this.pos.x) / this.size)
-          let rowIntersected = Math.trunc((Game.events.mouse.y - this.pos.y) / this.size)
+          let cartMousePos = {
+            x: Game.events.mouse.x - this.pos.x,
+            y: Game.events.mouse.y - this.pos.y
+          }
+
+          let mouseIsoPos = Iso.isoToCart(cartMousePos)
+          let columnIntersected = Math.trunc(mouseIsoPos.x / this.size)
+          let rowIntersected = Math.trunc(mouseIsoPos.y / this.size)
 
           let x = this.pos.x + (columnIntersected * this.size)
           let y = this.pos.y + (rowIntersected * this.size)

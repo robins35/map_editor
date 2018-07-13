@@ -16,25 +16,18 @@ let init = (canvas) => {
   $(canvas).on('mousemove', (e) => {
     mouse.x = e.offsetX
     mouse.y = e.offsetY
-    console.log(`e.which: ${e.which} : e.buttons: ${e.buttons} : mouse.down: ${mouse.down} : mouse.clicked: ${mouse.clicked}`)
 
-
-    // if(mouse.clicked)
-    //   debugger
-    if(e.which == 1 && mouse.clicked && mouse.dragging == false ) {//&& !mouse.clicked ) {
-      console.log("Starting drag")
+    if(mouse.clicked && mouse.dragging == false ) {
       mouse.dragging = true
       mouse.dragStart = { x: mouse.x, y: mouse.y }
     }
 
-    mouse.rightClicked = false//(e.which == 3 && !mouse.rightDown)
-    mouse.clicked = false//(!!(e.buttons & 1) || (e.buttons === undefined && e.which == 1)) && !mouse.down
+    mouse.rightClicked = false
+    mouse.clicked = false
   });
 
   $(canvas).on('mousedown', (e) => {
     if (e.which == 1) {
-      console.log("mouse.down: true")
-
       mouse.clicked = !mouse.down
       mouse.down = true
     }
@@ -45,9 +38,7 @@ let init = (canvas) => {
   });
 
   $(canvas).on('mouseup', (e) => {
-    // console.log("Mouseup")
     if (e.which == 1) {
-      // console.log("leftmouse up")
       mouse.down = false
       mouse.clicked = false
       if (mouse.dragging) {
