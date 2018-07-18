@@ -8,7 +8,10 @@ export default class TextureMenu extends UI.UIElement {
     this.name = "UI.TextureMenu"
     this.textures = properties['textures']
     this.selectedTexture = null
-    this.textureWidth = this.textures[Object.keys(this.textures)[0]].width
+
+    let firstTexture = this.textures[Object.keys(this.textures)[0]]
+    this.textureWidth = 60//Math.floor(firstTexture.img.width / firstTexture.imageCount)
+    this.textureHeight = 30
     this.setupMenuProperties()
     this.texturesPerPage = this.textureColumnCount * this.textureRowCount
 
@@ -69,14 +72,25 @@ export default class TextureMenu extends UI.UIElement {
     this.textureObjects = [[]]
 
     for(let key of textureKeys) {
-      let texture = new Texture(x, y, key, this.textures[key])
+      let texture
+      let imageObject = this.textures[key]
+
+      if(imageObject.isSprite) {
+        let sx = imageObject.index * this.textureWidth
+        texture = new Texture(x, y, key, this.textures[key].img, this.textureWidth, sx)
+      }
+      else {
+        texture = new Texture(x, y, key, this.textures[key].img)
+      }
+
       this.textureObjects[page].push(texture)
       currentColumn++
 
-      x += texture.width + this.imagePadding
+      // x += texture.width + this.imagePadding
+      x += this.textureWidth + this.imagePadding
       if(currentColumn >= this.textureColumnCount) {
         x = this.pos.x + this.leftPadding
-        y += texture.height + this.imagePadding
+        y += this.textureHeight + this.imagePadding
         currentColumn = 0
         currentRow++
         if(currentRow >= this.textureRowCount) {
@@ -123,25 +137,26 @@ export default class TextureMenu extends UI.UIElement {
     this.ctx.fillRect(this.pos.x, this.pos.y, this.width, this.height)
 
     for(let texture of this.textureObjects[this.page]) {
-      this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height)
+      texture.draw()
+
       if(this.selectedTexture && this.selectedTexture.id == texture.id) {
         this.ctx.lineWidth = 3
         this.ctx.strokeStyle = "#00ff00"
-        this.ctx.strokeRect(texture.pos.x, texture.pos.y, texture.width, texture.height)
+        this.ctx.strokeRect(texture.pos.x, texture.pos.y, this.textureWidth, this.textureHeight)
       }
       if(texture.hovering && (!this.selectedTexture ||
             (this.selectedTexture &&
               this.selectedTexture.id != texture.id))) {
         this.ctx.lineWidth = 2
         this.ctx.strokeStyle = "#90c3d4"
-        this.ctx.strokeRect(texture.pos.x, texture.pos.y, texture.width, texture.height)
+        this.ctx.strokeRect(texture.pos.x, texture.pos.y, this.textureWidth, this.textureHeight)
       }
     }
 
     for(let iconKey of Object.keys(this.icons)) {
       let icon = this.icons[iconKey]
       if(!icon.hidden)
-        this.ctx.drawImage(icon, icon.pos.x, icon.pos.y, icon.width, icon.height)
+        this.ctx.drawImage(icon.img, icon.pos.x, icon.pos.y, icon.width, icon.height)
     }
   }
 

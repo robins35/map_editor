@@ -51,37 +51,37 @@ class Grid extends Entity {
   }
 
   draw() {
-    Game.ctx.save()
-    // Game.ctx.translate(view.x, view.y);
-    Game.ctx.translate(this.pos.x, this.pos.y);
-    Game.ctx.scale(1, 0.5);
-    Game.ctx.rotate(45 * Math.PI /180);
+    // Game.ctx.save()
+    // // Game.ctx.translate(view.x, view.y);
+    // Game.ctx.translate(this.pos.x, this.pos.y);
+    // Game.ctx.scale(1, 0.5);
+    // Game.ctx.rotate(45 * Math.PI /180);
 
-    this.ctx.beginPath()
-    for(let x = 0; x <= (this.drawWidth); x += this.size) {
-      this.ctx.moveTo(x, 0)
-      this.ctx.lineTo(x, this.drawHeight)
-    }
+    // this.ctx.beginPath()
+    // for(let x = 0; x <= (this.drawWidth); x += this.size) {
+    //   this.ctx.moveTo(x, 0)
+    //   this.ctx.lineTo(x, this.drawHeight)
+    // }
 
-    for(let y = this.pos.y + 0.5; y <= this.drawHeight; y += this.size) {
-      this.ctx.moveTo(0, y)
-      this.ctx.lineTo(this.drawWidth, y)
-    }
+    // for(let y = this.pos.y + 0.5; y <= this.drawHeight; y += this.size) {
+    //   this.ctx.moveTo(0, y)
+    //   this.ctx.lineTo(this.drawWidth, y)
+    // }
 
-    this.ctx.strokeStyle = this.color
-    this.ctx.lineWidth = 1
-    this.ctx.stroke()
+    // this.ctx.strokeStyle = this.color
+    // this.ctx.lineWidth = 1
+    // this.ctx.stroke()
 
-    if(this.texturePreview && !this.viewPort.positionAtDragStart) {
-      // this.ctx.save()
-      this.ctx.globalAlpha = this.texturePreviewAlpha
+    // if(this.texturePreview && !this.viewPort.positionAtDragStart) {
+    //   // this.ctx.save()
+    //   this.ctx.globalAlpha = this.texturePreviewAlpha
 
-      let texture = this.texturePreview
-      this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height)
+    //   let texture = this.texturePreview
+    //   this.ctx.drawImage(texture.img, texture.pos.x, texture.pos.y, texture.width, texture.height)
 
-      // this.ctx.restore()
-    }
-    this.ctx.restore()
+    //   // this.ctx.restore()
+    // }
+    // this.ctx.restore()
   }
 
   update() {

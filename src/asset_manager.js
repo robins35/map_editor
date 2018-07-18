@@ -27,7 +27,6 @@ let loadImagePaths = (downloadCallback) => {
 }
 
 let loadImages = function(downloadCallback) {
-    let image = new Image()
     let progressBar = new UI.ProgressBar(Game.canvas, {
       width: "50%",
       height: 20,
@@ -40,27 +39,35 @@ let loadImages = function(downloadCallback) {
     })
     Game.uiElements.push(progressBar)
 
-    if (imgPaths.length == 0) downloadCallback();
+    if ((imgPaths.length + spriteImageData.length) == 0) downloadCallback();
 
-    image.addEventListener("load", function() {
-        successCount++;
-        progressBar.progress++
-        if (isDone()) downloadCallback();
-    }, false);
-
-    image.addEventListener("error", function() {
-        errorCount++;
-        console.log(`Error loading image ${this.src}`)
-        if (isDone()) downloadCallback();
-    }, false);
 
     for (let imagePath of  imgPaths) {
+      let image = initializeImage(progressBar, downloadCallback)
       loadImage(image, imagePath, false);
     }
 
     for(let spriteSheet of spriteImageData) {
+      let image = initializeImage(progressBar, downloadCallback)
       loadImage(image, spriteSheet, true)
     }
+}
+
+let initializeImage = (progressBar, downloadCallback) => {
+  let image = new Image()
+  image.addEventListener("load", function() {
+      successCount++;
+      progressBar.progress++
+      if (isDone()) downloadCallback();
+  }, false);
+
+  image.addEventListener("error", function() {
+      errorCount++;
+      console.log(`Error loading image ${this.src}`)
+      if (isDone()) downloadCallback();
+  }, false);
+
+  return image
 }
 
 let loadImage = (image, imageInfo, isSprite) => {
@@ -75,33 +82,32 @@ let loadStandaloneImage = (image, src) => {
   let imageType = imagePath[0]
   let imageName = imagePath[1].split('.').slice(0, -1).join('.')
 
-  if(imgs[imageType] === undefined) {
-    imageType = "misc"
+  if(imgs[imageType] === undefined)
     imgs[imageType] = {}
-  }
 
   imgs[imageType][imageName] = {
     img: image,
-    isSprite: false
+    isSprite: false,
+    imageCount: 1,
   }
   image.src = src
 }
 
 let loadSpriteSheet = (image, spriteSheet) => {
   let imagePath = spriteSheet.image_path.split('/').slice(-3)
-  let imageType = spriteSheet.image_path[0]
+  let imageType = imagePath[0]
+  let spriteCount = spriteSheet.image_names.length
 
-  if(imgs[imageType] === undefined) {
-    imageType = "misc"
+  if(imgs[imageType] === undefined)
     imgs[imageType] = {}
-  }
 
-  for(let i = 0; i < spriteSheet.image_names.length; i++) {
+  for(let i = 0; i < spriteCount; i++) {
     let imageName = spriteSheet.image_names[i]
 
     imgs[imageType][imageName] = {
       img: image,
       index: i,
+      imageCount: spriteCount,
       isSprite: true
     }
   }
@@ -113,7 +119,18 @@ let loadSpriteSheet = (image, spriteSheet) => {
 // }
 
 let loadAssets = function(downloadCallback) {
-    loadImagePaths(downloadCallback)
+  let modifiedCallback = () => {
+    for(const [imageType, imageHash] of Object.entries(this.imgs)) {
+      for(const imageObject of Object.values(imageHash)) {
+        imageObject.width = Math.floor(imageObject.img.width / imageObject.imageCount)
+        imageObject.height = imageObject.img.height
+      }
+    }
+
+    downloadCallback()
+  }
+
+  loadImagePaths(modifiedCallback)
 }
 
 let getImage = function(image_type, image_name) {
