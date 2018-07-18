@@ -333,7 +333,7 @@ export default class Map {
 
         let absolutePosition = { x: (column * this.textureSize), y: (row * this.textureSize) }
         let pos = Collision.vectorDifference(absolutePosition, this.viewPort.pos)
-        let relativePosition = Collision.vectorSum(pos, { x: relativeX, y: 0 })
+        let relativePosition = Collision.vectorSum(pos, { x: 0, y: 0 })
 
         Game.ctx.drawImage(texture.img, relativePosition.x, relativePosition.y,
             texture.width, texture.height)

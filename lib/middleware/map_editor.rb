@@ -9,7 +9,26 @@ class MapEditor
     case "#{request.path}"
     when '/load_images'
       if request.get?
-        response_data = Dir.glob("public/images/*/*").map{|p| p.gsub('public', '')}.to_json
+        standalone_image_paths = Dir.glob("public/images/*/*.{png,jpg}").map{|p| p.gsub('public', '')}
+        sprite_sheet_paths = Dir.glob("public/images/*/sprite_sheets/*{png,jpg}")
+        sprite_sheet_data = []
+
+        sprite_sheet_paths.map do |image_path|
+          path_without_extension = image_path.gsub(File.extname(image_path), '')
+          data_file_path = "#{path_without_extension}.txt"
+
+          image_names = File.readlines(data_file_path).map(&:chomp)
+
+          sprite_sheet_data << {
+            image_path: image_path,
+            image_names: image_names
+          }
+        end
+
+        response_data = {
+          standalone_image_paths: standalone_image_paths,
+          sprite_sheets: sprite_sheet_data
+        }.to_json
 
         response = Rack::Response.new(
           response_data,

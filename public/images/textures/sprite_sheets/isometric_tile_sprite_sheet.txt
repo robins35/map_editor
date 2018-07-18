@@ -1,0 +1,16 @@
+water_deepest
+water_deep
+water
+water_shallow
+sand
+lightest_grass
+light_grass
+dark_grass
+darkest_grass
+patchy_grass
+dry_dirt
+rocky_dirt
+stone
+rocks
+dark_stone
+mountain
